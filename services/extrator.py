@@ -3,7 +3,7 @@ import time
 from playwright.sync_api import sync_playwright
 
 # CONFIGURAÇÕES PADRÃO (Podem ser editadas aqui ou passadas como argumento)
-NOME_DA_COMUNIDADE = "Nome da Comunidade Principal"
+NOME_DA_COMUNIDADE = ""
 NOME_DO_GRUPO = "Nome do Grupo de Teste"
 
 def extrair_dados_comunidade(nome_grupo=NOME_DO_GRUPO, nome_comunidade=NOME_DA_COMUNIDADE):
@@ -64,24 +64,45 @@ def extrair_dados_comunidade(nome_grupo=NOME_DO_GRUPO, nome_comunidade=NOME_DA_C
             pagina.click(seletor_item_lista)
             print(f"Sucesso: Grupo aberto através da Comunidade!")
 
-        print("Aguardando o carregamento das mensagens...")
-        seletor_chat = "div[data-tab='8']"
-        pagina.wait_for_selector(seletor_chat, timeout=20000)
-        time.sleep(2)
-        
         print("\n--- Coletando as últimas mensagens ---")
-        baloes_mensagens = pagina.query_selector_all("div.message-in, div.message-out")
         
-        for i, balao in enumerate(baloes_mensagens[-10:]):
-            elemento_texto = balao.query_selector("span.copyable-text")
+        # 1. Tentamos pegar as mensagens usando o atributo de papel de mensagem do WhatsApp
+        baloes_mensagens = pagina.query_selector_all("[role='row'], div.message-in, div.message-out")
+        
+        # 2. Se falhar, tentamos pegar pelas caixas que contêm textos selecionáveis
+        if len(baloes_mensagens) == 0:
+            baloes_mensagens = pagina.query_selector_all("div.copyable-text")
+            
+        print(f"Quantidade de balões encontrados na tela: {len(baloes_mensagens)}")
+        
+        mensagens_encontradas = 0
+        
+        for i, balao in enumerate(baloes_mensagens[-15:]): # Olhamos até as últimas 15 mensagens
+            texto = None
+            
+            # Tentativa A: Buscar pelo texto selecionável padrão do WhatsApp Web
+            elemento_texto = balao.query_selector("span.selectable-text")
+            
+            if not elemento_texto:
+                # Tentativa B: Buscar por qualquer span de texto copiável
+                elemento_texto = balao.query_selector(".copyable-text")
+                
             if elemento_texto:
                 texto = elemento_texto.inner_text()
-                print(f"\n[Mensagem {i+1}]: {texto}")
+            else:
+                # Tentativa C: Pegar o texto limpo direto do bloco se não achar os seletores acima
+                texto_bruto = balao.inner_text()
+                if texto_bruto and len(texto_bruto.strip()) > 2:
+                    # Limpa quebras de linha e pega a primeira parte (geralmente a mensagem)
+                    linhas = [l.strip() for l in texto_bruto.split('\n') if l.strip()]
+                    if linhas and not linhas[0].replace(':', '').isdigit(): # Ignora se for só horário
+                        texto = linhas[0]
+            
+            if texto:
+                mensagens_encontradas += 1
+                print(f"\n[Mensagem {mensagens_encontradas}]: {texto}")
                 print("-" * 30)
                 
-        print("\nFechando em 5 segundos...")
-        time.sleep(5)
-        contexto.close()
-
-if __name__ == "__main__":
-    extrair_dados_comunidade()
+        if mensagens_encontradas == 0:
+            print("\n[Aviso]: Não consegui extrair o texto de nenhuma mensagem.")
+            print("Certifique-se de que enviou mensagens de texto de verdade no grupo pelo celular recentemente!")
