@@ -1,9 +1,11 @@
 import os
 import time
+import sys
 from playwright.sync_api import sync_playwright
 
 def iniciar_coletor():
-    caminho_sessao = os.path.join(os.getcwd(), "sessao_whatsapp")
+    caminho_projeto = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    caminho_sessao = os.path.join(caminho_projeto, "sessao_whatsapp")
     
     with sync_playwright() as p:
         print("Iniciando o navegador...")
@@ -23,8 +25,9 @@ def iniciar_coletor():
         print("Aguardando a sincronização das conversas...\n")
         
         try:
-            # tempo de espera para 3 minutos (180000 ms) 
-            pagina.wait_for_selector("div[contenteditable='true'][data-tab='3']", timeout=180000)
+            # Aguarda o painel de conversas ou a barra de pesquisa carregar (mais robusto)
+            seletores_login = "#pane-side, div[contenteditable='true'][data-tab='3'], div[contenteditable='true'][role='textbox']"
+            pagina.wait_for_selector(seletores_login, timeout=180000)
             print("Conectado com sucesso ao WhatsApp Web!")
         except Exception as e:
             print(f"Tempo limite esgotado ou erro: {e}")

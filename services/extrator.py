@@ -2,12 +2,13 @@ import os
 import time
 from playwright.sync_api import sync_playwright
 
-# INDIQUE AQUI OS NOMES EXATOS
+# CONFIGURAÇÕES PADRÃO (Podem ser editadas aqui ou passadas como argumento)
 NOME_DA_COMUNIDADE = "Nome da Comunidade Principal"
 NOME_DO_GRUPO = "Nome do Grupo de Teste"
 
-def extrair_dados_comunidade():
-    caminho_sessao = os.path.join(os.getcwd(), "sessao_whatsapp")
+def extrair_dados_comunidade(nome_grupo=NOME_DO_GRUPO, nome_comunidade=NOME_DA_COMUNIDADE):
+    caminho_projeto = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    caminho_sessao = os.path.join(caminho_projeto, "sessao_whatsapp")
     
     with sync_playwright() as p:
         print("Abrindo navegador...")
@@ -22,38 +23,39 @@ def extrair_dados_comunidade():
         pagina.goto("https://web.whatsapp.com")
         
         print("Aguardando carregamento do WhatsApp Web...")
-        seletor_busca = "div[contenteditable='true'][data-tab='3']"
+        # Suporta múltiplos seletores comuns para a barra de pesquisa
+        seletor_busca = "div[contenteditable='true'][data-tab='3'], div[contenteditable='true'][role='textbox'], [data-testid='chat-list-search']"
         pagina.wait_for_selector(seletor_busca, timeout=60000)
         
         # Estratégia: Buscar o grupo específico diretamente pela barra de pesquisa
-        print(f"Buscando por: '{NOME_DO_GRUPO}'...")
+        print(f"Buscando por: '{nome_grupo}'...")
         pagina.click(seletor_busca)
         
         # Limpa o campo de busca antes de digitar (caso haja algo)
         pagina.keyboard.press("Control+A")
         pagina.keyboard.press("Backspace")
         
-        pagina.fill(seletor_busca, NOME_DO_GRUPO)
+        pagina.fill(seletor_busca, nome_grupo)
         time.sleep(2) # Pausa um pouco maior para o WhatsApp expandir a comunidade na lateral
         
         # O WhatsApp Web usa spans para os títulos dos chats na lista lateral
         # Vamos tentar clicar no texto exato do grupo que apareceu na busca
-        seletor_item_lista = f"span[title='{NOME_DO_GRUPO}']"
+        seletor_item_lista = f"span[title='{nome_grupo}']"
         
         try:
             pagina.wait_for_selector(seletor_item_lista, timeout=15000)
             pagina.click(seletor_item_lista)
-            print(f"Sucesso: Grupo '{NOME_DO_GRUPO}' aberto!")
+            print(f"Sucesso: Grupo '{nome_grupo}' aberto!")
         except Exception:
-            print(f"Não encontrei o grupo direto. Tentando buscar pela comunidade '{NOME_DA_COMUNIDADE}'...")
+            print(f"Não encontrei o grupo direto. Tentando buscar pela comunidade '{nome_comunidade}'...")
             # Se não achou o grupo direto, busca a comunidade principal para abrir a árvore de grupos
             pagina.click(seletor_busca)
             pagina.keyboard.press("Control+A")
             pagina.keyboard.press("Backspace")
-            pagina.fill(seletor_busca, NOME_DA_COMUNIDADE)
+            pagina.fill(seletor_busca, nome_comunidade)
             time.sleep(2)
             
-            seletor_comunidade = f"span[title='{NOME_DA_COMUNIDADE}']"
+            seletor_comunidade = f"span[title='{nome_comunidade}']"
             pagina.wait_for_selector(seletor_comunidade, timeout=10000)
             pagina.click(seletor_comunidade)
             
