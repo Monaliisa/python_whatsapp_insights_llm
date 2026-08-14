@@ -25,7 +25,14 @@ def menu():
             grupo = input("Digite o nome do grupo (ou Enter para usar o padrão): ").strip()
             comunidade = input("Digite o nome da comunidade (ou Enter para usar o padrão): ").strip()
             
-            kwargs = {}
+            qtd_semanas_input = input("Quantas semanas para trás deseja coletar? (Padrão: 1): ").strip()
+            try:
+                semanas = int(qtd_semanas_input) if qtd_semanas_input else 1
+            except ValueError:
+                print("Valor inválido! Usando o padrão de 1 semana.")
+                semanas = 1
+            
+            kwargs = {'semanas': semanas}
             if grupo:
                 kwargs['nome_grupo'] = grupo
             if comunidade:
@@ -48,3 +55,5 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n\nOperação cancelada pelo usuário. Saindo...")
         sys.exit(0)
+
+        
