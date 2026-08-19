@@ -153,7 +153,7 @@ def export_to_csv(path: str, limit: int | None = None, db_path: str | None = Non
     conn.close()
 
     with open(path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
+        writer = csv.writer(f, delimiter=';')
         writer.writerow(cols)
         for r in rows:
             writer.writerow(r)
