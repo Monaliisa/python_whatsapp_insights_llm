@@ -1,6 +1,7 @@
 import os
 import time
 import re
+import uuid
 from datetime import datetime, timedelta
 from playwright.sync_api import sync_playwright
 from services.storage import init_db, save_messages
@@ -172,13 +173,36 @@ def extrair_dados_balao(balao):
     }
 
 
-def extrair_dados_comunidade(nome_grupo=NOME_DO_GRUPO, nome_comunidade=NOME_DA_COMUNIDADE, semanas=1):
+def calcular_data_limite(tipo_filtro="mes", meses=1, dias=30):
+    agora = datetime.now()
+
+    if tipo_filtro == "mes":
+        meses = max(1, int(meses))
+        primeiro_dia_do_mes_atual = agora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        data_limite = primeiro_dia_do_mes_atual
+        for _ in range(meses):
+            ano = data_limite.year
+            mes = data_limite.month - 1
+            if mes == 0:
+                mes = 12
+                ano -= 1
+            data_limite = data_limite.replace(year=ano, month=mes, day=1)
+        return data_limite, agora, f"{meses} mês(es)"
+
+    dias = max(1, int(dias))
+    data_limite = (agora - timedelta(days=dias)).replace(hour=0, minute=0, second=0, microsecond=0)
+    return data_limite, agora, f"últimos {dias} dias"
+
+
+def extrair_dados_comunidade(nome_grupo=NOME_DO_GRUPO, nome_comunidade=NOME_DA_COMUNIDADE, tipo_filtro="mes", meses=1, dias=None):
     caminho_projeto = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     caminho_sessao = os.path.join(caminho_projeto, "sessao_whatsapp")
-    
-    agora = datetime.now()
-    data_limite = (agora - timedelta(weeks=semanas)).replace(hour=0, minute=0, second=0, microsecond=0)
-    print(f"\n[Filtro] Coletando mensagens de {data_limite.strftime('%d/%m/%Y')} até hoje ({agora.strftime('%d/%m/%Y')})")
+
+    if dias is None:
+        dias = 30
+
+    data_limite, agora, label_filtro = calcular_data_limite(tipo_filtro=tipo_filtro, meses=meses, dias=dias)
+    print(f"\n[Filtro] Coletando mensagens por: {label_filtro} ({data_limite.strftime('%d/%m/%Y')} até {agora.strftime('%d/%m/%Y')})")
 
     with sync_playwright() as p:
         print("Abrindo navegador...")
@@ -275,6 +299,20 @@ def extrair_dados_comunidade(nome_grupo=NOME_DO_GRUPO, nome_comunidade=NOME_DA_C
 
         # Ordenação cronológica das mensagens extraídas
         lista_final = sorted(mensagens_coletadas.values(), key=lambda x: x["data_hora"])
+
+        coleta_id = str(uuid.uuid4())
+        coletado_em = datetime.utcnow().isoformat()
+        for msg in lista_final:
+            msg["coleta_id"] = coleta_id
+            msg["grupo_nome"] = nome_grupo
+            msg["comunidade_nome"] = nome_comunidade
+            msg["coletado_em"] = coletado_em
+            if tipo_filtro == "mes":
+                msg["meses_back"] = int(meses)
+                msg["semanas_back"] = int(meses) * 4
+            else:
+                msg["meses_back"] = 0
+                msg["semanas_back"] = int(dias)
 
         print(f"\nTotal de mensagens extraídas com sucesso: {len(lista_final)}")
         print("="*60)

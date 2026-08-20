@@ -23,6 +23,12 @@ def init_db(db_path: str | None = None):
         """
         CREATE TABLE IF NOT EXISTS messages (
             id TEXT PRIMARY KEY,
+            coleta_id TEXT,
+            grupo_nome TEXT,
+            comunidade_nome TEXT,
+            coletado_em TEXT,
+            meses_back INTEGER,
+            semanas_back INTEGER,
             data_hora TEXT,
             data_hora_ts REAL,
             remetente TEXT,
@@ -40,11 +46,27 @@ def init_db(db_path: str | None = None):
         )
         """
     )
+
+    # Migração para tabelas já existentes sem os campos de coleta
+    cols = [row[1] for row in cur.execute("PRAGMA table_info(messages)").fetchall()]
+    for column_name, column_type in {
+        "coleta_id": "TEXT",
+        "grupo_nome": "TEXT",
+        "comunidade_nome": "TEXT",
+        "coletado_em": "TEXT",
+        "meses_back": "INTEGER",
+        "semanas_back": "INTEGER",
+    }.items():
+        if column_name not in cols:
+            cur.execute(f"ALTER TABLE messages ADD COLUMN {column_name} {column_type}")
+
     conn.commit()
     # Índices para consultas rápidas
     cur.execute("CREATE INDEX IF NOT EXISTS idx_messages_data_hora_ts ON messages(data_hora_ts);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_messages_remetente ON messages(remetente);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_messages_has_attachments ON messages(has_attachments);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_messages_coleta_id ON messages(coleta_id);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_messages_grupo_nome ON messages(grupo_nome);")
     conn.close()
 
 
@@ -72,6 +94,12 @@ def _serialize_msg(m: dict) -> dict:
 
     return {
         "id": m.get("id"),
+        "coleta_id": m.get("coleta_id"),
+        "grupo_nome": m.get("grupo_nome"),
+        "comunidade_nome": m.get("comunidade_nome"),
+        "coletado_em": m.get("coletado_em"),
+        "meses_back": m.get("meses_back"),
+        "semanas_back": m.get("semanas_back"),
         "data_hora": data_hora_str,
         "data_hora_ts": data_hora_ts,
         "remetente": m.get("remetente"),
@@ -101,14 +129,37 @@ def save_messages(messages: list[dict], db_path: str | None = None):
         s = _serialize_msg(m)
         cur.execute(
             """
-            INSERT OR REPLACE INTO messages (
-                id, data_hora, data_hora_ts, remetente, texto, texto_normalizado,
+            INSERT INTO messages (
+                id, coleta_id, grupo_nome, comunidade_nome, coletado_em, meses_back, semanas_back,
+                data_hora, data_hora_ts, remetente, texto, texto_normalizado,
                 is_reply, reply_author, reply_text, has_attachments, attachments_json,
                 reactions_json, topics_json, transcript, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                coleta_id = excluded.coleta_id,
+                grupo_nome = excluded.grupo_nome,
+                comunidade_nome = excluded.comunidade_nome,
+                coletado_em = excluded.coletado_em,
+                meses_back = excluded.meses_back,
+                semanas_back = excluded.semanas_back,
+                data_hora = excluded.data_hora,
+                data_hora_ts = excluded.data_hora_ts,
+                remetente = excluded.remetente,
+                texto = excluded.texto,
+                texto_normalizado = excluded.texto_normalizado,
+                is_reply = excluded.is_reply,
+                reply_author = excluded.reply_author,
+                reply_text = excluded.reply_text,
+                has_attachments = excluded.has_attachments,
+                attachments_json = excluded.attachments_json,
+                reactions_json = excluded.reactions_json,
+                topics_json = excluded.topics_json,
+                transcript = excluded.transcript,
+                created_at = excluded.created_at
             """,
             (
-                s["id"], s["data_hora"], s["data_hora_ts"], s["remetente"], s["texto"], s["texto_normalizado"],
+                s["id"], s["coleta_id"], s["grupo_nome"], s["comunidade_nome"], s["coletado_em"], s["meses_back"], s["semanas_back"],
+                s["data_hora"], s["data_hora_ts"], s["remetente"], s["texto"], s["texto_normalizado"],
                 s["is_reply"], s["reply_author"], s["reply_text"], s["has_attachments"], s["attachments_json"],
                 s["reactions_json"], s["topics_json"], s["transcript"], s["created_at"]
             ),
@@ -141,7 +192,7 @@ def export_to_csv(path: str, limit: int | None = None, db_path: str | None = Non
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
 
-    q = "SELECT id, data_hora, remetente, texto, texto_normalizado, is_reply, reply_author, reply_text, has_attachments, attachments_json, reactions_json, topics_json, transcript, created_at FROM messages"
+    q = "SELECT id, coleta_id, grupo_nome, comunidade_nome, coletado_em, meses_back, semanas_back, data_hora, remetente, texto, texto_normalizado, is_reply, reply_author, reply_text, has_attachments, attachments_json, reactions_json, topics_json, transcript, created_at FROM messages"
     params = []
     if limit is not None:
         q += " ORDER BY data_hora_ts DESC LIMIT ?"
@@ -166,7 +217,7 @@ def export_to_json(path: str, limit: int | None = None, db_path: str | None = No
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
 
-    q = "SELECT id, data_hora, remetente, texto, texto_normalizado, is_reply, reply_author, reply_text, has_attachments, attachments_json, reactions_json, topics_json, transcript, created_at FROM messages"
+    q = "SELECT id, coleta_id, grupo_nome, comunidade_nome, coletado_em, meses_back, semanas_back, data_hora, remetente, texto, texto_normalizado, is_reply, reply_author, reply_text, has_attachments, attachments_json, reactions_json, topics_json, transcript, created_at FROM messages"
     params = []
     if limit is not None:
         q += " ORDER BY data_hora_ts DESC LIMIT ?"

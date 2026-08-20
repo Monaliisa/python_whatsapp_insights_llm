@@ -51,14 +51,33 @@ def menu():
             grupo = input("Digite o nome do grupo (ou Enter para usar o padrão): ").strip()
             comunidade = input("Digite o nome da comunidade (ou Enter para usar o padrão): ").strip()
 
-            qtd_semanas_input = input("Quantas semanas para trás deseja coletar? (Padrão: 1): ").strip()
-            try:
-                semanas = int(qtd_semanas_input) if qtd_semanas_input else 1
-            except ValueError:
-                print("Valor inválido! Usando o padrão de 1 semana.")
-                semanas = 1
+            print("\nEscolha o tipo de filtro:")
+            print("1. Por mês")
+            print("2. Por dias")
+            tipo_filtro_opcao = input("Digite a opção (1 ou 2): ").strip()
 
-            kwargs = {'semanas': semanas}
+            if tipo_filtro_opcao == "1":
+                tipo_filtro = "mes"
+                meses_input = input("Digite quantos meses para trás deseja coletar? (Ex.: 2): ").strip()
+                try:
+                    meses = int(meses_input) if meses_input else 1
+                except ValueError:
+                    print("Valor inválido! Usando 1 mês.")
+                    meses = 1
+                kwargs = {'tipo_filtro': tipo_filtro, 'meses': meses}
+            elif tipo_filtro_opcao == "2":
+                tipo_filtro = "dias"
+                dias_input = input("Digite quantos dias deseja coletar? (Ex.: 15, 30, 7): ").strip()
+                try:
+                    dias = int(dias_input) if dias_input else 30
+                except ValueError:
+                    print("Valor inválido! Usando 30 dias.")
+                    dias = 30
+                kwargs = {'tipo_filtro': tipo_filtro, 'dias': dias}
+            else:
+                print("Opção inválida! Usando filtro por mês com 1 mês.")
+                kwargs = {'tipo_filtro': 'mes', 'meses': 1}
+
             if grupo:
                 kwargs['nome_grupo'] = grupo
             if comunidade:
