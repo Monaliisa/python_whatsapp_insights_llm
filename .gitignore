@@ -78,6 +78,7 @@ docs/_build/
 # PyBuilder
 .pybuilder/
 target/
+GEMINI.md
 
 # Jupyter Notebook
 .ipynb_checkpoints
