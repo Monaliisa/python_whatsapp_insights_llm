@@ -18,6 +18,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 
+from services.coletor import (
+    desconectar_sessao,
+    iniciar_coletor,
+    verificar_status_sessao,
+)
 from services.extrator import NOME_DO_GRUPO, extrair_dados_comunidade
 from services.storage import (
     export_to_csv,
@@ -128,14 +133,71 @@ async def serve_index():
 @app.get("/api/status")
 async def get_status():
     db_path = get_db_path()
+    has_session = verificar_status_sessao()
     return {
         "status": "online",
         "is_busy": state.is_busy,
+        "has_session": has_session,
+        "session_status": "connected" if has_session else "disconnected",
         "db_path": db_path,
         "db_exists": os.path.exists(db_path),
         "default_grupo": NOME_DO_GRUPO,
         "default_export_path": str(DEFAULT_EXPORT_PATH),
     }
+
+
+@app.get("/api/session/status")
+async def get_session_status():
+    has_session = verificar_status_sessao()
+    return {
+        "has_session": has_session,
+        "session_status": "connected" if has_session else "disconnected",
+        "is_busy": state.is_busy,
+    }
+
+
+def _run_coletor_login_thread():
+    state.is_busy = True
+    orig_stdout = sys.stdout
+    redirector = StdoutRedirector(orig_stdout)
+    sys.stdout = redirector
+
+    try:
+        state.add_log("Iniciando conector para autenticação no WhatsApp Web...")
+        sucesso = iniciar_coletor(timeout_segundos=300)
+        if sucesso:
+            state.add_log("Sessão conectada e salva com sucesso!")
+        else:
+            state.add_log("Conexão finalizada sem autenticação.")
+    except Exception as exc:
+        state.add_log(f"Erro ao conectar sessão: {exc}")
+    finally:
+        sys.stdout = orig_stdout
+        state.is_busy = False
+
+
+@app.post("/api/session/conectar")
+async def trigger_conectar_sessao(background_tasks: BackgroundTasks):
+    if state.is_busy:
+        return {"success": False, "message": "Já existe uma tarefa em execução."}
+
+    background_tasks.add_task(_run_coletor_login_thread)
+    return {"success": True, "message": "Navegador aberto para escanear o QR Code."}
+
+
+@app.post("/api/session/desconectar")
+async def trigger_desconectar_sessao():
+    if state.is_busy:
+        return {"success": False, "message": "Não é possível desconectar durante uma coleta ou operação em andamento."}
+
+    sucesso, msg = desconectar_sessao()
+    if sucesso:
+        state.add_log(f"[Sessão] {msg}")
+        return {"success": True, "message": msg}
+    else:
+        state.add_log(f"[Sessão - Erro] {msg}")
+        return {"success": False, "error": msg}
+
 
 
 @app.get("/api/messages")

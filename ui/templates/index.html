@@ -184,9 +184,90 @@
       background: #374151;
     }
 
+    button.danger, .btn.danger {
+      background: #991b1b;
+      color: #fee2e2;
+    }
+
+    button.danger:hover:not(:disabled), .btn.danger:hover:not(:disabled) {
+      background: #b91c1c;
+    }
+
     button:disabled, .btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+    }
+
+    .btn-xs {
+      padding: 5px 10px;
+      font-size: 12px;
+      border-radius: 4px;
+      width: 100%;
+    }
+
+    /* Badge de Status de Sessão */
+    .session-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 9999px;
+      font-weight: 500;
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1px solid #334155;
+    }
+
+    .session-badge.connected {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .session-badge.disconnected {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .session-badge .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #94a3b8;
+    }
+
+    .session-badge.connected .dot {
+      background: #10b981;
+      box-shadow: 0 0 6px #10b981;
+    }
+
+    .session-badge.disconnected .dot {
+      background: #ef4444;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid #1e293b;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .info-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #334155;
+      color: #93c5fd;
+      font-size: 11px;
+      cursor: help;
+      font-weight: bold;
     }
 
     /* Console de Logs */
@@ -298,6 +379,16 @@
       <div class="sidebar-item" data-page="page-detalhes">Detalhes</div>
       <div class="sidebar-item" data-page="page-database">Banco de Dados</div>
       <div class="sidebar-item" data-page="page-exportacao">Exportação</div>
+
+      <div class="sidebar-footer">
+        <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Sessão WhatsApp</div>
+        <div id="sidebar-session-badge" class="session-badge disconnected">
+          <span class="dot"></span>
+          <span id="sidebar-session-text">Desconectado</span>
+        </div>
+        <button id="btn-sidebar-conectar" class="secondary btn-xs" onclick="conectarWhatsApp()">Conectar (QR Code)</button>
+        <button id="btn-sidebar-desconectar" class="danger btn-xs" onclick="desconectarWhatsApp()" style="display: none;">Sair / Desconectar</button>
+      </div>
     </div>
 
     <!-- Main Content Pages -->
@@ -306,11 +397,29 @@
       <!-- PÁGINA 1: RESUMO -->
       <div id="page-resumo" class="page">
         <h1>Resumo do sistema</h1>
+
+        <div class="group-box">
+          <div class="group-box-title">Status da Sessão do WhatsApp</div>
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="color: #cbd5e1; font-size: 14px;">Status da conta:</span>
+              <div id="resumo-session-badge" class="session-badge disconnected">
+                <span class="dot"></span>
+                <span id="resumo-session-text">Desconectado (Necessário QR Code)</span>
+              </div>
+            </div>
+            <div class="btn-group">
+              <button id="btn-resumo-conectar" onclick="conectarWhatsApp()">Conectar WhatsApp</button>
+              <button id="btn-resumo-desconectar" class="danger" onclick="desconectarWhatsApp()" style="display: none;">Sair / Desconectar</button>
+            </div>
+          </div>
+        </div>
+
         <div class="group-box" style="flex: 1;">
           <p style="margin-bottom: 12px; font-size: 15px;"><b>WhatsApp Insights</b></p>
           <p style="margin-bottom: 12px; color: #cbd5e1;">O sistema salva as mensagens em um banco local SQLite para consulta rápida e análise.</p>
           <p style="margin-bottom: 12px; color: #cbd5e1;"><b>Banco atual:</b> <span id="resumo-db-path" style="color: #93c5fd;">Carregando...</span></p>
-          <p style="color: #cbd5e1;"><b>Fluxo:</b> coletar mensagens → salvar no banco → consultar na tabela → exportar para CSV/JSON.</p>
+          <p style="color: #cbd5e1;"><b>Fluxo:</b> conectar/autenticar WhatsApp → coletar mensagens → salvar no banco → consultar na tabela → exportar para CSV/JSON.</p>
         </div>
       </div>
 
@@ -318,13 +427,27 @@
       <div id="page-mensagens" class="page active">
         <!-- Parâmetros de Coleta -->
         <div class="group-box">
-          <div class="group-box-title">Parâmetros da coleta</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div class="group-box-title" style="margin-bottom: 0;">Parâmetros da coleta</div>
+            <div id="mensagens-session-badge" class="session-badge disconnected">
+              <span class="dot"></span>
+              <span id="mensagens-session-text">Desconectado</span>
+            </div>
+          </div>
           <div class="form-grid">
             <label for="input-grupo">Grupo:</label>
-            <input type="text" id="input-grupo" value="Ciência de Dados | Comunidade Alura">
+            <input type="text" id="input-grupo" value="Ciência de Dados | Comunidade Alura" placeholder="Ex: Ciência de Dados">
 
-            <label for="input-comunidade">Comunidade:</label>
-            <input type="text" id="input-comunidade" value="">
+            <label for="input-comunidade" style="display: flex; align-items: center; gap: 4px; color: #94a3b8;">
+              Comunidade:
+              <span class="info-icon" title="O WhatsApp Web não enxerga comunidades, apenas grupos. Para coletar mensagens, informe o nome do grupo no campo acima.">ⓘ</span>
+            </label>
+            <div>
+              <input type="text" id="input-comunidade" value="Desabilitado (WhatsApp Web só lê grupos)" disabled style="background: #1e293b; color: #64748b; cursor: not-allowed; opacity: 0.7;">
+              <small style="color: #94a3b8; font-size: 11px; display: block; margin-top: 3px;">
+                ⓘ <i>O WhatsApp Web não possui histórico de comunidades inteiras, apenas de grupos. Informe o nome do grupo acima.</i>
+              </small>
+            </div>
 
             <label for="select-filtro">Filtro:</label>
             <select id="select-filtro">
@@ -497,6 +620,59 @@
       });
     }
 
+    // Atualiza a visualização do status de sessão na interface
+    function atualizarStatusSessaoUI(hasSession) {
+      const sidebarBadge = document.getElementById('sidebar-session-badge');
+      const sidebarText = document.getElementById('sidebar-session-text');
+      const btnSidebarConectar = document.getElementById('btn-sidebar-conectar');
+      const btnSidebarDesconectar = document.getElementById('btn-sidebar-desconectar');
+
+      const resumoBadge = document.getElementById('resumo-session-badge');
+      const resumoText = document.getElementById('resumo-session-text');
+      const btnResumoDesconectar = document.getElementById('btn-resumo-desconectar');
+
+      const mensagensBadge = document.getElementById('mensagens-session-badge');
+      const mensagensText = document.getElementById('mensagens-session-text');
+
+      if (hasSession) {
+        if (sidebarBadge) {
+          sidebarBadge.className = 'session-badge connected';
+          sidebarText.innerText = 'Conectado';
+        }
+        if (btnSidebarConectar) btnSidebarConectar.innerText = 'Reabrir WhatsApp';
+        if (btnSidebarDesconectar) btnSidebarDesconectar.style.display = 'block';
+
+        if (resumoBadge) {
+          resumoBadge.className = 'session-badge connected';
+          resumoText.innerText = 'Conectado (Sessão Ativa)';
+        }
+        if (btnResumoDesconectar) btnResumoDesconectar.style.display = 'inline-flex';
+
+        if (mensagensBadge) {
+          mensagensBadge.className = 'session-badge connected';
+          mensagensText.innerText = 'WhatsApp Conectado';
+        }
+      } else {
+        if (sidebarBadge) {
+          sidebarBadge.className = 'session-badge disconnected';
+          sidebarText.innerText = 'Desconectado';
+        }
+        if (btnSidebarConectar) btnSidebarConectar.innerText = 'Conectar (QR Code)';
+        if (btnSidebarDesconectar) btnSidebarDesconectar.style.display = 'none';
+
+        if (resumoBadge) {
+          resumoBadge.className = 'session-badge disconnected';
+          resumoText.innerText = 'Desconectado (Necessário QR Code)';
+        }
+        if (btnResumoDesconectar) btnResumoDesconectar.style.display = 'none';
+
+        if (mensagensBadge) {
+          mensagensBadge.className = 'session-badge disconnected';
+          mensagensText.innerText = 'Não Conectado (QR Code)';
+        }
+      }
+    }
+
     // Carregar Informações do Sistema e Status
     async function carregarStatus() {
       try {
@@ -508,8 +684,46 @@
         if (data.default_grupo) {
           document.getElementById('input-grupo').value = data.default_grupo;
         }
+        atualizarStatusSessaoUI(Boolean(data.has_session));
       } catch (err) {
         console.error("Erro ao obter status:", err);
+      }
+    }
+
+    // Ações de Sessão do WhatsApp
+    async function conectarWhatsApp() {
+      setBusy(true);
+      try {
+        const res = await fetch('/api/session/conectar', { method: 'POST' });
+        const json = await res.json();
+        showToast(json.message || "Iniciando conector do WhatsApp...");
+        appendLog("[Sessão] Conector de WhatsApp acionado.");
+      } catch (err) {
+        showToast("Erro ao iniciar conexão do WhatsApp.");
+        appendLog(`Erro ao acionar conector: ${err}`);
+        setBusy(false);
+      }
+    }
+
+    async function desconectarWhatsApp() {
+      if (!confirm("Tem certeza de que deseja sair e desconectar a conta do WhatsApp deste dispositivo?")) {
+        return;
+      }
+      setBusy(true);
+      try {
+        const res = await fetch('/api/session/desconectar', { method: 'POST' });
+        const json = await res.json();
+        if (json.success) {
+          showToast(json.message);
+          appendLog(`[Sessão] ${json.message}`);
+          await carregarStatus();
+        } else {
+          showToast(json.error || "Erro ao desconectar sessão.");
+        }
+      } catch (err) {
+        showToast("Erro ao comunicar com o servidor para desconexão.");
+      } finally {
+        setBusy(false);
       }
     }
 
@@ -668,6 +882,7 @@
           if (data.is_busy !== undefined && data.is_busy !== isBusy) {
             setBusy(data.is_busy);
             if (!data.is_busy) {
+              carregarStatus();
               carregarMensagens();
             }
           }
