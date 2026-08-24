@@ -10,6 +10,105 @@ NOME_DA_COMUNIDADE = ""
 NOME_DO_GRUPO = "Ciência de Dados | Comunidade Alura"
 
 
+def abrir_chat_por_nome(pagina, nome, nome_alternativo=None):
+    candidatos = []
+    for valor in [nome, nome_alternativo]:
+        if not valor or not valor.strip():
+            continue
+        valor = valor.strip()
+        candidatos.extend([
+            valor,
+            valor.replace("|", ""),
+            " ".join(valor.split()),
+            valor.lower(),
+            valor.upper(),
+        ])
+
+    nomes = list(dict.fromkeys(candidatos))
+    print(f"Candidatos para busca: {nomes}")
+
+    for nome_atual in nomes:
+        print(f"Buscando chat: '{nome_atual}'...")
+        # Tenta pesquisa rápida via Ctrl+F primeiro (pode focar a lista)
+        try:
+            pagina.keyboard.press("Control+F")
+            time.sleep(0.8)
+            pagina.keyboard.press("Control+A")
+            pagina.keyboard.press("Backspace")
+            pagina.keyboard.type(nome_atual)
+            time.sleep(2.5)
+        except Exception:
+            pass
+
+        seletores = [
+            f"span[title='{nome_atual}']",
+            f"div[title='{nome_atual}']",
+            f"text={nome_atual}",
+            f"span:has-text('{nome_atual}')",
+            f"div:has-text('{nome_atual}')",
+            f"[role='gridcell']:has-text('{nome_atual}')",
+            f"[role='listitem']:has-text('{nome_atual}')",
+        ]
+
+        for seletor in seletores:
+            try:
+                locator = pagina.locator(seletor)
+                count = locator.count() if hasattr(locator, 'count') else 0
+                if count > 0:
+                    print(f"Localizador '{seletor}' encontrou {count} itens. Tentando clicar...")
+                    try:
+                        locator.first.click(timeout=15000)
+                        time.sleep(2.5)
+                        print(f"Sucesso: '{nome_atual}' aberto via seletor '{seletor}'.")
+                        return True
+                    except Exception as e:
+                        print(f"Falha ao clicar no seletor '{seletor}': {e}")
+            except Exception:
+                pass
+
+        # Fallback robusto: localizar spans com atributo title e casar por substring (case-insensitive)
+        try:
+            items = pagina.query_selector_all("span[title], div[role='gridcell'] span[title], div[role='listitem'] span[title]")
+            print(f"Itens com title encontrados: {len(items)}")
+            for it in items:
+                try:
+                    title = (it.get_attribute("title") or "").strip()
+                except Exception:
+                    title = ""
+                if title and nome_atual.lower() in title.lower():
+                    try:
+                        it.click(timeout=15000)
+                        time.sleep(2.5)
+                        print(f"Sucesso via match parcial: '{title}' ~ '{nome_atual}'")
+                        return True
+                    except Exception as e:
+                        print(f"Falha ao clicar em item com title '{title}': {e}")
+        except Exception as e:
+            print(f"Erro no fallback por title: {e}")
+
+        try:
+            fallback = pagina.locator("div[role='gridcell'], div[role='listitem']").filter(has_text=nome_atual).first
+            if fallback.count() > 0:
+                try:
+                    fallback.click(timeout=15000)
+                    time.sleep(2.5)
+                    print(f"Sucesso via fallback: '{nome_atual}' aberto.")
+                    return True
+                except Exception as e:
+                    print(f"Falha no fallback filter(has_text): {e}")
+        except Exception:
+            pass
+
+        try:
+            pagina.keyboard.press("Escape")
+        except Exception:
+            pass
+        time.sleep(0.8)
+
+    print("Nenhum chat localizado para os candidatos fornecidos.")
+    return False
+
+
 def detectar_anexos(balao):
     anexos = []
 
@@ -221,30 +320,11 @@ def extrair_dados_comunidade(nome_grupo=NOME_DO_GRUPO, nome_comunidade=NOME_DA_C
         time.sleep(3)
         
         print(f"Buscando por: '{nome_grupo}'...")
-        pagina.keyboard.press("Control+f")
-        time.sleep(1)
-        pagina.keyboard.type(nome_grupo)
-        time.sleep(2)
-        
-        seletor_item_lista = f"span[title='{nome_grupo}']"
-        try:
-            pagina.wait_for_selector(seletor_item_lista, timeout=15000)
-            pagina.click(seletor_item_lista)
-            print(f"Sucesso: Grupo '{nome_grupo}' aberto!")
-        except Exception:
-            print(f"Grupo não encontrado direto. Buscando pela comunidade '{nome_comunidade}'...")
-            pagina.keyboard.press("Control+f")
-            time.sleep(1)
-            pagina.keyboard.press("Control+A")
-            pagina.keyboard.press("Backspace")
-            pagina.keyboard.type(nome_comunidade)
-            time.sleep(2)
-            
-            seletor_comunidade = f"span[title='{nome_comunidade}']"
-            pagina.wait_for_selector(seletor_comunidade, timeout=10000)
-            pagina.click(seletor_comunidade)
-            time.sleep(1)
-            pagina.click(seletor_item_lista)
+        if not abrir_chat_por_nome(pagina, nome_grupo, nome_comunidade):
+            # Log extra com sugestões de diagnóstico
+            print(f"ERRO: Não foi possível localizar o chat '{nome_grupo}' nem '{nome_comunidade}'.")
+            print("Sugestões: verifique se você está logado no WhatsApp Web; confira diferenças de espaços/caracteres; confira se o grupo está arquivado ou dentro de uma comunidade diferente.")
+            raise RuntimeError(f"Não foi possível localizar o chat '{nome_grupo}' nem '{nome_comunidade}'.")
 
         print("\nAguardando o painel de mensagens carregar...")
         pagina.wait_for_selector("#main", timeout=20000)
