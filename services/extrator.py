@@ -5,6 +5,7 @@ import uuid
 import unicodedata
 from datetime import datetime, timedelta
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+from services.paths import get_session_dir
 from services.storage import init_db, save_messages
 
 NOME_DA_COMUNIDADE = ""
@@ -410,8 +411,7 @@ def calcular_data_limite(tipo_filtro="mes", meses=1, dias=30):
 
 
 def extrair_dados_comunidade(nome_grupo=NOME_DO_GRUPO, nome_comunidade=NOME_DA_COMUNIDADE, tipo_filtro="mes", meses=1, dias=None):
-    caminho_projeto = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    caminho_sessao = os.path.join(caminho_projeto, "sessao_whatsapp")
+    caminho_sessao = str(get_session_dir())
 
     if dias is None:
         dias = 30

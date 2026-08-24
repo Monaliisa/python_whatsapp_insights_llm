@@ -28,14 +28,13 @@ from services.storage import (
     export_to_csv,
     fetch_message_by_id,
     fetch_recent,
-    get_db_path,
     init_db,
 )
+from services.paths import get_base_dir, get_data_dir, get_db_path, get_templates_dir
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-UI_DIR = Path(__file__).resolve().parent
-TEMPLATES_DIR = UI_DIR / "templates"
-DATA_DIR = BASE_DIR / "data"
+BASE_DIR = get_base_dir()
+TEMPLATES_DIR = get_templates_dir()
+DATA_DIR = get_data_dir()
 DEFAULT_EXPORT_PATH = DATA_DIR / "export_messages.csv"
 
 app = FastAPI(title="WhatsApp Insights Web", version="1.0.0")

@@ -3,9 +3,12 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+import threading
+import time
 import webbrowser
 from services.coletor import iniciar_coletor
 from services.extrator import extrair_dados_comunidade
+from services.paths import get_data_dir, setup_environment
 from services.storage import export_to_csv, get_db_path
 from ui.server import start_server
 
@@ -24,9 +27,7 @@ def exportar_db_para_csv():
     destino = nome_arquivo
 
     if not os.path.isabs(destino):
-        pasta_data = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
-        os.makedirs(pasta_data, exist_ok=True)
-        destino = os.path.join(pasta_data, destino)
+        destino = str(get_data_dir() / destino)
 
     try:
         export_to_csv(destino, db_path=caminho_db)
@@ -110,6 +111,7 @@ def menu_cli():
 
 
 def iniciar_servidor_web(host: str = "127.0.0.1", port: int = 8000, abrir_browser: bool = False):
+    setup_environment()
     print("\n" + "=" * 60, flush=True)
     print("      WHATSAPP INSIGHTS - PAINEL WEB DE CONTROLE", flush=True)
     print("=" * 60, flush=True)
@@ -118,16 +120,20 @@ def iniciar_servidor_web(host: str = "127.0.0.1", port: int = 8000, abrir_browse
     print("=" * 60, flush=True)
     print("Pressione Ctrl+C para encerrar o servidor.\n", flush=True)
 
-    if abrir_browser:
-        try:
-            webbrowser.open(f"http://localhost:{port}")
-        except Exception:
-            pass
+    if abrir_browser or getattr(sys, "frozen", False):
+        def _abrir():
+            time.sleep(1.0)
+            try:
+                webbrowser.open(f"http://localhost:{port}")
+            except Exception:
+                pass
+        threading.Thread(target=_abrir, daemon=True).start()
 
     start_server(host=host, port=port)
 
 
 def main():
+    setup_environment()
     parser = argparse.ArgumentParser(description="WhatsApp Insights LLM Orchestrator")
     parser.add_argument("--cli", action="store_true", help="Executa no modo terminal interativo CLI")
     parser.add_argument("--host", default="127.0.0.1", help="Host IP para o servidor web (default: 127.0.0.1)")

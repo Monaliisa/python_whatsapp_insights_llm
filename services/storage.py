@@ -4,11 +4,7 @@ import json
 from datetime import datetime
 
 
-def get_db_path():
-    projeto = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    data_dir = os.path.join(projeto, "data")
-    os.makedirs(data_dir, exist_ok=True)
-    return os.path.join(data_dir, "messages.db")
+from services.paths import get_data_dir, get_db_path
 
 
 def init_db(db_path: str | None = None):

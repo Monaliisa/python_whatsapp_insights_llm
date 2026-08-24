@@ -7,11 +7,11 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
 
+from services.paths import get_session_dir
+
+
 def get_session_path() -> str:
-    projeto = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    caminho = os.path.join(projeto, "sessao_whatsapp")
-    os.makedirs(caminho, exist_ok=True)
-    return caminho
+    return str(get_session_dir())
 
 
 def verificar_status_sessao() -> bool:
