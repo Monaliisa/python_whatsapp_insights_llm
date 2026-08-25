@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp Insights</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Container Principal */
+    .app-container {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      padding: 10px;
+      gap: 12px;
+    }
+
+    /* Barra Lateral */
+    .sidebar {
+      width: 220px;
+      min-width: 220px;
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      padding: 8px;
+      gap: 4px;
+      user-select: none;
+    }
+
+    .sidebar-item {
+      padding: 12px 14px;
+      border-radius: 6px;
+      color: #cbd5e1;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .sidebar-item:hover {
+      background: #1e293b;
+      color: #ffffff;
+    }
+
+    .sidebar-item.active {
+      background: #1d4ed8;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    /* Conteúdo Principal (Stacked Pages) */
+    .main-content {
+      flex: 1;
+      background: #0f172a;
+      border-radius: 8px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .page {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+      height: 100%;
+    }
+
+    .page.active {
+      display: flex;
+    }
+
+    /* Grupos e Caixas */
+    .group-box {
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 16px;
+      background: #111827;
+      position: relative;
+    }
+
+    .group-box-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #93c5fd;
+      margin-bottom: 12px;
+    }
+
+    h1, h2 {
+      color: #bfdbfe;
+      font-weight: 600;
+    }
+
+    h1 {
+      font-size: 22px;
+    }
+
+    /* Formulários e Inputs */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 12px;
+      align-items: center;
+    }
+
+    label {
+      color: #dbeafe;
+      font-size: 14px;
+    }
+
+    input, select, textarea {
+      background: #111827;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      color: #f8fafc;
+      padding: 8px 12px;
+      font-size: 14px;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #2563eb;
+    }
+
+    input:read-only, textarea:read-only {
+      background: #1e293b;
+      cursor: default;
+    }
+
+    /* Botões */
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button, .btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.15s ease, opacity 0.15s ease;
+      text-decoration: none;
+    }
+
+    button:hover:not(:disabled), .btn:hover:not(:disabled) {
+      background: #1d4ed8;
+    }
+
+    button.secondary, .btn.secondary {
+      background: #1f2937;
+      border: 1px solid #334155;
+    }
+
+    button.secondary:hover:not(:disabled), .btn.secondary:hover:not(:disabled) {
+      background: #374151;
+    }
+
+    button.danger, .btn.danger {
+      background: #991b1b;
+      color: #fee2e2;
+    }
+
+    button.danger:hover:not(:disabled), .btn.danger:hover:not(:disabled) {
+      background: #b91c1c;
+    }
+
+    button:disabled, .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-xs {
+      padding: 5px 10px;
+      font-size: 12px;
+      border-radius: 4px;
+      width: 100%;
+    }
+
+    /* Badge de Status de Sessão */
+    .session-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 9999px;
+      font-weight: 500;
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1px solid #334155;
+    }
+
+    .session-badge.connected {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .session-badge.disconnected {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .session-badge .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #94a3b8;
+    }
+
+    .session-badge.connected .dot {
+      background: #10b981;
+      box-shadow: 0 0 6px #10b981;
+    }
+
+    .session-badge.disconnected .dot {
+      background: #ef4444;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid #1e293b;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .info-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #334155;
+      color: #93c5fd;
+      font-size: 11px;
+      cursor: help;
+      font-weight: bold;
+    }
+
+    /* Console de Logs */
+    .log-container {
+      background: #111827;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 12px;
+      height: 180px;
+      min-height: 180px;
+      max-height: 180px;
+      overflow-y: auto;
+      font-family: "Cascadia Code", "Fira Code", Consolas, Courier, monospace;
+      font-size: 13px;
+      color: #94a3b8;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .log-entry {
+      margin-bottom: 3px;
+      line-height: 1.4;
+    }
+
+    .log-entry.highlight {
+      color: #38bdf8;
+    }
+
+    /* Tabela */
+    .table-container {
+      flex: 1;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      overflow: auto;
+      background: #111827;
+      min-height: 250px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      background: #1e293b;
+      color: #93c5fd;
+      padding: 10px 12px;
+      font-weight: 600;
+      border-bottom: 1px solid #334155;
+      z-index: 10;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid #1e293b;
+      cursor: pointer;
+      transition: background 0.1s ease;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #0f172a;
+    }
+
+    tbody tr:hover {
+      background: #1e293b;
+    }
+
+    td {
+      padding: 8px 12px;
+      color: #e2e8f0;
+      max-width: 380px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Notificações / Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e293b;
+      border: 1px solid #3b82f6;
+      color: #f8fafc;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: none;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-item" data-page="page-resumo">Resumo</div>
+      <div class="sidebar-item active" data-page="page-mensagens">Mensagens</div>
+      <div class="sidebar-item" data-page="page-detalhes">Detalhes</div>
+      <div class="sidebar-item" data-page="page-database">Banco de Dados</div>
+      <div class="sidebar-item" data-page="page-exportacao">Exportação</div>
+
+      <div class="sidebar-footer">
+        <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Sessão WhatsApp</div>
+        <div id="sidebar-session-badge" class="session-badge disconnected">
+          <span class="dot"></span>
+          <span id="sidebar-session-text">Desconectado</span>
+        </div>
+        <button id="btn-sidebar-conectar" class="secondary btn-xs" onclick="conectarWhatsApp()">Conectar (QR Code)</button>
+        <button id="btn-sidebar-desconectar" class="danger btn-xs" onclick="desconectarWhatsApp()" style="display: none;">Sair / Desconectar</button>
+      </div>
+    </div>
+
+    <!-- Main Content Pages -->
+    <div class="main-content">
+
+      <!-- PÁGINA 1: RESUMO -->
+      <div id="page-resumo" class="page">
+        <h1>Resumo do sistema</h1>
+
+        <div class="group-box">
+          <div class="group-box-title">Status da Sessão do WhatsApp</div>
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="color: #cbd5e1; font-size: 14px;">Status da conta:</span>
+              <div id="resumo-session-badge" class="session-badge disconnected">
+                <span class="dot"></span>
+                <span id="resumo-session-text">Desconectado (Necessário QR Code)</span>
+              </div>
+            </div>
+            <div class="btn-group">
+              <button id="btn-resumo-conectar" onclick="conectarWhatsApp()">Conectar WhatsApp</button>
+              <button id="btn-resumo-desconectar" class="danger" onclick="desconectarWhatsApp()" style="display: none;">Sair / Desconectar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="group-box" style="flex: 1;">
+          <p style="margin-bottom: 12px; font-size: 15px;"><b>WhatsApp Insights</b></p>
+          <p style="margin-bottom: 12px; color: #cbd5e1;">O sistema salva as mensagens em um banco local SQLite para consulta rápida e análise.</p>
+          <p style="margin-bottom: 12px; color: #cbd5e1;"><b>Banco atual:</b> <span id="resumo-db-path" style="color: #93c5fd;">Carregando...</span></p>
+          <p style="color: #cbd5e1;"><b>Fluxo:</b> conectar/autenticar WhatsApp → coletar mensagens → salvar no banco → consultar na tabela → exportar para CSV/JSON.</p>
+        </div>
+      </div>
+
+      <!-- PÁGINA 2: MENSAGENS -->
+      <div id="page-mensagens" class="page active">
+        <!-- Parâmetros de Coleta -->
+        <div class="group-box">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div class="group-box-title" style="margin-bottom: 0;">Parâmetros da coleta</div>
+            <div id="mensagens-session-badge" class="session-badge disconnected">
+              <span class="dot"></span>
+              <span id="mensagens-session-text">Desconectado</span>
+            </div>
+          </div>
+          <div class="form-grid">
+            <label for="input-grupo">Grupo:</label>
+            <input type="text" id="input-grupo" value="Ciência de Dados | Comunidade Alura" placeholder="Ex: Ciência de Dados">
+
+            <label for="input-comunidade" style="display: flex; align-items: center; gap: 4px; color: #94a3b8;">
+              Comunidade:
+              <span class="info-icon" title="O WhatsApp Web não enxerga comunidades, apenas grupos. Para coletar mensagens, informe o nome do grupo no campo acima.">ⓘ</span>
+            </label>
+            <div>
+              <input type="text" id="input-comunidade" value="Desabilitado (WhatsApp Web só lê grupos)" disabled style="background: #1e293b; color: #64748b; cursor: not-allowed; opacity: 0.7;">
+              <small style="color: #94a3b8; font-size: 11px; display: block; margin-top: 3px;">
+                ⓘ <i>O WhatsApp Web não possui histórico de comunidades inteiras, apenas de grupos. Informe o nome do grupo acima.</i>
+              </small>
+            </div>
+
+            <label for="select-filtro">Filtro:</label>
+            <select id="select-filtro">
+              <option value="mes">Por mês</option>
+              <option value="dias">Por dias</option>
+            </select>
+
+            <label for="input-valor">Valor:</label>
+            <input type="number" id="input-valor" min="1" max="120" value="1">
+          </div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="btn-group">
+          <button id="btn-coletar" onclick="iniciarColeta()">Coletar mensagens</button>
+          <a href="/api/exportar/download" class="btn secondary" download="export_messages.csv">Baixar CSV</a>
+          <button id="btn-atualizar" class="secondary" onclick="carregarMensagens()">Atualizar tabela</button>
+        </div>
+
+        <!-- Console de Log -->
+        <div class="log-container" id="log-output">
+          <div class="log-entry">[Início] Interface inicializada. Conectando aos serviços...</div>
+        </div>
+
+        <!-- Tabela de Mensagens -->
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 170px;">Data/Hora</th>
+                <th style="width: 180px;">Remetente</th>
+                <th>Texto</th>
+                <th style="width: 80px;">Anexos</th>
+                <th style="width: 120px;">ID</th>
+              </tr>
+            </thead>
+            <tbody id="messages-tbody">
+              <tr>
+                <td colspan="5" style="text-align: center; padding: 20px; color: #64748b;">Nenhuma mensagem carregada.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PÁGINA 3: DETALHES -->
+      <div id="page-detalhes" class="page">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h1>Detalhes da mensagem</h1>
+          <button class="secondary" onclick="navegarPara('page-mensagens')">Voltar para mensagens</button>
+        </div>
+
+        <div class="group-box">
+          <div class="group-box-title">Informações gerais</div>
+          <div class="form-grid">
+            <label>ID:</label>
+            <div id="detail-id" style="color: #93c5fd;">-</div>
+
+            <label>Data/Hora:</label>
+            <div id="detail-data">-</div>
+
+            <label>Remetente:</label>
+            <div id="detail-remetente">-</div>
+
+            <label>Anexos:</label>
+            <div id="detail-anexos">-</div>
+
+            <label>Grupo:</label>
+            <div id="detail-grupo">-</div>
+
+            <label>Comunidade:</label>
+            <div id="detail-comunidade">-</div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
+          <label style="font-weight: 600;">Texto completo:</label>
+          <textarea id="detail-texto" style="height: 120px; resize: vertical;" readonly></textarea>
+
+          <label style="font-weight: 600; margin-top: 8px;">Metadados extras:</label>
+          <textarea id="detail-metadata" style="flex: 1; min-height: 150px; font-family: monospace;" readonly></textarea>
+        </div>
+      </div>
+
+      <!-- PÁGINA 4: BANCO DE DADOS -->
+      <div id="page-database" class="page">
+        <h1>Banco de Dados</h1>
+        <div class="group-box">
+          <div class="group-box-title">Banco de dados local</div>
+          <p style="color: #cbd5e1; margin-bottom: 14px;">Arquivo salvo localmente para consulta e análise rápida.</p>
+          <div style="display: flex; gap: 10px; margin-bottom: 14px;">
+            <input type="text" id="db-path-input" readonly>
+            <button class="secondary" onclick="abrirBanco()">Abrir banco</button>
+            <button class="secondary" onclick="abrirPastaDB()">Abrir pasta</button>
+            <button class="secondary" onclick="copiarCaminhoDB()">Copiar caminho</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PÁGINA 5: EXPORTAÇÃO -->
+      <div id="page-exportacao" class="page">
+        <h1>Exportação de Dados</h1>
+        <div class="group-box">
+          <div class="group-box-title">Formatos de Exportação</div>
+          <p style="color: #cbd5e1; margin-bottom: 16px; font-size: 14px;">
+            Exporte e faça o download de todas as mensagens gravadas no banco de dados local para o seu computador:
+          </p>
+          <div class="btn-group">
+            <a href="/api/exportar/download" class="btn" download="export_messages.csv">Baixar CSV (.csv)</a>
+            <a href="/api/exportar/json" class="btn secondary" download="export_messages.json">Baixar JSON (.json)</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Mensagem</div>
+
+  <script>
+    let isBusy = false;
+
+    // Navegação entre Abas
+    const sidebarItems = document.querySelectorAll('.sidebar-item');
+    const pages = document.querySelectorAll('.page');
+
+    function navegarPara(pageId) {
+      pages.forEach(p => p.classList.remove('active'));
+      sidebarItems.forEach(i => i.classList.remove('active'));
+
+      const targetPage = document.getElementById(pageId);
+      if (targetPage) targetPage.classList.add('active');
+
+      const targetSidebar = document.querySelector(`[data-page="${pageId}"]`);
+      if (targetSidebar) targetSidebar.classList.add('active');
+    }
+
+    sidebarItems.forEach(item => {
+      item.addEventListener('click', () => {
+        navegarPara(item.getAttribute('data-page'));
+      });
+    });
+
+    // Notificações Toast
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.innerText = msg;
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 3500);
+    }
+
+    // Adiciona entrada de log no console
+    function appendLog(msg) {
+      const box = document.getElementById('log-output');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerText = msg;
+      box.appendChild(entry);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    // Atualiza estado de carregamento/ocupado
+    function setBusy(busy) {
+      isBusy = busy;
+      document.querySelectorAll('button').forEach(btn => {
+        btn.disabled = busy;
+      });
+    }
+
+    // Atualiza a visualização do status de sessão na interface
+    function atualizarStatusSessaoUI(hasSession) {
+      const sidebarBadge = document.getElementById('sidebar-session-badge');
+      const sidebarText = document.getElementById('sidebar-session-text');
+      const btnSidebarConectar = document.getElementById('btn-sidebar-conectar');
+      const btnSidebarDesconectar = document.getElementById('btn-sidebar-desconectar');
+
+      const resumoBadge = document.getElementById('resumo-session-badge');
+      const resumoText = document.getElementById('resumo-session-text');
+      const btnResumoDesconectar = document.getElementById('btn-resumo-desconectar');
+
+      const mensagensBadge = document.getElementById('mensagens-session-badge');
+      const mensagensText = document.getElementById('mensagens-session-text');
+
+      if (hasSession) {
+        if (sidebarBadge) {
+          sidebarBadge.className = 'session-badge connected';
+          sidebarText.innerText = 'Conectado';
+        }
+        if (btnSidebarConectar) btnSidebarConectar.innerText = 'Reabrir WhatsApp';
+        if (btnSidebarDesconectar) btnSidebarDesconectar.style.display = 'block';
+
+        if (resumoBadge) {
+          resumoBadge.className = 'session-badge connected';
+          resumoText.innerText = 'Conectado (Sessão Ativa)';
+        }
+        if (btnResumoDesconectar) btnResumoDesconectar.style.display = 'inline-flex';
+
+        if (mensagensBadge) {
+          mensagensBadge.className = 'session-badge connected';
+          mensagensText.innerText = 'WhatsApp Conectado';
+        }
+      } else {
+        if (sidebarBadge) {
+          sidebarBadge.className = 'session-badge disconnected';
+          sidebarText.innerText = 'Desconectado';
+        }
+        if (btnSidebarConectar) btnSidebarConectar.innerText = 'Conectar (QR Code)';
+        if (btnSidebarDesconectar) btnSidebarDesconectar.style.display = 'none';
+
+        if (resumoBadge) {
+          resumoBadge.className = 'session-badge disconnected';
+          resumoText.innerText = 'Desconectado (Necessário QR Code)';
+        }
+        if (btnResumoDesconectar) btnResumoDesconectar.style.display = 'none';
+
+        if (mensagensBadge) {
+          mensagensBadge.className = 'session-badge disconnected';
+          mensagensText.innerText = 'Não Conectado (QR Code)';
+        }
+      }
+    }
+
+    // Carregar Informações do Sistema e Status
+    async function carregarStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        document.getElementById('resumo-db-path').innerText = data.db_path;
+        document.getElementById('db-path-input').value = data.db_path;
+        if (data.default_grupo) {
+          document.getElementById('input-grupo').value = data.default_grupo;
+        }
+        atualizarStatusSessaoUI(Boolean(data.has_session));
+      } catch (err) {
+        console.error("Erro ao obter status:", err);
+      }
+    }
+
+    // Ações de Sessão do WhatsApp
+    async function conectarWhatsApp() {
+      setBusy(true);
+      try {
+        const res = await fetch('/api/session/conectar', { method: 'POST' });
+        const json = await res.json();
+        showToast(json.message || "Iniciando conector do WhatsApp...");
+        appendLog("[Sessão] Conector de WhatsApp acionado.");
+      } catch (err) {
+        showToast("Erro ao iniciar conexão do WhatsApp.");
+        appendLog(`Erro ao acionar conector: ${err}`);
+        setBusy(false);
+      }
+    }
+
+    async function desconectarWhatsApp() {
+      if (!confirm("Tem certeza de que deseja sair e desconectar a conta do WhatsApp deste dispositivo?")) {
+        return;
+      }
+      setBusy(true);
+      try {
+        const res = await fetch('/api/session/desconectar', { method: 'POST' });
+        const json = await res.json();
+        if (json.success) {
+          showToast(json.message);
+          appendLog(`[Sessão] ${json.message}`);
+          await carregarStatus();
+        } else {
+          showToast(json.error || "Erro ao desconectar sessão.");
+        }
+      } catch (err) {
+        showToast("Erro ao comunicar com o servidor para desconexão.");
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    // Carregar Tabela de Mensagens
+    async function carregarMensagens() {
+      try {
+        const res = await fetch('/api/messages');
+        const json = await res.json();
+        const tbody = document.getElementById('messages-tbody');
+        tbody.innerHTML = '';
+
+        if (!json.success || !json.data || json.data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#64748b;">Nenhuma mensagem encontrada.</td></tr>';
+          return;
+        }
+
+        json.data.forEach(msg => {
+          const tr = document.createElement('tr');
+          tr.onclick = () => abrirDetalhes(msg.id);
+
+          tr.innerHTML = `
+            <td>${msg.data_hora || '-'}</td>
+            <td>${msg.remetente || '-'}</td>
+            <td>${(msg.texto || '').substring(0, 150)}</td>
+            <td>${msg.has_attachments ? 'Sim' : 'Não'}</td>
+            <td style="color:#93c5fd;">${msg.id || '-'}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        appendLog(`[${new Date().toLocaleTimeString()}] Tabela atualizada com ${json.data.length} registros.`);
+      } catch (err) {
+        appendLog(`Erro ao carregar mensagens: ${err}`);
+      }
+    }
+
+    // Abrir Detalhes da Mensagem
+    async function abrirDetalhes(id) {
+      try {
+        const res = await fetch(`/api/messages/${id}`);
+        const json = await res.json();
+        if (!json.success || !json.data) return;
+
+        const d = json.data;
+        document.getElementById('detail-id').innerText = d.id || '-';
+        document.getElementById('detail-data').innerText = d.data_hora || '-';
+        document.getElementById('detail-remetente').innerText = d.remetente || '-';
+        document.getElementById('detail-anexos').innerText = d.has_attachments ? 'Sim' : 'Não';
+        document.getElementById('detail-grupo').innerText = d.grupo_nome || '-';
+        document.getElementById('detail-comunidade').innerText = d.comunidade_nome || '-';
+        document.getElementById('detail-texto').value = d.texto || d.transcript || 'Mensagem sem texto.';
+
+        const extra = {
+          coleta_id: d.coleta_id,
+          coletado_em: d.coletado_em,
+          meses_back: d.meses_back,
+          semanas_back: d.semanas_back,
+          is_reply: Boolean(d.is_reply),
+          reply_author: d.reply_author,
+          reply_text: d.reply_text,
+          texto_normalizado: d.texto_normalizado,
+          attachments_json: d.attachments_json,
+          reactions_json: d.reactions_json,
+          topics_json: d.topics_json,
+          created_at: d.created_at
+        };
+        document.getElementById('detail-metadata').value = JSON.stringify(extra, null, 2);
+
+        navegarPara('page-detalhes');
+      } catch (err) {
+        showToast("Erro ao abrir detalhes da mensagem.");
+      }
+    }
+
+    // Disparar Coleta
+    async function iniciarColeta() {
+      const grupo = document.getElementById('input-grupo').value;
+      const comunidade = document.getElementById('input-comunidade').value;
+      const tipo_filtro = document.getElementById('select-filtro').value;
+      const valor = parseInt(document.getElementById('input-valor').value, 10) || 1;
+
+      setBusy(true);
+      try {
+        const res = await fetch('/api/coletar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ grupo, comunidade, tipo_filtro, valor })
+        });
+        const json = await res.json();
+        showToast(json.message);
+      } catch (err) {
+        appendLog(`Erro ao iniciar coleta: ${err}`);
+        setBusy(false);
+      }
+    }
+
+    // Ações de Banco de Dados
+    async function abrirBanco() {
+      try {
+        const res = await fetch('/api/abrir-banco', { method: 'POST' });
+        const json = await res.json();
+        showToast(json.message || "Abertura solicitada.");
+      } catch (err) {
+        showToast("Erro ao abrir banco.");
+      }
+    }
+
+    async function abrirPastaDB() {
+      try {
+        const res = await fetch('/api/abrir-pasta-db', { method: 'POST' });
+        const json = await res.json();
+        showToast(json.message || "Pasta aberta no sistema.");
+      } catch (err) {
+        showToast("Erro ao abrir pasta.");
+      }
+    }
+
+    function copiarCaminhoDB() {
+      const val = document.getElementById('db-path-input').value;
+      navigator.clipboard.writeText(val).then(() => {
+        showToast("Caminho do banco copiado para a área de transferência!");
+      }).catch(() => {
+        showToast("Falha ao copiar caminho.");
+      });
+    }
+
+    // Streaming de Logs via SSE
+    function conectarSSE() {
+      const evtSource = new EventSource('/api/logs/stream');
+      evtSource.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data.message) {
+            appendLog(data.message);
+          }
+          if (data.is_busy !== undefined && data.is_busy !== isBusy) {
+            setBusy(data.is_busy);
+            if (!data.is_busy) {
+              carregarStatus();
+              carregarMensagens();
+            }
+          }
+        } catch (err) {
+          console.error("Erro parsing SSE:", err);
+        }
+      };
+
+      evtSource.onerror = () => {
+        evtSource.close();
+        setTimeout(conectarSSE, 3000);
+      };
+    }
+
+    // Inicialização
+    window.addEventListener('DOMContentLoaded', () => {
+      carregarStatus();
+      carregarMensagens();
+      conectarSSE();
+    });
+  </script>
+</body>
+</html>

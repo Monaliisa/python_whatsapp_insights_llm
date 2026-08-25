@@ -2,12 +2,228 @@ import os
 import time
 import re
 import uuid
+import unicodedata
 from datetime import datetime, timedelta
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+from services.paths import get_session_dir
 from services.storage import init_db, save_messages
 
 NOME_DA_COMUNIDADE = ""
 NOME_DO_GRUPO = "Ciência de Dados | Comunidade Alura"
+
+
+def normalizar_texto_busca(texto: str) -> str:
+    """
+    Remove acentos, caracteres especiais, pipes e normaliza espaços para comparação tolerante.
+    Exemplo: 'Ciência de Dados | Comunidade Alura' -> 'ciencia de dados comunidade alura'
+    """
+    if not texto:
+        return ""
+    texto_sem_acento = unicodedata.normalize("NFKD", texto).encode("ASCII", "ignore").decode("ASCII")
+    texto_limpo = re.sub(r"[^\w\s]", " ", texto_sem_acento.lower())
+    return " ".join(texto_limpo.split())
+
+
+def abrir_chat_por_nome(pagina, nome, nome_alternativo=None):
+    """
+    Localiza e abre um chat no WhatsApp Web utilizando a caixa de pesquisa interna
+    e comparação inteligente de strings (tolerante a acentuação, pipes e variações).
+    """
+    candidatos_brutos = []
+    
+    # Se o usuário passou "Grupo | Comunidade", a prioridade número 1 é o nome real do grupo (antes do pipe)
+    for valor in [nome]:
+        if not valor or not valor.strip():
+            continue
+        v = valor.strip()
+        if "|" in v:
+            partes = [p.strip() for p in v.split("|") if p.strip()]
+            if partes:
+                # O nome do grupo geralmente é a primeira parte antes do pipe
+                candidatos_brutos.append(partes[0])
+                candidatos_brutos.append(v)
+                candidatos_brutos.append(" ".join(partes))
+        else:
+            candidatos_brutos.append(v)
+            if "-" in v:
+                partes = [p.strip() for p in v.split("-") if p.strip()]
+                if partes:
+                    candidatos_brutos.append(partes[0])
+                    candidatos_brutos.append(v)
+
+    # Remove duplicatas preservando a ordem
+    candidatos = list(dict.fromkeys(candidatos_brutos))
+    print(f"Candidatos para busca de grupo: {candidatos}")
+
+    # 1. Verifica se o chat desejado já está aberto no painel principal (#main)
+    try:
+        header_title = pagina.locator("#main header span[title], #main header div[title]").first
+        if header_title.count() > 0:
+            current_chat = header_title.get_attribute("title") or header_title.inner_text() or ""
+            current_norm = normalizar_texto_busca(current_chat)
+            for c in candidatos:
+                c_norm = normalizar_texto_busca(c)
+                if c_norm and (c_norm == current_norm or c_norm in current_norm or current_norm in c_norm):
+                    print(f"Chat já está atualmente aberto no painel: '{current_chat}'")
+                    return True
+    except Exception:
+        pass
+
+    seletores_search_box = [
+        "div[contenteditable='true'][data-tab='3']",
+        "#side div[role='textbox']",
+        "div[role='textbox'][aria-label*='Pesquisar']",
+        "div[role='textbox'][aria-label*='Search']",
+        "div[role='textbox'][title*='Pesquisar']",
+        "div[role='textbox']",
+        "button[aria-label*='Pesquisar']",
+        "button[aria-label*='Search']",
+    ]
+
+    for termo in candidatos:
+        termo_norm = normalizar_texto_busca(termo)
+        if not termo_norm:
+            continue
+
+        print(f"Pesquisando grupo via campo de busca: '{termo}'...")
+
+        # 2. Localiza e foca a caixa de pesquisa do WhatsApp Web
+        search_elem = None
+        for sel in seletores_search_box:
+            try:
+                elem = pagina.locator(sel).first
+                if elem.count() > 0 and elem.is_visible():
+                    search_elem = elem
+                    break
+            except Exception:
+                pass
+
+        if search_elem:
+            try:
+                search_elem.click()
+                time.sleep(0.4)
+                # Limpa qualquer busca anterior
+                pagina.keyboard.press("Control+A")
+                pagina.keyboard.press("Backspace")
+                time.sleep(0.2)
+                # No WhatsApp Web (div contenteditable), keyboard.type é obrigatório para disparar eventos do React
+                pagina.keyboard.type(termo, delay=40)
+                time.sleep(2.0)  # Aguarda o WhatsApp filtrar e renderizar os resultados
+            except Exception as e:
+                print(f"Aviso: falha ao interagir com search_elem: {e}")
+                try:
+                    pagina.keyboard.type(termo, delay=40)
+                    time.sleep(2.0)
+                except Exception:
+                    pass
+
+        # 3. Varre os itens de resultado de busca e painel lateral
+        seletores_itens = [
+            "#pane-side span[title]",
+            "div[role='gridcell'] span[title]",
+            "div[role='listitem'] span[title]",
+            "#pane-side div[role='gridcell']",
+            "#pane-side div[role='listitem']",
+        ]
+
+        encontrou = False
+        for sel in seletores_itens:
+            try:
+                locators = pagina.locator(sel)
+                total = locators.count()
+                for i in range(total):
+                    item = locators.nth(i)
+                    if not item.is_visible():
+                        continue
+                    titulo = item.get_attribute("title") or item.inner_text() or ""
+                    titulo_norm = normalizar_texto_busca(titulo)
+
+                    if not titulo_norm:
+                        continue
+
+                    # Casamento exato ou por substring normalizada
+                    if (
+                        termo_norm == titulo_norm
+                        or termo_norm in titulo_norm
+                        or titulo_norm in termo_norm
+                    ):
+                        print(f"Chat correspondente encontrado: '{titulo}' (termo: '{termo}'). Clicando...")
+                        try:
+                            # Tenta clicar no elemento encontrado ou container ancestral
+                            item.click(timeout=6000, force=True)
+                        except Exception:
+                            try:
+                                item.locator("xpath=ancestor-or-self::div[@role='listitem' or @role='row' or @tabindex='-1'][1]").click(timeout=6000, force=True)
+                            except Exception:
+                                item.locator("..").click(timeout=6000)
+
+                        # Tenta confirmar via Enter caso a caixa de busca ainda esteja ativa
+                        try:
+                            pagina.keyboard.press("Enter")
+                        except Exception:
+                            pass
+
+                        time.sleep(2.0)
+
+                        # Verifica se o painel #main carregou
+                        try:
+                            pagina.wait_for_selector("#main", timeout=12000)
+                            print(f"Sucesso: conversa '{titulo}' aberta no painel principal.")
+                            encontrou = True
+                            break
+                        except Exception:
+                            pass
+                if encontrou:
+                    break
+            except Exception:
+                pass
+
+        if encontrou:
+            # NUNCA pressionar Escape aqui, pois no WhatsApp Web o Escape fecha o chat ativo!
+            # Apenas damos foco no painel principal da conversa
+            try:
+                pagina.locator("#main").click(timeout=3000)
+            except Exception:
+                pass
+            return True
+
+        # Se não encontrou com este candidato, limpa a caixa de pesquisa antes de tentar o próximo termo
+        try:
+            pagina.keyboard.press("Escape")
+            time.sleep(0.5)
+        except Exception:
+            pass
+
+    # 4. Fallback: Varredura por rolagem no painel lateral
+    print("Tentando fallback por rolagem direta na lista de conversas...")
+    try:
+        for _ in range(3):
+            items = pagina.query_selector_all("#pane-side span[title]")
+            for it in items:
+                try:
+                    title = (it.get_attribute("title") or "").strip()
+                    title_norm = normalizar_texto_busca(title)
+                    for c in candidatos:
+                        c_norm = normalizar_texto_busca(c)
+                        if c_norm and (c_norm == title_norm or c_norm in title_norm or title_norm in c_norm):
+                            print(f"Chat localizado no fallback: '{title}'. Clicando...")
+                            it.click()
+                            time.sleep(2.0)
+                            pagina.wait_for_selector("#main", timeout=10000)
+                            return True
+                except Exception:
+                    pass
+            # Rola um pouco a lista lateral para carregar mais itens
+            pagina.evaluate("""
+                let pane = document.querySelector("#pane-side");
+                if (pane) pane.scrollTop += 500;
+            """)
+            time.sleep(1.0)
+    except Exception as e:
+        print(f"Erro durante o fallback de rolagem: {e}")
+
+    print("Nenhum chat localizado para os candidatos fornecidos.")
+    return False
 
 
 def detectar_anexos(balao):
@@ -195,8 +411,7 @@ def calcular_data_limite(tipo_filtro="mes", meses=1, dias=30):
 
 
 def extrair_dados_comunidade(nome_grupo=NOME_DO_GRUPO, nome_comunidade=NOME_DA_COMUNIDADE, tipo_filtro="mes", meses=1, dias=None):
-    caminho_projeto = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    caminho_sessao = os.path.join(caminho_projeto, "sessao_whatsapp")
+    caminho_sessao = str(get_session_dir())
 
     if dias is None:
         dias = 30
@@ -213,145 +428,160 @@ def extrair_dados_comunidade(nome_grupo=NOME_DO_GRUPO, nome_comunidade=NOME_DA_C
             no_viewport=True
         )
         
-        pagina = contexto.pages[0]
-        pagina.goto("https://web.whatsapp.com")
-        
-        print("Aguardando carregamento do WhatsApp Web...")
-        pagina.wait_for_selector("#pane-side, #app", timeout=90000)
-        time.sleep(3)
-        
-        print(f"Buscando por: '{nome_grupo}'...")
-        pagina.keyboard.press("Control+f")
-        time.sleep(1)
-        pagina.keyboard.type(nome_grupo)
-        time.sleep(2)
-        
-        seletor_item_lista = f"span[title='{nome_grupo}']"
         try:
-            pagina.wait_for_selector(seletor_item_lista, timeout=15000)
-            pagina.click(seletor_item_lista)
-            print(f"Sucesso: Grupo '{nome_grupo}' aberto!")
-        except Exception:
-            print(f"Grupo não encontrado direto. Buscando pela comunidade '{nome_comunidade}'...")
-            pagina.keyboard.press("Control+f")
-            time.sleep(1)
-            pagina.keyboard.press("Control+A")
-            pagina.keyboard.press("Backspace")
-            pagina.keyboard.type(nome_comunidade)
+            pagina = contexto.pages[0] if contexto.pages else contexto.new_page()
+            print("Acessando https://web.whatsapp.com ...")
+            pagina.goto("https://web.whatsapp.com")
+            
+            print("Aguardando carregamento e sincronização do WhatsApp Web...")
+            seletores_painel = "#pane-side, div[contenteditable='true'][data-tab='3'], header[data-testid='chatlist-header']"
+            
+            # Verifica se já está conectado
+            try:
+                pagina.wait_for_selector(seletores_painel, timeout=15000)
+                print(">> WhatsApp Web conectado com sucesso!")
+            except PlaywrightTimeoutError:
+                print("\n" + "-" * 55)
+                print("[AGUARDANDO LOGIN] Por favor, escaneie o QR Code na tela...")
+                print("O navegador permanecerá aberto aguardando a sincronização...")
+                print("-" * 55 + "\n")
+                try:
+                    pagina.wait_for_selector(seletores_painel, timeout=300000)
+                    print(">> Login concluído com sucesso!")
+                except PlaywrightTimeoutError:
+                    raise RuntimeError("Tempo limite de 5 minutos esgotado aguardando leitura do QR Code.")
+
             time.sleep(2)
             
-            seletor_comunidade = f"span[title='{nome_comunidade}']"
-            pagina.wait_for_selector(seletor_comunidade, timeout=10000)
-            pagina.click(seletor_comunidade)
-            time.sleep(1)
-            pagina.click(seletor_item_lista)
+            print(f"Buscando por: '{nome_grupo}'...")
+            if not abrir_chat_por_nome(pagina, nome_grupo, nome_comunidade):
+                print(f"ERRO: Não foi possível localizar o chat '{nome_grupo}' nem '{nome_comunidade}'.")
+                print("Sugestões: confira diferenças de espaços/caracteres; confira se o grupo está arquivado ou dentro de uma comunidade.")
+                raise RuntimeError(f"Não foi possível localizar o chat '{nome_grupo}' nem '{nome_comunidade}'.")
 
-        print("\nAguardando o painel de mensagens carregar...")
-        pagina.wait_for_selector("#main", timeout=20000)
-        time.sleep(2)
-        pagina.click("#main")
+            print("\nAguardando o painel de mensagens carregar...")
+            pagina.wait_for_selector("#main", timeout=20000)
+            time.sleep(2)
+            pagina.click("#main")
 
-        print("\n--- Iniciando rolagem incremental e raspagem contínua ---")
-        
-        # Estrutura de armazenamento com deduplicação nativa por ID
-        mensagens_coletadas = {}
-        
-        atingiu_limite = False
-        tentativas_sem_novos_dados = 0
-        seletor_baloes = "#main div[data-id], #main div.message-in, #main div.message-out"
-
-        while not atingiu_limite and tentativas_sem_novos_dados < 12:
-            baloes_visiveis = pagina.query_selector_all(seletor_baloes)
-            total_antes = len(mensagens_coletadas)
+            print("\n--- Iniciando rolagem incremental e raspagem contínua ---")
             
-            # Raspagem imediata dos balões presentes no DOM atual
-            for balao in baloes_visiveis:
-                dados = extrair_dados_balao(balao)
-                if not dados:
-                    continue
+            # Estrutura de armazenamento com deduplicação nativa por ID
+            mensagens_coletadas = {}
+            
+            atingiu_limite = False
+            tentativas_sem_novos_dados = 0
+            seletor_baloes = "#main div[data-id], #main div.message-in, #main div.message-out, #main div[data-pre-plain-text]"
+
+            while not atingiu_limite and tentativas_sem_novos_dados < 12:
+                baloes_visiveis = pagina.query_selector_all(seletor_baloes)
+                total_antes = len(mensagens_coletadas)
                 
-                # Interrupção temporal: verifica se atingiu mensagens anteriores à janela
-                if dados["data_hora"] < data_limite:
-                    print(f"\n[Alerta] Alcançou mensagem de {dados['data_hora_str']} (Anterior a {data_limite.strftime('%d/%m/%Y')}). Encerrando scroll...")
-                    atingiu_limite = True
-                    break
-                
-                # Adiciona ao dicionário (se já existir, atualiza sem duplicar)
-                mensagens_coletadas[dados["id"]] = dados
+                # Raspagem imediata dos balões presentes no DOM atual
+                for balao in baloes_visiveis:
+                    dados = extrair_dados_balao(balao)
+                    if not dados:
+                        continue
+                    
+                    # Interrupção temporal: verifica se atingiu mensagens anteriores à janela
+                    if dados["data_hora"] < data_limite:
+                        print(f"\n[Alerta] Alcançou mensagem de {dados['data_hora_str']} (Anterior a {data_limite.strftime('%d/%m/%Y')}). Encerrando scroll...")
+                        atingiu_limite = True
+                        break
+                    
+                    # Adiciona ao dicionário (se já existir, atualiza sem duplicar)
+                    mensagens_coletadas[dados["id"]] = dados
 
-            # Verifica progresso de novas mensagens coletadas
-            if len(mensagens_coletadas) == total_antes:
-                tentativas_sem_novos_dados += 1
-            else:
-                tentativas_sem_novos_dados = 0
+                # Verifica progresso de novas mensagens coletadas
+                if len(mensagens_coletadas) == total_antes:
+                    tentativas_sem_novos_dados += 1
+                else:
+                    tentativas_sem_novos_dados = 0
 
-            # Executa a rolagem para cima
-            pagina.evaluate("""
-                let container = document.querySelector("#main div[tabindex='-1']") || 
-                                document.querySelector("div[data-tab='8']") ||
-                                document.querySelector("#main .copyable-area > div");
-                if (container) {
-                    container.scrollTop = 0;
-                }
-            """)
-            pagina.keyboard.press("PageUp")
-            time.sleep(1.8)  # Tempo para renderização e requisição de histórico
+                # Executa a rolagem para cima com múltiplos seletores e wheel
+                pagina.evaluate("""
+                    let container = document.querySelector("#main div[data-testid='conversation-panel-messages']") ||
+                                    document.querySelector("#main div[tabindex='-1']") || 
+                                    document.querySelector("div[data-tab='8']") ||
+                                    document.querySelector("#main .copyable-area > div:nth-child(2)") ||
+                                    document.querySelector("#main .copyable-area > div") ||
+                                    document.querySelector("#main [role='application']");
+                    if (container) {
+                        container.scrollTop = 0;
+                    }
+                """)
+                try:
+                    pagina.mouse.wheel(0, -3000)
+                except Exception:
+                    pass
+                pagina.keyboard.press("PageUp")
+                time.sleep(1.8)  # Tempo para renderização e requisição de histórico
 
-        # Ordenação cronológica das mensagens extraídas
-        lista_final = sorted(mensagens_coletadas.values(), key=lambda x: x["data_hora"])
+            # Ordenação cronológica das mensagens extraídas
+            lista_final = sorted(mensagens_coletadas.values(), key=lambda x: x["data_hora"])
 
-        coleta_id = str(uuid.uuid4())
-        coletado_em = datetime.utcnow().isoformat()
-        for msg in lista_final:
-            msg["coleta_id"] = coleta_id
-            msg["grupo_nome"] = nome_grupo
-            msg["comunidade_nome"] = nome_comunidade
-            msg["coletado_em"] = coletado_em
-            if tipo_filtro == "mes":
-                msg["meses_back"] = int(meses)
-                msg["semanas_back"] = int(meses) * 4
-            else:
-                msg["meses_back"] = 0
-                msg["semanas_back"] = int(dias)
+            coleta_id = str(uuid.uuid4())
+            coletado_em = datetime.utcnow().isoformat()
+            for msg in lista_final:
+                msg["coleta_id"] = coleta_id
+                msg["grupo_nome"] = nome_grupo
+                msg["comunidade_nome"] = nome_comunidade
+                msg["coletado_em"] = coletado_em
+                if tipo_filtro == "mes":
+                    msg["meses_back"] = int(meses)
+                    msg["semanas_back"] = int(meses) * 4
+                else:
+                    msg["meses_back"] = 0
+                    msg["semanas_back"] = int(dias)
 
-        print(f"\nTotal de mensagens extraídas com sucesso: {len(lista_final)}")
-        print("="*60)
-        
-        for i, m in enumerate(lista_final, 1):
-            status_reply = "[REPLY]" if m.get("is_reply") else "[MENSAGEM]"
-            attachment_flag = " [ANEXO]" if m.get("has_attachments") else ""
-            print(f"[{i}] {status_reply}{attachment_flag} [{m['data_hora_str']}] {m['remetente']}: {m['texto']}")
-            if m.get("is_reply") and m.get("reply_data"):
-                print(f"   └──> Em resposta a {m['reply_data']['autor_citado']}: \"{m['reply_data']['texto_citado']}\"")
+            print(f"\nTotal de mensagens extraídas com sucesso: {len(lista_final)}")
+            print("="*60)
+            
+            for i, m in enumerate(lista_final, 1):
+                status_reply = "[REPLY]" if m.get("is_reply") else "[MENSAGEM]"
+                attachment_flag = " [ANEXO]" if m.get("has_attachments") else ""
+                print(f"[{i}] {status_reply}{attachment_flag} [{m['data_hora_str']}] {m['remetente']}: {m['texto']}")
+                if m.get("is_reply") and m.get("reply_data"):
+                    print(f"   └──> Em resposta a {m['reply_data']['autor_citado']}: \"{m['reply_data']['texto_citado']}\"")
 
-            if m.get("has_attachments"):
-                anexos = m.get("attachments", [])
-                tipos = sorted({a.get("type") for a in anexos if a.get("type")})
-                # Mapear tipos técnicos para rótulos em português
-                label_map = {
-                    "image": "imagem",
-                    "video": "vídeo",
-                    "audio": "áudio",
-                    "document": "documento",
-                    "sticker": "figurinha",
-                    "poll": "enquete"
-                }
-                tipos_label = [label_map.get(t, t) for t in tipos]
-                if tipos_label:
-                    print(f"   └──> Contém: {', '.join(tipos_label)}")
+                if m.get("has_attachments"):
+                    anexos = m.get("attachments", [])
+                    tipos = sorted({a.get("type") for a in anexos if a.get("type")})
+                    label_map = {
+                        "image": "imagem",
+                        "video": "vídeo",
+                        "audio": "áudio",
+                        "document": "documento",
+                        "sticker": "figurinha",
+                        "poll": "enquete"
+                    }
+                    tipos_label = [label_map.get(t, t) for t in tipos]
+                    if tipos_label:
+                        print(f"   └──> Contém: {', '.join(tipos_label)}")
 
-            print("-" * 50)
+                print("-" * 50)
 
-        # Persistir mensagens no banco local (SQLite)
-        try:
-            init_db()
-            save_messages(lista_final)
-            print("[INFO] Mensagens salvas em data/messages.db")
+            # Persistir mensagens no banco local (SQLite)
+            try:
+                init_db()
+                save_messages(lista_final)
+                print("[INFO] Mensagens salvas em data/messages.db")
+            except Exception as e:
+                print(f"[ERRO] Falha ao salvar mensagens: {e}")
+
+            time.sleep(3)
+
         except Exception as e:
-            print(f"[ERRO] Falha ao salvar mensagens: {e}")
-
-        time.sleep(3)
-        contexto.close()
+            msg_erro = str(e).lower()
+            if "target page, context or browser has been closed" in msg_erro or "closed" in msg_erro:
+                print("\n[INFO] O navegador foi fechado pelo usuário.")
+            else:
+                raise e
+        finally:
+            try:
+                contexto.close()
+            except Exception:
+                pass
 
 if __name__ == "__main__":
     extrair_dados_comunidade()

@@ -4,11 +4,7 @@ import json
 from datetime import datetime
 
 
-def get_db_path():
-    projeto = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    data_dir = os.path.join(projeto, "data")
-    os.makedirs(data_dir, exist_ok=True)
-    return os.path.join(data_dir, "messages.db")
+from services.paths import get_data_dir, get_db_path
 
 
 def init_db(db_path: str | None = None):
@@ -181,6 +177,39 @@ def fetch_recent(limit: int = 100, db_path: str | None = None) -> list[dict]:
         {"id": r[0], "data_hora": r[1], "remetente": r[2], "texto": r[3], "has_attachments": bool(r[4])}
         for r in rows
     ]
+
+
+def fetch_message_by_id(message_id: str, db_path: str | None = None) -> dict | None:
+    if db_path is None:
+        db_path = get_db_path()
+
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT id, coleta_id, grupo_nome, comunidade_nome, coletado_em, meses_back, semanas_back,
+               data_hora, data_hora_ts, remetente, texto, texto_normalizado,
+               is_reply, reply_author, reply_text, has_attachments, attachments_json,
+               reactions_json, topics_json, transcript, created_at
+        FROM messages WHERE id = ? LIMIT 1
+        """,
+        (message_id,),
+    )
+    row = cur.fetchone()
+    conn.close()
+
+    if row is None:
+        return None
+
+    cols = [
+        "id", "coleta_id", "grupo_nome", "comunidade_nome", "coletado_em", "meses_back", "semanas_back",
+        "data_hora", "data_hora_ts", "remetente", "texto", "texto_normalizado",
+        "is_reply", "reply_author", "reply_text", "has_attachments", "attachments_json",
+        "reactions_json", "topics_json", "transcript", "created_at",
+    ]
+    data = dict(zip(cols, row))
+    data["has_attachments"] = bool(data.get("has_attachments"))
+    return data
 
 
 def export_to_csv(path: str, limit: int | None = None, db_path: str | None = None):

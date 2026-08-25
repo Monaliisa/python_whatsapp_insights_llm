@@ -35,6 +35,7 @@ MANIFEST
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
+!whatsapp_insights.spec
 
 # Installer logs
 pip-log.txt
@@ -78,6 +79,7 @@ docs/_build/
 # PyBuilder
 .pybuilder/
 target/
+GEMINI.md
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -176,3 +178,4 @@ pyrightconfig.json
 # End of https://www.toptal.com/developers/gitignore/api/python
 
 sessao_whatsapp/
+data/
