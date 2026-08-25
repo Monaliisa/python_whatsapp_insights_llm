@@ -26,6 +26,7 @@ from services.coletor import (
 from services.extrator import NOME_DO_GRUPO, extrair_dados_comunidade
 from services.storage import (
     export_to_csv,
+    export_to_json,
     fetch_message_by_id,
     fetch_recent,
     init_db,
@@ -323,6 +324,21 @@ async def download_csv():
         )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Erro ao gerar CSV: {exc}")
+
+
+@app.get("/api/exportar/json")
+async def download_json():
+    json_path = DATA_DIR / "export_messages.json"
+    os.makedirs(os.path.dirname(str(json_path)), exist_ok=True)
+    try:
+        export_to_json(str(json_path), db_path=get_db_path())
+        return FileResponse(
+            path=str(json_path),
+            filename="export_messages.json",
+            media_type="application/json",
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar JSON: {exc}")
 
 
 @app.post("/api/abrir-pasta-db")

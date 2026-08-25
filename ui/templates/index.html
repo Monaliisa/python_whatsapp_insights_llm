@@ -463,7 +463,7 @@
         <!-- Botões de Ação -->
         <div class="btn-group">
           <button id="btn-coletar" onclick="iniciarColeta()">Coletar mensagens</button>
-          <button id="btn-exportar" class="secondary" onclick="exportarCSV()">Exportar CSV</button>
+          <a href="/api/exportar/download" class="btn secondary" download="export_messages.csv">Baixar CSV</a>
           <button id="btn-atualizar" class="secondary" onclick="carregarMensagens()">Atualizar tabela</button>
         </div>
 
@@ -549,18 +549,15 @@
 
       <!-- PÁGINA 5: EXPORTAÇÃO -->
       <div id="page-exportacao" class="page">
-        <h1>Exportação</h1>
+        <h1>Exportação de Dados</h1>
         <div class="group-box">
-          <div class="group-box-title">Exportação do banco</div>
-          <div style="display: flex; flex-direction: column; gap: 14px;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <label for="export-path-input" style="min-width: 100px;">Destino CSV:</label>
-              <input type="text" id="export-path-input">
-            </div>
-            <div class="btn-group">
-              <button onclick="exportarCSV()">Exportar CSV no Servidor</button>
-              <a href="/api/exportar/download" class="btn secondary" download="export_messages.csv">Baixar CSV via Navegador</a>
-            </div>
+          <div class="group-box-title">Formatos de Exportação</div>
+          <p style="color: #cbd5e1; margin-bottom: 16px; font-size: 14px;">
+            Exporte e faça o download de todas as mensagens gravadas no banco de dados local para o seu computador:
+          </p>
+          <div class="btn-group">
+            <a href="/api/exportar/download" class="btn" download="export_messages.csv">Baixar CSV (.csv)</a>
+            <a href="/api/exportar/json" class="btn secondary" download="export_messages.json">Baixar JSON (.json)</a>
           </div>
         </div>
       </div>
@@ -680,7 +677,6 @@
         const data = await res.json();
         document.getElementById('resumo-db-path').innerText = data.db_path;
         document.getElementById('db-path-input').value = data.db_path;
-        document.getElementById('export-path-input').value = data.default_export_path;
         if (data.default_grupo) {
           document.getElementById('input-grupo').value = data.default_grupo;
         }
@@ -817,26 +813,6 @@
       } catch (err) {
         appendLog(`Erro ao iniciar coleta: ${err}`);
         setBusy(false);
-      }
-    }
-
-    // Exportar CSV
-    async function exportarCSV() {
-      const destino = document.getElementById('export-path-input').value;
-      try {
-        const res = await fetch('/api/exportar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ destino })
-        });
-        const json = await res.json();
-        if (json.success) {
-          showToast(json.message);
-        } else {
-          showToast("Erro ao exportar: " + json.error);
-        }
-      } catch (err) {
-        showToast("Erro de comunicação ao exportar.");
       }
     }
 
