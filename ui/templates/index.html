@@ -1549,7 +1549,7 @@
               <div class="btn-group">
                 <a href="/api/exportar/download" class="btn secondary" download="export_messages.csv">📥 Baixar CSV</a>
                 <a href="/api/exportar/json" class="btn secondary" download="export_messages.json">📥 Baixar JSON</a>
-                <button class="secondary" onclick="carregarMensagens()">🔄 Atualizar</button>
+                <button class="secondary" id="btn-atualizar-visualizacao" onclick="atualizarColetaIncremental()" title="Atalho para coleta incremental no WhatsApp Web para buscar novas mensagens deste grupo">🔄 Atualizar</button>
               </div>
             </div>
           </div>
@@ -2360,6 +2360,16 @@
         showToast("Erro ao iniciar coleta.");
         setBusy(false);
       }
+    }
+
+    async function atualizarColetaIncremental() {
+      let grupo = (grupoAtivoGlobal && (grupoAtivoGlobal.nome || grupoAtivoGlobal.id)) || obterGrupoSelecionado();
+      if (!grupo) {
+        showToast("Nenhum grupo ativo detectado para atualização incremental.");
+        return;
+      }
+      appendLog(`[Visualização] Atalho acionado: Disparando coleta incremental para o grupo '${grupo}'...`);
+      await iniciarColeta();
     }
 
     // -------------------------------------------------------------
