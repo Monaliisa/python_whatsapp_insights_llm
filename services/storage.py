@@ -56,6 +56,16 @@ def init_db(db_path: str | None = None):
         if column_name not in cols:
             cur.execute(f"ALTER TABLE messages ADD COLUMN {column_name} {column_type}")
 
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS known_groups (
+            nome TEXT PRIMARY KEY,
+            comunidade_nome TEXT,
+            atualizado_em TEXT
+        )
+        """
+    )
+
     conn.commit()
     # Índices para consultas rápidas
     cur.execute("CREATE INDEX IF NOT EXISTS idx_messages_data_hora_ts ON messages(data_hora_ts);")
@@ -389,3 +399,98 @@ def import_from_json_data(content: str, db_path: str | None = None) -> int:
     if messages:
         save_messages(messages, db_path=db_path)
     return len(messages)
+
+
+def save_known_groups(groups: list[dict | str], db_path: str | None = None) -> int:
+    """
+    Salva ou atualiza a lista de grupos conhecidos no SQLite.
+    Aceita lista de strings (nomes dos grupos) ou dicts.
+    """
+    if db_path is None:
+        db_path = get_db_path()
+    init_db(db_path)
+
+    if not groups:
+        return 0
+
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    now_str = datetime.now().isoformat()
+
+    count = 0
+    for item in groups:
+        if isinstance(item, str):
+            nome = item.strip()
+            comunidade = ""
+        elif isinstance(item, dict):
+            nome = (item.get("nome") or item.get("grupo_nome") or "").strip()
+            comunidade = (item.get("comunidade") or item.get("comunidade_nome") or "").strip()
+        else:
+            continue
+
+        if not nome:
+            continue
+
+        cur.execute(
+            """
+            INSERT INTO known_groups (nome, comunidade_nome, atualizado_em)
+            VALUES (?, ?, ?)
+            ON CONFLICT(nome) DO UPDATE SET
+                comunidade_nome = CASE WHEN excluded.comunidade_nome != '' THEN excluded.comunidade_nome ELSE known_groups.comunidade_nome END,
+                atualizado_em = excluded.atualizado_em
+            """,
+            (nome, comunidade, now_str),
+        )
+        count += 1
+
+    conn.commit()
+    conn.close()
+    return count
+
+
+def fetch_known_groups(db_path: str | None = None) -> list[str]:
+    """
+    Retorna a lista ordenada dos nomes de todos os grupos conhecidos, unindo os grupos salvos
+    na tabela `known_groups` com os nomes de grupos presentes no histórico de mensagens,
+    filtrando números de telefone e chats individuais.
+    """
+    import re
+    if db_path is None:
+        db_path = get_db_path()
+    init_db(db_path)
+
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+
+    query = """
+        SELECT DISTINCT nome FROM (
+            SELECT nome FROM known_groups WHERE nome IS NOT NULL AND TRIM(nome) != ''
+            UNION
+            SELECT grupo_nome AS nome FROM messages WHERE grupo_nome IS NOT NULL AND TRIM(grupo_nome) != ''
+        ) ORDER BY nome COLLATE NOCASE ASC
+    """
+    rows = cur.execute(query).fetchall()
+    conn.close()
+
+    re_phone = re.compile(r"^[\+]?[\d\s\-\(\)\.]{7,}$")
+    ignorar = {"você", "you", "meta ai", "whatsapp", "mensagens favoritas", "avisos", "status", "rascunhos", "drafts", "nome desconhecido"}
+
+    grupos_validos = []
+    for (nome,) in rows:
+        n = (nome or "").strip()
+        # Remove marcas de unicode bidi
+        clean_n = re.sub(r"[\u200E\u200F\u202A-\u202E]", "", n).strip()
+        digitos_puros = re.sub(r"[\s\-\(\)\+\.]", "", clean_n)
+        
+        if (
+            clean_n
+            and len(clean_n) > 1
+            and not digitos_puros.isdigit()
+            and not re_phone.match(clean_n)
+            and clean_n.lower() not in ignorar
+        ):
+            grupos_validos.append(clean_n)
+
+    return sorted(list(dict.fromkeys(grupos_validos)), key=lambda s: s.lower())
+
+

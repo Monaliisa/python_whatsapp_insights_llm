@@ -21,6 +21,7 @@ from pydantic import BaseModel
 from services.coletor import (
     desconectar_sessao,
     iniciar_coletor,
+    sincronizar_grupos_whatsapp,
     verificar_status_sessao,
 )
 from services.extrator import NOME_DO_GRUPO, extrair_dados_comunidade
@@ -28,11 +29,13 @@ from services.storage import (
     count_messages,
     export_to_csv,
     export_to_json,
+    fetch_known_groups,
     fetch_message_by_id,
     fetch_recent,
     import_from_csv_data,
     import_from_json_data,
     init_db,
+    save_known_groups,
 )
 from services.paths import get_base_dir, get_data_dir, get_db_path, get_templates_dir
 
@@ -242,6 +245,47 @@ async def trigger_desconectar_sessao():
     else:
         state.add_log(f"[Sessão - Erro] {msg}")
         return {"success": False, "error": msg}
+
+
+@app.get("/api/grupos")
+async def get_grupos():
+    try:
+        grupos = fetch_known_groups(get_db_path())
+        return {"success": True, "count": len(grupos), "data": grupos}
+    except Exception as exc:
+        return {"success": False, "error": str(exc), "data": []}
+
+
+def _run_sincronizar_grupos_thread():
+    state.is_busy = True
+    orig_stdout = sys.stdout
+    redirector = StdoutRedirector(orig_stdout)
+    sys.stdout = redirector
+
+    try:
+        state.add_log("Iniciando varredura no WhatsApp Web para catalogar grupos...")
+        grupos = sincronizar_grupos_whatsapp(headless=False, timeout_segundos=60)
+        if grupos:
+            state.add_log(f"[Sincronização] {len(grupos)} grupos catalogados com sucesso!")
+        else:
+            state.add_log("[Sincronização] Nenhum grupo encontrado ou sessão desconectada.")
+    except Exception as exc:
+        state.add_log(f"Erro ao sincronizar grupos: {exc}")
+    finally:
+        sys.stdout = orig_stdout
+        state.is_busy = False
+
+
+@app.post("/api/grupos/sincronizar")
+async def trigger_sincronizar_grupos(background_tasks: BackgroundTasks):
+    if state.is_busy:
+        return {"success": False, "message": "Já existe uma tarefa em execução."}
+    if not verificar_status_sessao():
+        return {"success": False, "message": "Sessão do WhatsApp não está autenticada. Conecte a sessão primeiro."}
+
+    background_tasks.add_task(_run_sincronizar_grupos_thread)
+    return {"success": True, "message": "Sincronização de grupos iniciada em segundo plano."}
+
 
 
 
