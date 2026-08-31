@@ -305,7 +305,7 @@ def detect_active_group_from_db(db_path: str | None = None) -> dict | None:
             gid = "grupo_importado"
 
         # Sincroniza app_state.json
-        state = set_active_group(gid, gnome, total_msgs)
+        set_active_group(gid, gnome, total_msgs)
         return {
             "id": gid,
             "nome": gnome,
@@ -591,8 +591,10 @@ def export_to_csv(
     path: str,
     limit: int | None = None,
     db_path: str | None = None,
+    grupo_id: str | None = None,
+    grupo_nome: str | None = None,
 ) -> int:
-    """Exporta mensagens para CSV (UTF-8 com separador ';')."""
+    """Exporta mensagens para CSV (UTF-8 com BOM e separador ';')."""
     if db_path is None:
         db_path = get_db_path()
     init_db(db_path)
@@ -604,10 +606,20 @@ def export_to_csv(
         "SELECT id, coleta_id, grupo_id, grupo_nome, comunidade_nome, coletado_em, "
         "meses_back, semanas_back, data_hora, remetente, texto, texto_normalizado, "
         "is_reply, reply_author, reply_text, has_attachments, attachments_json, "
-        "reactions_json, topics_json, transcript, created_at FROM messages "
-        "ORDER BY data_hora_ts ASC"
+        "reactions_json, topics_json, transcript, created_at FROM messages"
     )
     params: list[Any] = []
+    if grupo_id or grupo_nome:
+        filtros = []
+        if grupo_id:
+            filtros.append("grupo_id = ?")
+            params.append(grupo_id)
+        if grupo_nome:
+            filtros.append("grupo_nome = ?")
+            params.append(grupo_nome)
+        q += f" WHERE ({' OR '.join(filtros)})"
+
+    q += " ORDER BY data_hora_ts ASC"
     if limit is not None:
         q += " LIMIT ?"
         params.append(limit)
@@ -632,6 +644,8 @@ def export_to_json(
     path: str,
     limit: int | None = None,
     db_path: str | None = None,
+    grupo_id: str | None = None,
+    grupo_nome: str | None = None,
 ) -> int:
     """Exporta mensagens para JSON."""
     if db_path is None:
@@ -641,8 +655,19 @@ def export_to_json(
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
 
-    q = "SELECT * FROM messages ORDER BY data_hora_ts ASC"
+    q = "SELECT * FROM messages"
     params: list[Any] = []
+    if grupo_id or grupo_nome:
+        filtros = []
+        if grupo_id:
+            filtros.append("grupo_id = ?")
+            params.append(grupo_id)
+        if grupo_nome:
+            filtros.append("grupo_nome = ?")
+            params.append(grupo_nome)
+        q += f" WHERE ({' OR '.join(filtros)})"
+
+    q += " ORDER BY data_hora_ts ASC"
     if limit is not None:
         q += " LIMIT ?"
         params.append(limit)

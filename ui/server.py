@@ -5,9 +5,11 @@ import io
 import json
 import os
 import queue
+import re
 import subprocess
 import sys
 import threading
+import unicodedata
 from datetime import datetime
 from pathlib import Path
 from typing import Any, AsyncGenerator
@@ -488,18 +490,26 @@ async def download_csv(grupo_id: str | None = None, grupo_nome: str | None = Non
     destino = str(DEFAULT_EXPORT_PATH)
     os.makedirs(os.path.dirname(destino), exist_ok=True)
     try:
-        export_to_csv(
+        count = export_to_csv(
             destino,
             db_path=get_db_path(),
             grupo_id=grupo_id,
             grupo_nome=grupo_nome,
         )
+        app_state = get_app_state()
+        nome_base = app_state.get("active_group_name") or grupo_nome or "mensagens"
+        texto_norm = unicodedata.normalize("NFKD", str(nome_base)).encode("ascii", "ignore").decode("ascii")
+        slug = re.sub(r"[^\w\s-]", "", texto_norm).strip().lower()
+        slug = re.sub(r"[-\s]+", "_", slug) or "mensagens"
+        filename = f"export_{slug}.csv"
+        state.add_log(f"[Exportação] CSV gerado para download com sucesso ({count} mensagens): {filename}")
         return FileResponse(
             path=destino,
-            filename="export_messages.csv",
-            media_type="text/csv",
+            filename=filename,
+            media_type="text/csv; charset=utf-8",
         )
     except Exception as exc:
+        state.add_log(f"[Exportação - Erro] Falha ao gerar CSV: {exc}")
         raise HTTPException(status_code=500, detail=f"Erro ao gerar CSV: {exc}")
 
 
@@ -508,18 +518,26 @@ async def download_json(grupo_id: str | None = None, grupo_nome: str | None = No
     json_path = DATA_DIR / "export_messages.json"
     os.makedirs(os.path.dirname(str(json_path)), exist_ok=True)
     try:
-        export_to_json(
+        count = export_to_json(
             str(json_path),
             db_path=get_db_path(),
             grupo_id=grupo_id,
             grupo_nome=grupo_nome,
         )
+        app_state = get_app_state()
+        nome_base = app_state.get("active_group_name") or grupo_nome or "mensagens"
+        texto_norm = unicodedata.normalize("NFKD", str(nome_base)).encode("ascii", "ignore").decode("ascii")
+        slug = re.sub(r"[^\w\s-]", "", texto_norm).strip().lower()
+        slug = re.sub(r"[-\s]+", "_", slug) or "mensagens"
+        filename = f"export_{slug}.json"
+        state.add_log(f"[Exportação] JSON gerado para download com sucesso ({count} mensagens): {filename}")
         return FileResponse(
             path=str(json_path),
-            filename="export_messages.json",
-            media_type="application/json",
+            filename=filename,
+            media_type="application/json; charset=utf-8",
         )
     except Exception as exc:
+        state.add_log(f"[Exportação - Erro] Falha ao gerar JSON: {exc}")
         raise HTTPException(status_code=500, detail=f"Erro ao gerar JSON: {exc}")
 
 
