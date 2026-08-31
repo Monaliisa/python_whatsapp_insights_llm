@@ -28,17 +28,19 @@ from services.extrator import NOME_DO_GRUPO, extrair_dados_comunidade
 from services.storage import (
     clear_active_group,
     count_messages,
+    detect_active_group_from_db,
     export_to_csv,
     export_to_json,
-    fetch_known_groups,
-    fetch_known_groups_details,
     fetch_message_by_id,
     fetch_recent,
     get_app_state,
+    get_catalog_group_names,
     import_from_csv_data,
     import_from_json_data,
     init_db,
-    save_known_groups,
+    load_catalog_groups,
+    reset_messages_db,
+    save_catalog_groups,
     set_active_group,
 )
 from services.paths import get_base_dir, get_data_dir, get_db_path, get_templates_dir
@@ -142,12 +144,11 @@ class ImportRequest(BaseModel):
 @app.on_event("startup")
 def startup_event():
     init_db(get_db_path())
-    app_state = get_app_state()
-    grp = app_state.get("active_group_name")
-    if grp:
-        state.add_log(f"Interface inicializada. Grupo ativo na sessão: '{grp}'.")
+    detected = detect_active_group_from_db(get_db_path())
+    if detected:
+        state.add_log(f"Interface inicializada. Grupo ativo carregado do banco local: '{detected['nome']}' ({detected['total_messages']} mensagens).")
     else:
-        state.add_log("Interface Web inicializada com sucesso.")
+        state.add_log("Interface Web inicializada com sucesso. Banco de mensagens pronto.")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -162,19 +163,9 @@ async def serve_index():
 async def get_status():
     db_path = get_db_path()
     has_session = verificar_status_sessao()
-    app_state = get_app_state()
     total_messages = count_messages(db_path)
-
-    active_group = None
-    if app_state.get("active_group_name") or app_state.get("active_group_id"):
-        grp_nome = app_state.get("active_group_name")
-        grp_id = app_state.get("active_group_id")
-        grp_count = count_messages(db_path, grupo_id=grp_id, grupo_nome=grp_nome)
-        active_group = {
-            "id": grp_id,
-            "nome": grp_nome,
-            "total_messages": grp_count,
-        }
+    active_group = detect_active_group_from_db(db_path) if total_messages > 0 else None
+    app_state = get_app_state()
 
     return {
         "status": "online",
@@ -211,9 +202,10 @@ async def select_group_endpoint(req: SelectGroupRequest):
 
 @app.post("/api/state/clear-group")
 async def clear_group_endpoint():
-    """Limpa o grupo ativo da memória (sem apagar as mensagens do banco)."""
-    new_state = clear_active_group()
-    state.add_log("[Grupo] Grupo ativo limpo da memória. Pronto para nova seleção/extração.")
+    """Limpa a base messages.db e reseta o grupo ativo para liberar nova extração."""
+    reset_messages_db(get_db_path())
+    new_state = get_app_state()
+    state.add_log("[Grupo] Contexto de grupo liberado e mensagens limpas da sessão.")
     return {"success": True, "state": new_state, "message": "Grupo desmarcado da memória."}
 
 
@@ -313,8 +305,8 @@ async def trigger_desconectar_sessao():
 @app.get("/api/grupos")
 async def get_grupos():
     try:
-        details = fetch_known_groups_details(get_db_path())
-        nomes = [d["nome"] for d in details if d.get("nome")]
+        details = load_catalog_groups()
+        nomes = get_catalog_group_names()
         return {
             "success": True,
             "count": len(details),

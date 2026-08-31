@@ -201,9 +201,9 @@ def extrair_grupos_do_painel(pagina, max_scrolls: int = 6) -> list[str]:
 def sincronizar_grupos_whatsapp(headless: bool = False, timeout_segundos: int = 60) -> list[str]:
     """
     Conecta temporariamente ao WhatsApp Web usando a sessão salva, raspa a lista de grupos
-    e salva o resultado na tabela `known_groups` do SQLite.
+    e salva o resultado no catálogo data/groups_catalog.json.
     """
-    from services.storage import save_known_groups
+    from services.storage import save_catalog_groups
 
     caminho_sessao = get_session_path()
     if not verificar_status_sessao():
@@ -227,8 +227,8 @@ def sincronizar_grupos_whatsapp(headless: bool = False, timeout_segundos: int = 
             print("Extraindo lista de grupos do WhatsApp Web...")
             grupos = extrair_grupos_do_painel(pagina, max_scrolls=6)
             if grupos:
-                save_known_groups(grupos)
-                print(f"[SUCESSO] {len(grupos)} grupos sincronizados no banco de dados!")
+                save_catalog_groups(grupos)
+                print(f"[SUCESSO] {len(grupos)} grupos sincronizados no catálogo local!")
             return grupos
         except Exception as e:
             print(f"[ERRO] Falha ao sincronizar grupos do WhatsApp: {e}")
@@ -298,9 +298,9 @@ def iniciar_coletor(timeout_segundos: int = 300) -> bool:
                     print("Sincronizando lista de grupos conhecidos...")
                     grupos = extrair_grupos_do_painel(pagina, max_scrolls=4)
                     if grupos:
-                        from services.storage import save_known_groups
-                        save_known_groups(grupos)
-                        print(f">> [INFO] {len(grupos)} grupos catalogados no banco de dados local.")
+                        from services.storage import save_catalog_groups
+                        save_catalog_groups(grupos)
+                        print(f">> [INFO] {len(grupos)} grupos catalogados no arquivo data/groups_catalog.json.")
                 except Exception as err:
                     print(f"[AVISO] Não foi possível catalogar os grupos automaticamente: {err}")
 
