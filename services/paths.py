@@ -46,6 +46,16 @@ def get_db_path() -> str:
     return str(get_data_dir() / "messages.db")
 
 
+def get_state_file_path() -> Path:
+    """Retorna o caminho do arquivo JSON de estado/sessão da aplicação."""
+    return get_data_dir() / "app_state.json"
+
+
+def get_groups_catalog_path() -> Path:
+    """Retorna o caminho do arquivo JSON de catálogo de grupos catalogados do WhatsApp."""
+    return get_data_dir() / "groups_catalog.json"
+
+
 def get_templates_dir() -> Path:
     """Retorna o diretório dos templates HTML da interface web."""
     return get_bundle_dir() / "ui" / "templates"

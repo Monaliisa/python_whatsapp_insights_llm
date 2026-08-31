@@ -6,7 +6,13 @@ import unicodedata
 from datetime import datetime, timedelta
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 from services.paths import get_session_dir
-from services.storage import init_db, save_messages
+from services.storage import (
+    count_messages,
+    gerar_grupo_id,
+    init_db,
+    save_messages,
+    set_active_group,
+)
 
 NOME_DA_COMUNIDADE = ""
 NOME_DO_GRUPO = "Ciência de Dados | Comunidade Alura"
@@ -389,35 +395,78 @@ def extrair_dados_balao(balao):
     }
 
 
-def calcular_data_limite(tipo_filtro="mes", meses=1, dias=30):
+def calcular_data_limite(
+    unidade_tempo: str = "dias",
+    valor: int | float = 7,
+    tipo_filtro: str | None = None,
+    meses: int = 1,
+    dias: int = 30,
+) -> tuple[datetime, datetime, str]:
+    """
+    Calcula a data e hora limite com base na unidade de tempo selecionada (horas, dias, semanas, meses).
+    Suporta retrocompatibilidade com tipo_filtro ('mes' ou 'dias').
+    """
     agora = datetime.now()
 
-    if tipo_filtro == "mes":
-        meses = max(1, int(meses))
-        primeiro_dia_do_mes_atual = agora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        data_limite = primeiro_dia_do_mes_atual
-        for _ in range(meses):
+    # Retrocompatibilidade com parâmetros legados
+    if tipo_filtro:
+        tf = str(tipo_filtro).lower().strip()
+        if tf in ["mes", "meses"]:
+            unidade_tempo = "meses"
+            valor = meses
+        elif tf in ["dias", "dia"]:
+            unidade_tempo = "dias"
+            valor = dias
+
+    unidade = str(unidade_tempo).lower().strip()
+    val = max(1, int(valor)) if valor else 1
+
+    if unidade in ["hora", "horas", "h"]:
+        data_limite = agora - timedelta(hours=val)
+        label = f"última(s) {val} hora(s)"
+    elif unidade in ["dia", "dias", "d"]:
+        data_limite = (agora - timedelta(days=val)).replace(hour=0, minute=0, second=0, microsecond=0)
+        label = f"último(s) {val} dia(s)"
+    elif unidade in ["semana", "semanas", "sem", "w"]:
+        data_limite = (agora - timedelta(weeks=val)).replace(hour=0, minute=0, second=0, microsecond=0)
+        label = f"última(s) {val} semana(s)"
+    elif unidade in ["mes", "meses", "m"]:
+        primeiro_dia_do_mes = agora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        data_limite = primeiro_dia_do_mes
+        for _ in range(val):
             ano = data_limite.year
             mes = data_limite.month - 1
             if mes == 0:
                 mes = 12
                 ano -= 1
             data_limite = data_limite.replace(year=ano, month=mes, day=1)
-        return data_limite, agora, f"{meses} mês(es)"
+        label = f"último(s) {val} mês(es)"
+    else:
+        data_limite = (agora - timedelta(days=val)).replace(hour=0, minute=0, second=0, microsecond=0)
+        label = f"último(s) {val} dia(s)"
 
-    dias = max(1, int(dias))
-    data_limite = (agora - timedelta(days=dias)).replace(hour=0, minute=0, second=0, microsecond=0)
-    return data_limite, agora, f"últimos {dias} dias"
+    return data_limite, agora, label
 
 
-def extrair_dados_comunidade(nome_grupo=NOME_DO_GRUPO, nome_comunidade=NOME_DA_COMUNIDADE, tipo_filtro="mes", meses=1, dias=None):
+def extrair_dados_comunidade(
+    nome_grupo: str = NOME_DO_GRUPO,
+    nome_comunidade: str = NOME_DA_COMUNIDADE,
+    unidade_tempo: str = "dias",
+    valor: int = 7,
+    tipo_filtro: str | None = None,
+    meses: int = 1,
+    dias: int | None = None,
+):
     caminho_sessao = str(get_session_dir())
 
-    if dias is None:
-        dias = 30
-
-    data_limite, agora, label_filtro = calcular_data_limite(tipo_filtro=tipo_filtro, meses=meses, dias=dias)
-    print(f"\n[Filtro] Coletando mensagens por: {label_filtro} ({data_limite.strftime('%d/%m/%Y')} até {agora.strftime('%d/%m/%Y')})")
+    data_limite, agora, label_filtro = calcular_data_limite(
+        unidade_tempo=unidade_tempo,
+        valor=valor,
+        tipo_filtro=tipo_filtro,
+        meses=meses,
+        dias=dias or 30,
+    )
+    print(f"\n[Filtro] Coletando mensagens por: {label_filtro} ({data_limite.strftime('%d/%m/%Y %H:%M')} até {agora.strftime('%d/%m/%Y %H:%M')})")
 
     with sync_playwright() as p:
         print("Abrindo navegador...")
@@ -425,17 +474,17 @@ def extrair_dados_comunidade(nome_grupo=NOME_DO_GRUPO, nome_comunidade=NOME_DA_C
             user_data_dir=caminho_sessao,
             headless=False,
             args=["--start-maximized"],
-            no_viewport=True
+            no_viewport=True,
         )
-        
+
         try:
             pagina = contexto.pages[0] if contexto.pages else contexto.new_page()
             print("Acessando https://web.whatsapp.com ...")
             pagina.goto("https://web.whatsapp.com")
-            
+
             print("Aguardando carregamento e sincronização do WhatsApp Web...")
             seletores_painel = "#pane-side, div[contenteditable='true'][data-tab='3'], header[data-testid='chatlist-header']"
-            
+
             # Verifica se já está conectado
             try:
                 pagina.wait_for_selector(seletores_painel, timeout=15000)
@@ -452,12 +501,12 @@ def extrair_dados_comunidade(nome_grupo=NOME_DO_GRUPO, nome_comunidade=NOME_DA_C
                     raise RuntimeError("Tempo limite de 5 minutos esgotado aguardando leitura do QR Code.")
 
             time.sleep(2)
-            
+
             print(f"Buscando por: '{nome_grupo}'...")
             if not abrir_chat_por_nome(pagina, nome_grupo, nome_comunidade):
-                print(f"ERRO: Não foi possível localizar o chat '{nome_grupo}' nem '{nome_comunidade}'.")
+                print(f"ERRO: Não foi possível localizar o chat '{nome_grupo}'.")
                 print("Sugestões: confira diferenças de espaços/caracteres; confira se o grupo está arquivado ou dentro de uma comunidade.")
-                raise RuntimeError(f"Não foi possível localizar o chat '{nome_grupo}' nem '{nome_comunidade}'.")
+                raise RuntimeError(f"Não foi possível localizar o chat '{nome_grupo}'.")
 
             print("\nAguardando o painel de mensagens carregar...")
             pagina.wait_for_selector("#main", timeout=20000)
@@ -465,10 +514,10 @@ def extrair_dados_comunidade(nome_grupo=NOME_DO_GRUPO, nome_comunidade=NOME_DA_C
             pagina.click("#main")
 
             print("\n--- Iniciando rolagem incremental e raspagem contínua ---")
-            
+
             # Estrutura de armazenamento com deduplicação nativa por ID
             mensagens_coletadas = {}
-            
+
             atingiu_limite = False
             tentativas_sem_novos_dados = 0
             seletor_baloes = "#main div[data-id], #main div.message-in, #main div.message-out, #main div[data-pre-plain-text]"
@@ -476,19 +525,19 @@ def extrair_dados_comunidade(nome_grupo=NOME_DO_GRUPO, nome_comunidade=NOME_DA_C
             while not atingiu_limite and tentativas_sem_novos_dados < 12:
                 baloes_visiveis = pagina.query_selector_all(seletor_baloes)
                 total_antes = len(mensagens_coletadas)
-                
+
                 # Raspagem imediata dos balões presentes no DOM atual
                 for balao in baloes_visiveis:
                     dados = extrair_dados_balao(balao)
                     if not dados:
                         continue
-                    
+
                     # Interrupção temporal: verifica se atingiu mensagens anteriores à janela
                     if dados["data_hora"] < data_limite:
-                        print(f"\n[Alerta] Alcançou mensagem de {dados['data_hora_str']} (Anterior a {data_limite.strftime('%d/%m/%Y')}). Encerrando scroll...")
+                        print(f"\n[Alerta] Alcançou mensagem de {dados['data_hora_str']} (Anterior a {data_limite.strftime('%d/%m/%Y %H:%M')}). Encerrando scroll...")
                         atingiu_limite = True
                         break
-                    
+
                     # Adiciona ao dicionário (se já existir, atualiza sem duplicar)
                     mensagens_coletadas[dados["id"]] = dados
 
@@ -520,23 +569,35 @@ def extrair_dados_comunidade(nome_grupo=NOME_DO_GRUPO, nome_comunidade=NOME_DA_C
             # Ordenação cronológica das mensagens extraídas
             lista_final = sorted(mensagens_coletadas.values(), key=lambda x: x["data_hora"])
 
+            # Detecta o JID do grupo a partir do WhatsApp Web se presente
+            grupo_jid_identificado = None
+            for msg in lista_final:
+                mid = msg.get("id") or ""
+                match_jid = re.search(r"(\d+@g\.us)", mid)
+                if match_jid:
+                    grupo_jid_identificado = match_jid.group(1)
+                    break
+
+            grupo_id = gerar_grupo_id(nome_grupo, jid=grupo_jid_identificado)
             coleta_id = str(uuid.uuid4())
             coletado_em = datetime.utcnow().isoformat()
+
             for msg in lista_final:
                 msg["coleta_id"] = coleta_id
+                msg["grupo_id"] = grupo_id
                 msg["grupo_nome"] = nome_grupo
                 msg["comunidade_nome"] = nome_comunidade
                 msg["coletado_em"] = coletado_em
-                if tipo_filtro == "mes":
-                    msg["meses_back"] = int(meses)
-                    msg["semanas_back"] = int(meses) * 4
+                if unidade_tempo == "meses" or tipo_filtro == "mes":
+                    msg["meses_back"] = int(valor)
+                    msg["semanas_back"] = int(valor) * 4
                 else:
                     msg["meses_back"] = 0
-                    msg["semanas_back"] = int(dias)
+                    msg["semanas_back"] = int(valor)
 
             print(f"\nTotal de mensagens extraídas com sucesso: {len(lista_final)}")
-            print("="*60)
-            
+            print("=" * 60)
+
             for i, m in enumerate(lista_final, 1):
                 status_reply = "[REPLY]" if m.get("is_reply") else "[MENSAGEM]"
                 attachment_flag = " [ANEXO]" if m.get("has_attachments") else ""
@@ -553,7 +614,7 @@ def extrair_dados_comunidade(nome_grupo=NOME_DO_GRUPO, nome_comunidade=NOME_DA_C
                         "audio": "áudio",
                         "document": "documento",
                         "sticker": "figurinha",
-                        "poll": "enquete"
+                        "poll": "enquete",
                     }
                     tipos_label = [label_map.get(t, t) for t in tipos]
                     if tipos_label:
@@ -561,13 +622,15 @@ def extrair_dados_comunidade(nome_grupo=NOME_DO_GRUPO, nome_comunidade=NOME_DA_C
 
                 print("-" * 50)
 
-            # Persistir mensagens no banco local (SQLite)
+            # Persistir mensagens no banco local (SQLite) incrementalmente para o grupo ativo
             try:
                 init_db()
-                save_messages(lista_final)
-                print("[INFO] Mensagens salvas em data/messages.db")
+                novas_inseridas = save_messages(lista_final)
+                total_no_banco = count_messages()
+                set_active_group(group_id=grupo_id, group_name=nome_grupo, total_messages=total_no_banco)
+                print(f"[INFO] {novas_inseridas} mensagens processadas ({len(lista_final)} coletadas nesta rodada, {total_no_banco} mensagens totais no banco). Grupo ativo: '{nome_grupo}'")
             except Exception as e:
-                print(f"[ERRO] Falha ao salvar mensagens: {e}")
+                print(f"[ERRO] Falha ao salvar mensagens ou estado: {e}")
 
             time.sleep(3)
 
@@ -582,6 +645,7 @@ def extrair_dados_comunidade(nome_grupo=NOME_DO_GRUPO, nome_comunidade=NOME_DA_C
                 contexto.close()
             except Exception:
                 pass
+
 
 if __name__ == "__main__":
     extrair_dados_comunidade()

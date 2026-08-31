@@ -5,9 +5,11 @@ import io
 import json
 import os
 import queue
+import re
 import subprocess
 import sys
 import threading
+import unicodedata
 from datetime import datetime
 from pathlib import Path
 from typing import Any, AsyncGenerator
@@ -21,15 +23,27 @@ from pydantic import BaseModel
 from services.coletor import (
     desconectar_sessao,
     iniciar_coletor,
+    sincronizar_grupos_whatsapp,
     verificar_status_sessao,
 )
 from services.extrator import NOME_DO_GRUPO, extrair_dados_comunidade
 from services.storage import (
+    clear_active_group,
+    count_messages,
+    detect_active_group_from_db,
     export_to_csv,
     export_to_json,
     fetch_message_by_id,
     fetch_recent,
+    get_app_state,
+    get_catalog_group_names,
+    import_from_csv_data,
+    import_from_json_data,
     init_db,
+    load_catalog_groups,
+    reset_messages_db,
+    save_catalog_groups,
+    set_active_group,
 )
 from services.paths import get_base_dir, get_data_dir, get_db_path, get_templates_dir
 
@@ -107,19 +121,36 @@ class StdoutRedirector(io.TextIOBase):
 
 class ColetaRequest(BaseModel):
     grupo: str = NOME_DO_GRUPO
-    comunidade: str = ""
-    tipo_filtro: str = "mes"  # 'mes' ou 'dias'
-    valor: int = 1
+    unidade_tempo: str = "dias"  # 'horas', 'dias', 'semanas', 'meses'
+    valor: int = 7
+    tipo_filtro: str | None = None
+
+
+class SelectGroupRequest(BaseModel):
+    grupo_id: str | None = None
+    grupo_nome: str | None = None
 
 
 class ExportRequest(BaseModel):
     destino: str = str(DEFAULT_EXPORT_PATH)
+    grupo_id: str | None = None
+    grupo_nome: str | None = None
+
+
+class ImportRequest(BaseModel):
+    content: str
+    format: str = "csv"  # 'csv' ou 'json'
+    filename: str | None = None
 
 
 @app.on_event("startup")
 def startup_event():
     init_db(get_db_path())
-    state.add_log("Interface Web inicializada com sucesso.")
+    detected = detect_active_group_from_db(get_db_path())
+    if detected:
+        state.add_log(f"Interface inicializada. Grupo ativo carregado do banco local: '{detected['nome']}' ({detected['total_messages']} mensagens).")
+    else:
+        state.add_log("Interface Web inicializada com sucesso. Banco de mensagens pronto.")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -134,6 +165,10 @@ async def serve_index():
 async def get_status():
     db_path = get_db_path()
     has_session = verificar_status_sessao()
+    total_messages = count_messages(db_path)
+    active_group = detect_active_group_from_db(db_path) if total_messages > 0 else None
+    app_state = get_app_state()
+
     return {
         "status": "online",
         "is_busy": state.is_busy,
@@ -141,9 +176,88 @@ async def get_status():
         "session_status": "connected" if has_session else "disconnected",
         "db_path": db_path,
         "db_exists": os.path.exists(db_path),
+        "message_count": total_messages,
+        "has_data": total_messages > 0,
         "default_grupo": NOME_DO_GRUPO,
         "default_export_path": str(DEFAULT_EXPORT_PATH),
+        "app_state": app_state,
+        "active_group": active_group,
     }
+
+
+@app.get("/api/state")
+async def get_state_endpoint():
+    """Retorna o estado persistido do grupo ativo."""
+    return {"success": True, "data": get_app_state()}
+
+
+@app.post("/api/state/select-group")
+async def select_group_endpoint(req: SelectGroupRequest):
+    """Define o grupo ativo na memória e persiste no app_state.json."""
+    if not req.grupo_nome and not req.grupo_id:
+        return {"success": False, "message": "Nome ou ID do grupo não informado."}
+
+    new_state = set_active_group(group_id=req.grupo_id, group_name=req.grupo_nome)
+    state.add_log(f"[Grupo] Grupo ativo definido: '{req.grupo_nome or req.grupo_id}'.")
+    return {"success": True, "state": new_state}
+
+
+@app.post("/api/state/clear-group")
+async def clear_group_endpoint():
+    """Limpa a base messages.db e reseta o grupo ativo para liberar nova extração."""
+    reset_messages_db(get_db_path())
+    new_state = get_app_state()
+    state.add_log("[Grupo] Contexto de grupo liberado e mensagens limpas da sessão.")
+    return {"success": True, "state": new_state, "message": "Grupo desmarcado da memória."}
+
+
+@app.post("/api/importar")
+async def import_data(req: ImportRequest):
+    if state.is_busy:
+        return {"success": False, "message": "Existe outra tarefa em andamento. Aguarde."}
+
+    content = req.content.strip()
+    if not content:
+        return {"success": False, "message": "Nenhum conteúdo fornecido para importação."}
+
+    # Bloqueia importação se já houver um grupo ativo na base
+    active_group = detect_active_group_from_db(get_db_path())
+    if active_group and (active_group.get("nome") or active_group.get("id")):
+        grp_nome = active_group.get("nome") or active_group.get("id")
+        return {
+            "success": False,
+            "message": f"Importação bloqueada: o grupo '{grp_nome}' já está ativo na sessão. Clique em 'Mudar de grupo' antes de importar.",
+        }
+
+    fmt = req.format.lower().strip()
+    if req.filename:
+        if req.filename.lower().endswith(".json"):
+            fmt = "json"
+        elif req.filename.lower().endswith(".csv"):
+            fmt = "csv"
+
+    try:
+        if fmt == "json":
+            count, grupo_nome = import_from_json_data(content, db_path=get_db_path())
+        else:
+            count, grupo_nome = import_from_csv_data(content, db_path=get_db_path())
+
+        nome_arq = f" '{req.filename}'" if req.filename else ""
+        msg = f"Importação concluída com sucesso! {count} mensagens processadas a partir de{nome_arq}."
+        if grupo_nome:
+            msg += f" Grupo ativo fixado: '{grupo_nome}'."
+        state.add_log(f"[Importação] {msg}")
+        return {
+            "success": True,
+            "count": count,
+            "grupo": grupo_nome,
+            "message": msg,
+            "app_state": get_app_state(),
+        }
+    except Exception as exc:
+        err_msg = f"Erro ao importar dados: {exc}"
+        state.add_log(f"[Importação - Erro] {err_msg}")
+        return {"success": False, "error": err_msg}
 
 
 @app.get("/api/session/status")
@@ -199,12 +313,67 @@ async def trigger_desconectar_sessao():
         return {"success": False, "error": msg}
 
 
+@app.get("/api/grupos")
+async def get_grupos():
+    try:
+        details = load_catalog_groups()
+        nomes = get_catalog_group_names()
+        return {
+            "success": True,
+            "count": len(details),
+            "data": nomes,
+            "details": details,
+        }
+    except Exception as exc:
+        return {"success": False, "error": str(exc), "data": [], "details": []}
+
+
+def _run_sincronizar_grupos_thread():
+    state.is_busy = True
+    orig_stdout = sys.stdout
+    redirector = StdoutRedirector(orig_stdout)
+    sys.stdout = redirector
+
+    try:
+        state.add_log("Iniciando varredura no WhatsApp Web para catalogar grupos...")
+        grupos = sincronizar_grupos_whatsapp(headless=False, timeout_segundos=60)
+        if grupos:
+            state.add_log(f"[Sincronização] {len(grupos)} grupos catalogados com sucesso!")
+        else:
+            state.add_log("[Sincronização] Nenhum grupo encontrado ou sessão desconectada.")
+    except Exception as exc:
+        state.add_log(f"Erro ao sincronizar grupos: {exc}")
+    finally:
+        sys.stdout = orig_stdout
+        state.is_busy = False
+
+
+@app.post("/api/grupos/sincronizar")
+async def trigger_sincronizar_grupos(background_tasks: BackgroundTasks):
+    if state.is_busy:
+        return {"success": False, "message": "Já existe uma tarefa em execução."}
+    if not verificar_status_sessao():
+        return {"success": False, "message": "Sessão do WhatsApp não está autenticada. Conecte a sessão primeiro."}
+
+    background_tasks.add_task(_run_sincronizar_grupos_thread)
+    return {"success": True, "message": "Sincronização de grupos iniciada em segundo plano."}
+
 
 @app.get("/api/messages")
-async def get_messages(limit: int = 100):
+async def get_messages(
+    limit: int = 250,
+    grupo_id: str | None = None,
+    grupo_nome: str | None = None,
+    apenas_ativo: bool = False,
+):
     try:
         init_db(get_db_path())
-        messages = fetch_recent(limit=limit, db_path=get_db_path())
+        if apenas_ativo and not grupo_id and not grupo_nome:
+            app_state = get_app_state()
+            grupo_id = app_state.get("active_group_id")
+            grupo_nome = app_state.get("active_group_name")
+
+        messages = fetch_recent(limit=limit, db_path=get_db_path(), grupo_id=grupo_id, grupo_nome=grupo_nome)
         return {"success": True, "count": len(messages), "data": messages}
     except Exception as exc:
         return {"success": False, "error": str(exc), "data": []}
@@ -220,22 +389,22 @@ async def get_message_detail(message_id: str):
 
 def _run_coleta_thread(req: ColetaRequest):
     state.is_busy = True
-    grupo = req.grupo.strip() or NOME_DO_GRUPO
-    comunidade = req.comunidade.strip() or ""
-    tipo_filtro = req.tipo_filtro if req.tipo_filtro in ["mes", "dias"] else "mes"
-    valor = int(req.valor)
+    active_group = detect_active_group_from_db(get_db_path())
+    if active_group and (active_group.get("nome") or active_group.get("id")):
+        grupo = active_group.get("nome") or active_group.get("id")
+    else:
+        grupo = req.grupo.strip() or NOME_DO_GRUPO
+    unidade_tempo = req.unidade_tempo.lower().strip() if req.unidade_tempo else "dias"
+    valor = int(req.valor) if req.valor else 7
 
     kwargs = {
         "nome_grupo": grupo,
-        "nome_comunidade": comunidade,
-        "tipo_filtro": tipo_filtro,
+        "unidade_tempo": unidade_tempo,
+        "valor": valor,
+        "tipo_filtro": req.tipo_filtro,
     }
-    if tipo_filtro == "mes":
-        kwargs["meses"] = valor
-    else:
-        kwargs["dias"] = valor
 
-    state.add_log(f"Iniciando coleta por {tipo_filtro} com valor {valor} (Grupo: '{grupo}')...")
+    state.add_log(f"Iniciando coleta por janela de {valor} {unidade_tempo} (Grupo: '{grupo}')...")
 
     orig_stdout = sys.stdout
     redirector = StdoutRedirector(orig_stdout)
@@ -303,7 +472,12 @@ async def export_csv(req: ExportRequest):
         os.makedirs(pasta, exist_ok=True)
 
     try:
-        export_to_csv(destino, db_path=get_db_path())
+        export_to_csv(
+            destino,
+            db_path=get_db_path(),
+            grupo_id=req.grupo_id,
+            grupo_nome=req.grupo_nome,
+        )
         state.add_log(f"CSV exportado com sucesso em: {destino}")
         return {"success": True, "path": destino, "message": f"Arquivo salvo em: {destino}"}
     except Exception as exc:
@@ -312,32 +486,58 @@ async def export_csv(req: ExportRequest):
 
 
 @app.get("/api/exportar/download")
-async def download_csv():
+async def download_csv(grupo_id: str | None = None, grupo_nome: str | None = None):
     destino = str(DEFAULT_EXPORT_PATH)
     os.makedirs(os.path.dirname(destino), exist_ok=True)
     try:
-        export_to_csv(destino, db_path=get_db_path())
+        count = export_to_csv(
+            destino,
+            db_path=get_db_path(),
+            grupo_id=grupo_id,
+            grupo_nome=grupo_nome,
+        )
+        app_state = get_app_state()
+        nome_base = app_state.get("active_group_name") or grupo_nome or "mensagens"
+        texto_norm = unicodedata.normalize("NFKD", str(nome_base)).encode("ascii", "ignore").decode("ascii")
+        slug = re.sub(r"[^\w\s-]", "", texto_norm).strip().lower()
+        slug = re.sub(r"[-\s]+", "_", slug) or "mensagens"
+        filename = f"export_{slug}.csv"
+        state.add_log(f"[Exportação] CSV gerado para download com sucesso ({count} mensagens): {filename}")
         return FileResponse(
             path=destino,
-            filename="export_messages.csv",
-            media_type="text/csv",
+            filename=filename,
+            media_type="text/csv; charset=utf-8",
         )
     except Exception as exc:
+        state.add_log(f"[Exportação - Erro] Falha ao gerar CSV: {exc}")
         raise HTTPException(status_code=500, detail=f"Erro ao gerar CSV: {exc}")
 
 
 @app.get("/api/exportar/json")
-async def download_json():
+async def download_json(grupo_id: str | None = None, grupo_nome: str | None = None):
     json_path = DATA_DIR / "export_messages.json"
     os.makedirs(os.path.dirname(str(json_path)), exist_ok=True)
     try:
-        export_to_json(str(json_path), db_path=get_db_path())
+        count = export_to_json(
+            str(json_path),
+            db_path=get_db_path(),
+            grupo_id=grupo_id,
+            grupo_nome=grupo_nome,
+        )
+        app_state = get_app_state()
+        nome_base = app_state.get("active_group_name") or grupo_nome or "mensagens"
+        texto_norm = unicodedata.normalize("NFKD", str(nome_base)).encode("ascii", "ignore").decode("ascii")
+        slug = re.sub(r"[^\w\s-]", "", texto_norm).strip().lower()
+        slug = re.sub(r"[-\s]+", "_", slug) or "mensagens"
+        filename = f"export_{slug}.json"
+        state.add_log(f"[Exportação] JSON gerado para download com sucesso ({count} mensagens): {filename}")
         return FileResponse(
             path=str(json_path),
-            filename="export_messages.json",
-            media_type="application/json",
+            filename=filename,
+            media_type="application/json; charset=utf-8",
         )
     except Exception as exc:
+        state.add_log(f"[Exportação - Erro] Falha ao gerar JSON: {exc}")
         raise HTTPException(status_code=500, detail=f"Erro ao gerar JSON: {exc}")
 
 

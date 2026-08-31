@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WhatsApp Insights</title>
+  <title>ZapInsights Hub | WhatsApp Insights</title>
   <style>
     * {
       box-sizing: border-box;
@@ -12,75 +12,376 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
+    :root {
+      --bg-main: #0b1120;
+      --bg-surface: #0f172a;
+      --bg-card: #111827;
+      --bg-card-hover: #1e293b;
+      --border-color: #1e293b;
+      --border-color-light: #334155;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #38bdf8;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --wa-green: #25D366;
+      --danger-bg: rgba(127, 29, 29, 0.45);
+      --danger-border: rgba(239, 68, 68, 0.6);
+      --danger-text: #fca5a5;
+    }
+
     body {
-      background: #0f172a;
-      color: #e2e8f0;
+      background: var(--bg-main);
+      color: var(--text-main);
       height: 100vh;
       display: flex;
+      flex-direction: column;
       overflow: hidden;
     }
 
-    /* Container Principal */
-    .app-container {
+    /* -------------------------------------------------------------
+       1. APPBAR (ENDOMARKETING & MENU SANDUÍCHE)
+       ------------------------------------------------------------- */
+    .appbar {
+      height: 56px;
+      min-height: 56px;
+      background: #090e1a;
+      border-bottom: 1px solid var(--border-color);
       display: flex;
-      width: 100%;
-      height: 100%;
-      padding: 10px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      user-select: none;
+      z-index: 50;
+    }
+
+    .appbar-left {
+      display: flex;
+      align-items: center;
       gap: 12px;
     }
 
-    /* Barra Lateral */
-    .sidebar {
-      width: 220px;
-      min-width: 220px;
-      background: #0f172a;
-      border: 1px solid #1e293b;
+    .appbar-menu-btn {
+      width: 36px;
+      height: 36px;
       border-radius: 8px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #f1f5f9;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: none;
+      padding: 0;
+    }
+
+    .appbar-menu-btn:hover {
+      background: #2563eb;
+      border-color: #3b82f6;
+      color: #ffffff;
+      transform: none;
+    }
+
+    .appbar-title-group {
       display: flex;
       flex-direction: column;
-      padding: 8px;
-      gap: 4px;
+    }
+
+    .appbar-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #f1f5f9;
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .appbar-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .appbar-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .appbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .alura-branding {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: linear-gradient(135deg, rgba(0, 86, 226, 0.15), rgba(0, 168, 255, 0.15));
+      border: 1px solid rgba(0, 140, 255, 0.35);
+      border-radius: 20px;
+    }
+
+    .alura-text {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: #38bdf8;
+      text-transform: uppercase;
+    }
+
+    .alura-subtext {
+      font-size: 11px;
+      color: #94a3b8;
+      border-left: 1px solid #334155;
+      padding-left: 8px;
+    }
+
+    /* -------------------------------------------------------------
+       2. CONTAINER PRINCIPAL (DRAWER + CONTEÚDO PRINCIPAL)
+       ------------------------------------------------------------- */
+    .app-container {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 56px);
+      padding: 12px;
+      gap: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* -------------------------------------------------------------
+       3. DRAWER / SIDEBAR (MÓVEL & REDIMENSIONÁVEL)
+       ------------------------------------------------------------- */
+    .sidebar {
+      width: 290px;
+      min-width: 200px;
+      max-width: 480px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      gap: 6px;
       user-select: none;
+      position: relative;
+      overflow: hidden;
+      transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                  min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                  margin-right 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                  padding 0.25s ease,
+                  opacity 0.2s ease,
+                  border-color 0.2s ease;
+    }
+
+    .sidebar.collapsed {
+      width: 0 !important;
+      min-width: 0 !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      margin-right: -12px !important;
+      border-color: transparent !important;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Alça de redimensionamento do Drawer */
+    .sidebar-resizer {
+      position: absolute;
+      top: 0;
+      right: -6px;
+      width: 10px;
+      height: 100%;
+      cursor: col-resize;
+      z-index: 20;
+    }
+
+    .sidebar-resizer:hover, .sidebar-resizer.resizing {
+      background: rgba(59, 130, 246, 0.35);
+      border-radius: 4px;
+    }
+
+    .sidebar-header {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 6px 10px 4px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .sidebar-item {
       padding: 12px 14px;
-      border-radius: 6px;
+      border-radius: 8px;
       color: #cbd5e1;
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 500;
       cursor: pointer;
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 10px;
-      transition: background 0.15s ease, color 0.15s ease;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      position: relative;
     }
 
-    .sidebar-item:hover {
-      background: #1e293b;
+    .sidebar-item-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .sidebar-item-icon {
+      font-size: 14px;
+      width: 18px;
+      text-align: center;
+    }
+
+    .sidebar-item:hover:not(.disabled) {
+      background: var(--bg-card-hover);
       color: #ffffff;
     }
 
     .sidebar-item.active {
-      background: #1d4ed8;
-      color: #ffffff;
+      background: #1d4ed8 !important;
+      color: #ffffff !important;
       font-weight: 600;
+      box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3);
+      border-color: #3b82f6 !important;
     }
 
-    /* Conteúdo Principal (Stacked Pages) */
+    /* Alertas no Drawer (Vermelho Escuro) */
+    .sidebar-item.alert-danger:not(.disabled) {
+      background: var(--danger-bg);
+      border-color: var(--danger-border);
+      color: var(--danger-text);
+    }
+
+    .sidebar-item.alert-danger:not(.disabled):hover {
+      background: rgba(153, 27, 27, 0.6);
+      color: #fee2e2;
+    }
+
+    .sidebar-item.alert-danger.active {
+      background: #991b1b !important;
+      color: #ffffff !important;
+      border-color: #ef4444 !important;
+    }
+
+    /* Itens Bloqueados / Desabilitados */
+    .sidebar-item.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      color: #64748b;
+      background: transparent;
+    }
+
+    .sidebar-item.disabled:hover {
+      background: rgba(30, 41, 59, 0.4);
+      color: #94a3b8;
+    }
+
+    .sidebar-alert-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      background: rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .sidebar-success-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .sidebar-lock-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      background: rgba(100, 116, 139, 0.25);
+      color: #94a3b8;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-status-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color-light);
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* -------------------------------------------------------------
+       4. CONTEÚDO PRINCIPAL & PAINEL DO CONSOLE FIXO (REDIMENSIONÁVEL)
+       ------------------------------------------------------------- */
     .main-content {
       flex: 1;
-      background: #0f172a;
-      border-radius: 8px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      position: relative;
+    }
+
+    .page-container {
+      flex: 1;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
+      padding: 24px;
     }
 
     .page {
       display: none;
       flex-direction: column;
-      gap: 16px;
+      gap: 20px;
       height: 100%;
     }
 
@@ -88,63 +389,95 @@
       display: flex;
     }
 
-    /* Grupos e Caixas */
-    .group-box {
-      border: 1px solid #334155;
-      border-radius: 8px;
-      padding: 16px;
-      background: #111827;
+    .page-header {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 14px;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .page-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Grupos e Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color-light);
+      border-radius: 10px;
+      padding: 20px;
       position: relative;
     }
 
-    .group-box-title {
+    .card-title {
       font-size: 14px;
       font-weight: 600;
       color: #93c5fd;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    h1, h2 {
-      color: #bfdbfe;
-      font-weight: 600;
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
     }
 
-    h1 {
-      font-size: 22px;
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
     }
 
     /* Formulários e Inputs */
     .form-grid {
       display: grid;
-      grid-template-columns: 120px 1fr;
-      gap: 12px;
+      grid-template-columns: 130px 1fr;
+      gap: 14px;
       align-items: center;
     }
 
     label {
       color: #dbeafe;
-      font-size: 14px;
+      font-size: 13.5px;
+      font-weight: 500;
     }
 
     input, select, textarea {
-      background: #111827;
-      border: 1px solid #334155;
-      border-radius: 6px;
+      background: #0b1120;
+      border: 1px solid var(--border-color-light);
+      border-radius: 8px;
       color: #f8fafc;
-      padding: 8px 12px;
-      font-size: 14px;
+      padding: 10px 14px;
+      font-size: 13.5px;
       outline: none;
       width: 100%;
-      transition: border-color 0.2s;
+      transition: all 0.2s ease;
     }
 
     input:focus, select:focus, textarea:focus {
-      border-color: #2563eb;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
     }
 
-    input:read-only, textarea:read-only {
+    input:disabled, textarea:disabled {
       background: #1e293b;
-      cursor: default;
+      color: #64748b;
+      cursor: not-allowed;
+      opacity: 0.7;
     }
 
     /* Botões */
@@ -152,143 +485,193 @@
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
+      align-items: center;
     }
 
     button, .btn {
-      background: #2563eb;
+      background: var(--primary);
       color: white;
       border: none;
-      border-radius: 6px;
-      padding: 8px 14px;
-      font-size: 14px;
-      font-weight: 500;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 13.5px;
+      font-weight: 600;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      transition: background 0.15s ease, opacity 0.15s ease;
+      gap: 8px;
+      transition: all 0.2s ease;
       text-decoration: none;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
 
     button:hover:not(:disabled), .btn:hover:not(:disabled) {
-      background: #1d4ed8;
+      background: var(--primary-hover);
+      transform: translateY(-1px);
     }
 
     button.secondary, .btn.secondary {
       background: #1f2937;
-      border: 1px solid #334155;
+      border: 1px solid var(--border-color-light);
+      color: #e2e8f0;
+      box-shadow: none;
     }
 
     button.secondary:hover:not(:disabled), .btn.secondary:hover:not(:disabled) {
       background: #374151;
+      color: #ffffff;
     }
 
     button.danger, .btn.danger {
       background: #991b1b;
       color: #fee2e2;
+      border: 1px solid #dc2626;
     }
 
     button.danger:hover:not(:disabled), .btn.danger:hover:not(:disabled) {
       background: #b91c1c;
+      color: #ffffff;
+    }
+
+    button.success, .btn.success {
+      background: #059669;
+      color: #ffffff;
+    }
+
+    button.success:hover:not(:disabled), .btn.success:hover:not(:disabled) {
+      background: #047857;
     }
 
     button:disabled, .btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+      transform: none;
     }
 
-    .btn-xs {
+    .btn-sm {
       padding: 5px 10px;
       font-size: 12px;
-      border-radius: 4px;
-      width: 100%;
+      border-radius: 6px;
     }
 
-    /* Badge de Status de Sessão */
-    .session-badge {
+    .btn-lg {
+      padding: 14px 24px;
+      font-size: 15px;
+      border-radius: 10px;
+    }
+
+    /* Badges de Status */
+    .status-badge {
       display: inline-flex;
       align-items: center;
       gap: 6px;
       font-size: 12px;
-      padding: 4px 8px;
+      padding: 4px 10px;
       border-radius: 9999px;
-      font-weight: 500;
+      font-weight: 600;
       background: #1e293b;
       color: #94a3b8;
-      border: 1px solid #334155;
+      border: 1px solid var(--border-color-light);
     }
 
-    .session-badge.connected {
+    .status-badge.connected {
       background: rgba(16, 185, 129, 0.15);
       color: #34d399;
-      border-color: rgba(16, 185, 129, 0.3);
+      border-color: rgba(16, 185, 129, 0.35);
     }
 
-    .session-badge.disconnected {
+    .status-badge.disconnected {
       background: rgba(239, 68, 68, 0.15);
       color: #f87171;
-      border-color: rgba(239, 68, 68, 0.3);
+      border-color: rgba(239, 68, 68, 0.35);
     }
 
-    .session-badge .dot {
+    .status-badge .dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: #94a3b8;
+      background: currentColor;
     }
 
-    .session-badge.connected .dot {
-      background: #10b981;
-      box-shadow: 0 0 6px #10b981;
+    .status-badge.connected .dot {
+      box-shadow: 0 0 8px #10b981;
     }
 
-    .session-badge.disconnected .dot {
-      background: #ef4444;
+    /* -------------------------------------------------------------
+       PAINEL FIXO DO CONSOLE (REDIMENSIONÁVEL VIA DRAG)
+       ------------------------------------------------------------- */
+    .console-resizer {
+      height: 8px;
+      min-height: 8px;
+      background: #090e1a;
+      border-top: 1px solid var(--border-color);
+      cursor: row-resize;
+      z-index: 20;
+      transition: background 0.2s ease;
     }
 
-    .sidebar-footer {
-      margin-top: auto;
-      padding-top: 10px;
-      border-top: 1px solid #1e293b;
+    .console-resizer:hover, .console-resizer.resizing {
+      background: rgba(59, 130, 246, 0.45);
+    }
+
+    .console-panel {
+      height: 160px;
+      min-height: 38px;
+      max-height: 480px;
+      background: #090e1a;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      transition: height 0.15s ease;
+      user-select: none;
     }
 
-    .info-icon {
-      display: inline-flex;
+    .console-panel.minimized {
+      height: 38px !important;
+      min-height: 38px !important;
+    }
+
+    .console-header {
+      height: 38px;
+      min-height: 38px;
+      background: #0d1527;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
       align-items: center;
-      justify-content: center;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: #334155;
-      color: #93c5fd;
-      font-size: 11px;
-      cursor: help;
-      font-weight: bold;
+      justify-content: space-between;
+      padding: 0 14px;
     }
 
-    /* Console de Logs */
+    .console-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #93c5fd;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .console-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     .log-container {
-      background: #111827;
-      border: 1px solid #334155;
-      border-radius: 6px;
-      padding: 12px;
-      height: 180px;
-      min-height: 180px;
-      max-height: 180px;
+      flex: 1;
+      background: #090e1a;
+      padding: 10px 14px;
       overflow-y: auto;
-      font-family: "Cascadia Code", "Fira Code", Consolas, Courier, monospace;
-      font-size: 13px;
+      font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+      font-size: 12px;
       color: #94a3b8;
       white-space: pre-wrap;
       word-break: break-all;
+      user-select: text;
     }
 
     .log-entry {
-      margin-bottom: 3px;
+      margin-bottom: 4px;
       line-height: 1.4;
     }
 
@@ -296,13 +679,13 @@
       color: #38bdf8;
     }
 
-    /* Tabela */
+    /* Tabela de Mensagens */
     .table-container {
       flex: 1;
-      border: 1px solid #334155;
-      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
       overflow: auto;
-      background: #111827;
+      background: var(--bg-card);
       min-height: 250px;
     }
 
@@ -318,7 +701,7 @@
       top: 0;
       background: #1e293b;
       color: #93c5fd;
-      padding: 10px 12px;
+      padding: 12px 14px;
       font-weight: 600;
       border-bottom: 1px solid #334155;
       z-index: 10;
@@ -327,11 +710,11 @@
     tbody tr {
       border-bottom: 1px solid #1e293b;
       cursor: pointer;
-      transition: background 0.1s ease;
+      transition: background 0.15s ease;
     }
 
     tbody tr:nth-child(even) {
-      background: #0f172a;
+      background: #0b1120;
     }
 
     tbody tr:hover {
@@ -339,15 +722,106 @@
     }
 
     td {
-      padding: 8px 12px;
+      padding: 10px 14px;
       color: #e2e8f0;
-      max-width: 380px;
+      max-width: 400px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
-    /* Notificações / Toast */
+    /* -------------------------------------------------------------
+       5. MODAL DIALOG (DETALHES DA MENSAGEM)
+       ------------------------------------------------------------- */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+      animation: modalFadeIn 0.2s ease;
+    }
+
+    .modal-dialog {
+      background: #0f172a;
+      border: 1px solid var(--border-color-light);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 760px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #111827;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #93c5fd;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      box-shadow: none;
+    }
+
+    .modal-close:hover {
+      background: #1e293b;
+      color: #ffffff;
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: flex-end;
+      background: #111827;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Toast */
     .toast {
       position: fixed;
       bottom: 24px;
@@ -358,240 +832,1092 @@
       padding: 12px 20px;
       border-radius: 8px;
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-      z-index: 1000;
+      z-index: 2000;
       display: none;
       animation: fadeIn 0.2s ease;
+      font-size: 13.5px;
     }
 
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    /* -------------------------------------------------------------
+       6. ESTILOS DO FLUXO DE EXTRAÇÃO E DIVISOR VERTICAL "OU"
+       ------------------------------------------------------------- */
+    .active-group-card {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 58, 138, 0.28) 60%, rgba(14, 116, 144, 0.18) 100%);
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      border-radius: 12px;
+      padding: 18px 22px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    .active-group-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .active-group-title-col {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .active-group-label-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .active-group-badge {
+      background: rgba(37, 211, 102, 0.2);
+      color: #25D366;
+      border: 1px solid rgba(37, 211, 102, 0.4);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .active-group-id-badge {
+      font-family: monospace;
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    .active-group-name {
+      font-size: 20px;
+      font-weight: 700;
+      color: #f8fafc;
+      letter-spacing: 0.2px;
+    }
+
+    .btn-mudar-grupo {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.92), rgba(29, 78, 216, 0.95));
+      border: 1.5px solid #60a5fa;
+      color: #ffffff;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+    }
+
+    .btn-mudar-grupo:hover {
+      background: linear-gradient(135deg, #1d4ed8, #2563eb);
+      border-color: #93c5fd;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(37, 99, 235, 0.5);
+    }
+
+    .active-group-divider {
+      height: 1px;
+      background: linear-gradient(to right, rgba(56, 189, 248, 0.3), rgba(56, 189, 248, 0.08), transparent);
+    }
+
+    .active-group-bottom-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .active-group-meta {
+      font-size: 12.5px;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .active-group-msg-count {
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    .active-group-db-tools {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .active-group-db-label {
+      font-size: 11.5px;
+      color: #94a3b8;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .db-tool-btn {
+      font-size: 11.5px;
+      padding: 4px 10px;
+    }
+
+    @media (max-width: 920px) {
+      .active-group-top-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .btn-mudar-grupo {
+        width: 100%;
+        justify-content: center;
+      }
+      .active-group-bottom-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    .extraction-intro-banner {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 22px;
+      font-size: 13.5px;
+      color: #cbd5e1;
+      line-height: 1.55;
+    }
+
+    .extraction-pathways-container {
+      display: grid;
+      grid-template-columns: 1fr 60px 1fr;
+      align-items: stretch;
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .extraction-pathways-container.has-active-group {
+      grid-template-columns: 1fr;
+    }
+
+    .pathway-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      transition: border-color 0.2s ease, transform 0.15s ease;
+    }
+
+    .pathway-card:hover {
+      border-color: var(--border-color-light);
+    }
+
+    .pathway-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .pathway-badge {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .pathway-badge-coleta {
+      background: rgba(37, 99, 235, 0.2);
+      color: #60a5fa;
+      border: 1px solid rgba(37, 99, 235, 0.4);
+    }
+
+    .pathway-badge-import {
+      background: rgba(168, 85, 247, 0.2);
+      color: #c084fc;
+      border: 1px solid rgba(168, 85, 247, 0.4);
+    }
+
+    .pathway-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+
+    .pathway-desc {
+      font-size: 12.5px;
+      color: #94a3b8;
+      line-height: 1.45;
+      margin-bottom: 18px;
+    }
+
+    /* DIVISOR VERTICAL "OU" */
+    .divider-ou-vertical {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .divider-ou-vertical::before {
+      content: '';
+      position: absolute;
+      top: 10px;
+      bottom: 10px;
+      left: 50%;
+      width: 2px;
+      background: linear-gradient(to bottom, rgba(51, 65, 85, 0.2), rgba(59, 130, 246, 0.55), rgba(51, 65, 85, 0.2));
+      transform: translateX(-50%);
+      z-index: 1;
+    }
+
+    .badge-ou-circle {
+      position: relative;
+      z-index: 2;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #0f172a;
+      border: 2px solid #3b82f6;
+      color: #93c5fd;
+      font-size: 11.5px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: 0.5px;
+      box-shadow: 0 0 16px rgba(59, 130, 246, 0.35);
+    }
+
+    @media (max-width: 920px) {
+      .extraction-pathways-container {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .divider-ou-vertical {
+        flex-direction: row;
+        height: 40px;
+        margin: 4px 0;
+      }
+
+      .divider-ou-vertical::before {
+        top: 50%;
+        bottom: auto;
+        left: 10px;
+        right: 10px;
+        width: auto;
+        height: 2px;
+        transform: translateY(-50%);
+        background: linear-gradient(to right, rgba(51, 65, 85, 0.2), rgba(59, 130, 246, 0.55), rgba(51, 65, 85, 0.2));
+      }
+    }
+
+    .time-window-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      width: 100%;
+    }
+
+    .info-callout {
+      background: rgba(15, 23, 42, 0.8);
+      border-left: 3px solid #38bdf8;
+      padding: 10px 14px;
+      border-radius: 0 6px 6px 0;
+      font-size: 12px;
+      color: #94a3b8;
+      line-height: 1.45;
+      margin-top: 10px;
+    }
+
+    .group-helper-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+      font-size: 11.5px;
+    }
+
+    .group-sync-link {
+      background: transparent;
+      border: none;
+      color: #38bdf8;
+      cursor: pointer;
+      font-size: 11.5px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: none;
+    }
+
+    .group-sync-link:hover {
+      text-decoration: underline;
+      background: transparent;
+    }
   </style>
 </head>
 <body>
 
-  <div class="app-container">
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <div class="sidebar-item" data-page="page-resumo">Resumo</div>
-      <div class="sidebar-item active" data-page="page-mensagens">Mensagens</div>
-      <div class="sidebar-item" data-page="page-detalhes">Detalhes</div>
-      <div class="sidebar-item" data-page="page-database">Banco de Dados</div>
-      <div class="sidebar-item" data-page="page-exportacao">Exportação</div>
+  <!-- =============================================================
+       1. APPBAR DE ENDOMARKETING
+       ============================================================= -->
+  <header class="appbar">
+    <div class="appbar-left">
+      <!-- Botão de Menu Sanduíche -->
+      <button id="btn-toggle-sidebar" class="appbar-menu-btn" title="Alternar menu lateral" onclick="toggleSidebar()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
 
-      <div class="sidebar-footer">
-        <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Sessão WhatsApp</div>
-        <div id="sidebar-session-badge" class="session-badge disconnected">
-          <span class="dot"></span>
-          <span id="sidebar-session-text">Desconectado</span>
+      <div class="appbar-title-group">
+        <div class="appbar-title">
+          ZapInsights Hub
+          <span class="appbar-badge">v1.0</span>
         </div>
-        <button id="btn-sidebar-conectar" class="secondary btn-xs" onclick="conectarWhatsApp()">Conectar (QR Code)</button>
-        <button id="btn-sidebar-desconectar" class="danger btn-xs" onclick="desconectarWhatsApp()" style="display: none;">Sair / Desconectar</button>
+        <div class="appbar-subtitle">Inteligência e análise de comunidades WhatsApp</div>
       </div>
     </div>
+    <div class="appbar-right">
+      <div class="alura-branding">
+        <span class="alura-text">Alura</span>
+        <span class="alura-subtext">Data & AI Hub</span>
+      </div>
+    </div>
+  </header>
 
-    <!-- Main Content Pages -->
-    <div class="main-content">
+  <!-- =============================================================
+       2. CONTAINER GERAL (DRAWER + CONTEÚDO PRINCIPAL)
+       ============================================================= -->
+  <div class="app-container">
 
-      <!-- PÁGINA 1: RESUMO -->
-      <div id="page-resumo" class="page">
-        <h1>Resumo do sistema</h1>
+    <!-- DRAWER (MENU LATERAL MÓVEL / REDIMENSIONÁVEL) -->
+    <nav id="app-sidebar" class="sidebar">
+      <!-- Alça de redimensionamento do menu -->
+      <div id="sidebar-resizer" class="sidebar-resizer" title="Arraste para redimensionar o menu"></div>
 
-        <div class="group-box">
-          <div class="group-box-title">Status da Sessão do WhatsApp</div>
-          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <span style="color: #cbd5e1; font-size: 14px;">Status da conta:</span>
-              <div id="resumo-session-badge" class="session-badge disconnected">
-                <span class="dot"></span>
-                <span id="resumo-session-text">Desconectado (Necessário QR Code)</span>
+      <div class="sidebar-header">
+        <span>Navegação</span>
+        <span style="font-size: 10px; color: #64748b; font-weight: 500;">5 etapas</span>
+      </div>
+      
+      <!-- 1. Resumo -->
+      <div class="sidebar-item active" data-page="page-resumo">
+        <div class="sidebar-item-label">
+          <span class="sidebar-item-icon">📄</span>
+          <span>1. Resumo</span>
+        </div>
+      </div>
+
+      <!-- 2. Conectar ao WhatsApp -->
+      <div id="drawer-item-conectar" class="sidebar-item alert-danger" data-page="page-conectar">
+        <div class="sidebar-item-label">
+          <span class="sidebar-item-icon">💬</span>
+          <span>2. Conectar ao WhatsApp</span>
+        </div>
+        <span id="drawer-conectar-badge" class="sidebar-alert-badge">Desconectado</span>
+      </div>
+
+      <!-- 3. Extração -->
+      <div id="drawer-item-extracao" class="sidebar-item alert-danger" data-page="page-extracao">
+        <div class="sidebar-item-label">
+          <span class="sidebar-item-icon">⚡</span>
+          <span>3. Extração</span>
+        </div>
+        <span id="drawer-extracao-badge" class="sidebar-alert-badge">Sem dados</span>
+      </div>
+
+      <!-- 4. Visualização (Bloqueada se não houver dados) -->
+      <div id="drawer-item-visualizacao" class="sidebar-item disabled" data-page="page-visualizacao">
+        <div class="sidebar-item-label">
+          <span class="sidebar-item-icon">📋</span>
+          <span>4. Visualização</span>
+        </div>
+        <span id="drawer-visualizacao-lock" class="sidebar-lock-badge">🔒 Bloqueado</span>
+      </div>
+
+      <!-- 5. Gerar insights (Bloqueada se não houver dados) -->
+      <div id="drawer-item-insights" class="sidebar-item disabled" data-page="page-insights">
+        <div class="sidebar-item-label">
+          <span class="sidebar-item-icon">🧠</span>
+          <span>5. Gerar insights</span>
+        </div>
+        <span id="drawer-insights-lock" class="sidebar-lock-badge">🔒 Bloqueado</span>
+      </div>
+
+      <!-- FOOTER DA SIDEBAR -->
+      <div class="sidebar-footer">
+        <div class="sidebar-status-box">
+          <div class="status-row">
+            <span style="color: #94a3b8;">WhatsApp:</span>
+            <span id="sidebar-session-status" class="status-badge disconnected">
+              <span class="dot"></span>
+              <span id="sidebar-session-label">Offline</span>
+            </span>
+          </div>
+          <div class="status-row" style="margin-top: 4px;">
+            <span style="color: #94a3b8;">Mensagens:</span>
+            <span id="sidebar-messages-count" style="font-weight: 700; color: #38bdf8;">0</span>
+          </div>
+        </div>
+        <button id="btn-desconectar-sidebar" class="btn danger btn-sm" onclick="desconectarWhatsApp()" style="width: 100%; display: none;">
+          🚪 Desconectar e limpar sessão
+        </button>
+      </div>
+    </nav>
+
+    <!-- CONTEÚDO PRINCIPAL (ÁREA DE PÁGINAS + PAINEL DO CONSOLE) -->
+    <main class="main-content">
+
+      <!-- CONTAINER DE PÁGINAS -->
+      <div class="page-container">
+
+        <!-- =========================================================
+             TELA 1: RESUMO (APENAS INFORMATIVA)
+             ========================================================= -->
+        <div id="page-resumo" class="page active">
+          <div class="page-header">
+            <h1 class="page-title">📄 Visão geral da aplicação</h1>
+            <p class="page-subtitle">Entenda como a ferramenta funciona e o que esperar de cada etapa do fluxo.</p>
+          </div>
+
+          <div class="card" style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(15, 23, 42, 0.6)); border-color: rgba(59, 130, 246, 0.3);">
+            <h2 style="font-size: 16px; color: #93c5fd; margin-bottom: 8px;">Bem-vindo ao ZapInsights Hub!</h2>
+            <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6;">
+              Esta aplicação foi desenvolvida para coletar, armazenar incrementalmente e extrair inteligência qualitativa de grupos de estudo e comunidades do WhatsApp. Todo o processamento respeita a privacidade local-first, mantendo os dados salvos com segurança no seu próprio computador.
+            </p>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title">🚀 Como a aplicação funciona</div>
+              <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
+                <div><b>1. Conexão segura:</b> Você conecta sua sessão pelo QR Code do WhatsApp Web em um navegador local isolado.</div>
+                <div><b>2. Extração flexível:</b> Colete mensagens de grupos definindo filtros de tempo (dias ou meses) ou importe dados prévios via CSV/JSON.</div>
+                <div><b>3. Armazenamento persistente:</b> As mensagens são salvas e deduplicadas em um banco local SQLite, permitindo coletas cumulativas.</div>
+                <div><b>4. Visualização e auditoria:</b> Consulte as mensagens em tabela com pesquisa dinâmica e modal de detalhes.</div>
+                <div><b>5. Insights via IA:</b> Em breve, processe discussões com Modelos de Linguagem (LLMs) para gerar relatórios acionáveis.</div>
               </div>
             </div>
-            <div class="btn-group">
-              <button id="btn-resumo-conectar" onclick="conectarWhatsApp()">Conectar WhatsApp</button>
-              <button id="btn-resumo-desconectar" class="danger" onclick="desconectarWhatsApp()" style="display: none;">Sair / Desconectar</button>
+
+            <div class="card">
+              <div class="card-title">✨ O que esperar da ferramenta</div>
+              <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
+                <div>🔒 <b>Privacidade total:</b> Seus dados e mensagens ficam restritos ao banco local, sem envio desnecessário a servidores terceiros.</div>
+                <div>⚡ <b>Sem perda de histórico:</b> A persistência incremental garante que coletas futuras apenas complementem as existentes.</div>
+                <div>📊 <b>Exportação imediata:</b> Faça o download integral do banco de dados nos formatos CSV e JSON com um clique.</div>
+                <div>💡 <b>Navegação guiada:</b> Os indicadores no menu lateral alertam sobre etapas pendentes (como conexão ou ausência de dados).</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: auto; background: #090e1a; border-style: dashed;">
+            <p style="font-size: 13px; color: #94a3b8; text-align: center;">
+              💡 <i>Dica: Para começar, clique em <b>"2. Conectar ao WhatsApp"</b> no menu lateral à esquerda.</i>
+            </p>
+          </div>
+        </div>
+
+        <!-- =========================================================
+             TELA 2: CONECTAR AO WHATSAPP
+             ========================================================= -->
+        <div id="page-conectar" class="page">
+          <div class="page-header">
+            <h1 class="page-title">💬 Conectar ao WhatsApp</h1>
+            <p class="page-subtitle">Gerencie sua sessão e autenticação no WhatsApp Web de forma segura.</p>
+          </div>
+
+          <div class="card" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 24px 20px; gap: 14px;">
+            <!-- Ícone do WhatsApp -->
+            <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(37, 211, 102, 0.15); border: 2px solid rgba(37, 211, 102, 0.4); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 16px rgba(37, 211, 102, 0.2);">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+              </svg>
+            </div>
+
+            <div style="max-width: 520px;">
+              <h2 style="font-size: 16px; color: #f8fafc; margin-bottom: 6px;">Autenticação no WhatsApp Web</h2>
+              <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
+                Ao clicar no botão abaixo, o navegador será iniciado. Aponte a câmera do seu celular para escanear o <b>QR Code</b> na tela. Sua sessão será mantida ativa para coletas futuras.
+              </p>
+            </div>
+
+            <!-- Status da Conexão -->
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 13px; color: #94a3b8;">Status atual:</span>
+              <div id="conectar-status-badge" class="status-badge disconnected">
+                <span class="dot"></span>
+                <span id="conectar-status-text">Desconectado</span>
+              </div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="btn-group" style="margin-top: 4px;">
+              <button id="btn-conectar-main" class="success" onclick="conectarWhatsApp()">
+                <span>📱 Conectar ao WhatsApp</span>
+              </button>
+              <button id="btn-desconectar-main" class="danger" onclick="desconectarWhatsApp()" style="display: none;">
+                <span>🚪 Desconectar e limpar sessão</span>
+              </button>
             </div>
           </div>
         </div>
 
-        <div class="group-box" style="flex: 1;">
-          <p style="margin-bottom: 12px; font-size: 15px;"><b>WhatsApp Insights</b></p>
-          <p style="margin-bottom: 12px; color: #cbd5e1;">O sistema salva as mensagens em um banco local SQLite para consulta rápida e análise.</p>
-          <p style="margin-bottom: 12px; color: #cbd5e1;"><b>Banco atual:</b> <span id="resumo-db-path" style="color: #93c5fd;">Carregando...</span></p>
-          <p style="color: #cbd5e1;"><b>Fluxo:</b> conectar/autenticar WhatsApp → coletar mensagens → salvar no banco → consultar na tabela → exportar para CSV/JSON.</p>
+        <!-- =========================================================
+             TELA 3: EXTRAÇÃO (& IMPORTAÇÃO)
+             ========================================================= -->
+        <div id="page-extracao" class="page">
+          <div class="page-header">
+            <h1 class="page-title">⚡ Extração e carregamento de dados</h1>
+            <p class="page-subtitle">Alimente a base de dados coletando conversas ao vivo ou importando arquivos prévios.</p>
+          </div>
+
+          <!-- Banner / Card de Grupo Ativo na Sessão Local -->
+          <div id="active-group-banner" class="active-group-card" style="display: none;">
+            
+            <!-- Linha Superior: Título/Grupo à esquerda e botão Mudar de Grupo com destaque à direita -->
+            <div class="active-group-top-row">
+              <div class="active-group-title-col">
+                <div class="active-group-label-row">
+                  <span class="active-group-badge">🟢 Grupo Ativo na Sessão Local</span>
+                  <span id="active-group-id-badge" class="active-group-id-badge"></span>
+                </div>
+                <div class="active-group-name" id="active-group-name-display">-</div>
+              </div>
+
+              <div>
+                <button type="button" id="btn-mudar-grupo" class="btn-mudar-grupo" onclick="abrirModalTrocaGrupo()" title="Limpar base de mensagens da sessão local e escolher ou coletar outro grupo">
+                  <span>🔄 Mudar de grupo</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Divisor sutil -->
+            <div class="active-group-divider"></div>
+
+            <!-- Linha Inferior: Meta de mensagens à esquerda e Ferramentas SQLite à direita -->
+            <div class="active-group-bottom-row">
+              <div class="active-group-meta">
+                <span id="active-group-messages-display" class="active-group-msg-count">0 mensagens carregadas</span>
+                <span style="margin: 0 4px; color: #64748b;">•</span>
+                <span>Base exclusiva pronta para visualização e insights</span>
+              </div>
+
+              <div class="active-group-db-tools">
+                <span class="active-group-db-label">Banco local (SQLite):</span>
+                <button type="button" class="secondary btn-sm db-tool-btn" onclick="abrirBanco()" title="Abrir banco messages.db no visualizador do sistema">🗄️ Abrir SQLite</button>
+                <button type="button" class="secondary btn-sm db-tool-btn" onclick="abrirPastaDB()" title="Abrir pasta onde o arquivo messages.db está salvo">📂 Abrir pasta</button>
+                <button type="button" class="secondary btn-sm db-tool-btn" onclick="copiarCaminhoDB()" title="Copiar caminho completo do arquivo messages.db">📋 Copiar caminho</button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Banner Explicativo sobre os Dois Caminhos Equivalentes -->
+          <div id="extraction-intro-banner" class="extraction-intro-banner">
+            💡 <b>Ambas as opções abaixo satisfazem a extração:</b> Você pode tanto <b>coletar ao vivo</b> do WhatsApp Web via automação quanto <b>importar um arquivo</b> (CSV ou JSON). Qualquer um dos caminhos carrega as mensagens para o banco SQLite local (<code>messages.db</code>), liberando imediatamente a visualização e os módulos de inteligência artificial.
+          </div>
+
+          <!-- Dois Caminhos Lado a Lado com Divisor Vertical "OU" -->
+          <div id="extraction-pathways-container" class="extraction-pathways-container">
+
+            <!-- OPÇÃO 1: COLETA AUTOMÁTICA VIA WHATSAPP WEB -->
+            <div id="card-coleta" class="pathway-card">
+              <div>
+                <div class="pathway-header">
+                  <span id="coleta-card-badge" class="pathway-badge pathway-badge-coleta">Opção 1</span>
+                  <h3 id="coleta-card-title" class="pathway-title">⚡ Coleta via WhatsApp Web</h3>
+                </div>
+                <p id="coleta-card-desc" class="pathway-desc">
+                  Conecta ao WhatsApp Web no navegador e extrai as mensagens diretamente do histórico do grupo.
+                </p>
+
+                <div class="form-grid" style="grid-template-columns: 110px 1fr; margin-bottom: 12px;">
+                  <label for="select-grupo">Grupo:</label>
+                  <div>
+                    <div class="select-wrapper">
+                      <select id="select-grupo" class="custom-select" onchange="aoMudarSelectGrupo()">
+                        <option value="" disabled selected>🔄 Carregando catálogo de grupos...</option>
+                      </select>
+                    </div>
+
+                    <div id="container-grupo-manual" style="display: none; margin-top: 8px;">
+                      <input type="text" id="input-grupo-manual" placeholder="Digite o nome exato do grupo no WhatsApp...">
+                    </div>
+
+                    <div class="group-helper-bar">
+                      <span id="status-grupos-count" style="color: var(--text-dim); font-size: 11.5px;">Aguardando catálogo...</span>
+                      <button type="button" id="btn-sync-grupos" class="group-sync-link" onclick="sincronizarGruposWeb()" title="Escanear grupos do WhatsApp Web">
+                        <span>🔄 Atualizar grupos</span>
+                      </button>
+                    </div>
+
+                    <div class="info-callout">
+                      ⓘ <b>Nota sobre Comunidades:</b> O WhatsApp organiza conversas em grupos e canais individuais. Para comunidades, escolha o canal/grupo específico desejado.
+                    </div>
+                  </div>
+
+                  <label for="input-janela-valor">Janela de tempo:</label>
+                  <div>
+                    <div class="time-window-group">
+                      <input type="number" id="input-janela-valor" min="1" max="999" value="7" style="width: 90px;">
+                      <div class="select-wrapper" style="flex: 1;">
+                        <select id="select-janela-unidade" class="custom-select">
+                          <option value="horas">Horas</option>
+                          <option value="dias" selected>Dias</option>
+                          <option value="semanas">Semanas</option>
+                          <option value="meses">Meses</option>
+                        </select>
+                      </div>
+                    </div>
+                    <small style="color: #64748b; font-size: 11px; display: block; margin-top: 4px;">
+                      Define o período de mensagens para trás que o coletor irá rolar e extrair.
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top: 16px;">
+                <button id="btn-coletar" style="width: 100%;" onclick="iniciarColeta()"><span>⚡ Iniciar coleta de mensagens</span></button>
+              </div>
+            </div>
+
+            <!-- DIVISOR VERTICAL "OU" -->
+            <div id="divider-ou-extracao" class="divider-ou-vertical">
+              <div class="badge-ou-circle">OU</div>
+            </div>
+
+            <!-- OPÇÃO 2: IMPORTAÇÃO DE ARQUIVO (CSV / JSON) -->
+            <div id="card-importacao" class="pathway-card">
+              <div>
+                <div class="pathway-header">
+                  <span class="pathway-badge pathway-badge-import">Opção 2</span>
+                  <h3 class="pathway-title">📥 Importação de arquivo</h3>
+                </div>
+                <p class="pathway-desc">
+                  Carrega mensagens instantaneamente a partir de um arquivo <b>CSV</b> ou <b>JSON</b> exportado previamente, sem necessidade de abrir o navegador.
+                </p>
+
+                <div style="margin-bottom: 16px;">
+                  <label style="display: block; font-size: 13px; font-weight: 600; color: #cbd5e1; margin-bottom: 8px;">Selecione o arquivo local:</label>
+                  <input type="file" id="file-import-input" accept=".csv,.json" style="width: 100%;">
+                  <small style="color: #64748b; font-size: 11px; display: block; margin-top: 4px;">
+                    Suporta arquivos .csv (separador ';') ou .json com registros de conversas.
+                  </small>
+                </div>
+
+                <button id="btn-importar" class="secondary" style="width: 100%;" onclick="importarArquivo()">📥 Carregar e importar arquivo</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- =========================================================
+             TELA 4: VISUALIZAÇÃO (TABELA + DIALOG)
+             ========================================================= -->
+        <div id="page-visualizacao" class="page">
+          <div class="page-header">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <div>
+                <h1 class="page-title">📋 Visualização de mensagens</h1>
+                <p class="page-subtitle">Consulte, filtre e audite as mensagens armazenadas no banco local.</p>
+              </div>
+              <div class="btn-group">
+                <a href="/api/exportar/download" class="btn secondary" download title="Baixar histórico de mensagens em formato CSV">📥 Baixar CSV</a>
+                <a href="/api/exportar/json" class="btn secondary" download title="Baixar histórico de mensagens em formato JSON">📥 Baixar JSON</a>
+                <button class="secondary" id="btn-atualizar-visualizacao" onclick="atualizarColetaIncremental()" title="Atalho para coleta incremental no WhatsApp Web para buscar novas mensagens deste grupo">🔄 Atualizar</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Barra de Busca Rápida -->
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <input type="text" id="table-search-input" placeholder="🔍 Pesquisar por remetente ou texto da mensagem..." oninput="filtrarTabelaMensagens()">
+            <div style="white-space: nowrap; font-size: 13px; color: #94a3b8;">
+              Total: <b id="table-total-count" style="color: #38bdf8;">0</b> mensagens
+            </div>
+          </div>
+
+          <!-- Tabela -->
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 160px;">Data/Hora</th>
+                  <th style="width: 180px;">Remetente</th>
+                  <th>Mensagem</th>
+                  <th style="width: 80px; text-align: center;">Anexos</th>
+                  <th style="width: 120px;">ID</th>
+                </tr>
+              </thead>
+              <tbody id="messages-tbody">
+                <tr>
+                  <td colspan="5" style="text-align: center; padding: 24px; color: #64748b;">Carregando mensagens...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- =========================================================
+             TELA 5: GERAR INSIGHTS (MOCKUP IA / LLM)
+             ========================================================= -->
+        <div id="page-insights" class="page">
+          <div class="page-header">
+            <h1 class="page-title">🧠 Geração de insights com IA (LLM)</h1>
+            <p class="page-subtitle">Transforme as conversas coletadas em relatórios analíticos, tópicos e tendências.</p>
+          </div>
+
+          <div class="card" style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.15), rgba(37, 99, 235, 0.15)); border-color: rgba(168, 85, 247, 0.35);">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+              <span style="font-size: 20px;">🚀</span>
+              <h2 style="font-size: 16px; color: #c084fc;">Módulo em preparação arquitetural</h2>
+            </div>
+            <p style="color: #e2e8f0; font-size: 13.5px; line-height: 1.6;">
+              A camada de orquestração de LLMs será conectada nesta etapa para ler as mensagens persistidas no banco local SQLite e executar inferências de inteligência artificial.
+            </p>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title">📊 Resumo executivo e destaques</div>
+              <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
+                Síntese automática dos assuntos mais debatidos no período, identificando os tópicos mais relevantes levantados pelos participantes.
+              </p>
+              <button class="secondary btn-sm" disabled style="opacity: 0.5;">Em breve</button>
+            </div>
+
+            <div class="card">
+              <div class="card-title">💡 Mapeamento de dúvidas recorrentes</div>
+              <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
+                Identificação e agrupamento temático das principais dificuldades técnicas e pedagógicas trazidas pelos alunos nos grupos.
+              </p>
+              <button class="secondary btn-sm" disabled style="opacity: 0.5;">Em breve</button>
+            </div>
+
+            <div class="card">
+              <div class="card-title">📈 Análise de sentimento e clima</div>
+              <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
+                Termômetro de engajamento e satisfação da comunidade, destacando membros participativos e potenciais pontos de atrito.
+              </p>
+              <button class="secondary btn-sm" disabled style="opacity: 0.5;">Em breve</button>
+            </div>
+
+            <div class="card">
+              <div class="card-title">🎯 Recomendações e planos de ação</div>
+              <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
+                Sugestões automáticas de novos conteúdos, lives, artigos e intervenções dos instrutores baseadas nas conversas reais.
+              </p>
+              <button class="secondary btn-sm" disabled style="opacity: 0.5;">Em breve</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- =========================================================
+           PAINEL FIXO DO CONSOLE (SEMPRE VISÍVEL & REDIMENSIONÁVEL)
+           ========================================================= -->
+      <div id="console-resizer" class="console-resizer" title="Arraste para redimensionar a altura do console"></div>
+      
+      <div id="console-panel" class="console-panel">
+        <div class="console-header">
+          <div class="console-title">
+            <span>📟 Console de execução em tempo real</span>
+          </div>
+          <div class="console-actions">
+            <button class="btn-sm secondary" onclick="limparConsole()" title="Limpar mensagens do console">🧹 Limpar</button>
+            <button class="btn-sm secondary" id="btn-toggle-console" onclick="toggleConsole()" title="Minimizar/Expandir console">🔽</button>
+          </div>
+        </div>
+        <div id="log-output" class="log-container">
+          <div class="log-entry">[Sistema] ZapInsights Hub iniciado. Aguardando comandos...</div>
         </div>
       </div>
 
-      <!-- PÁGINA 2: MENSAGENS -->
-      <div id="page-mensagens" class="page active">
-        <!-- Parâmetros de Coleta -->
-        <div class="group-box">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <div class="group-box-title" style="margin-bottom: 0;">Parâmetros da coleta</div>
-            <div id="mensagens-session-badge" class="session-badge disconnected">
-              <span class="dot"></span>
-              <span id="mensagens-session-text">Desconectado</span>
-            </div>
-          </div>
-          <div class="form-grid">
-            <label for="input-grupo">Grupo:</label>
-            <input type="text" id="input-grupo" value="Ciência de Dados | Comunidade Alura" placeholder="Ex: Ciência de Dados">
+    </main>
+  </div>
 
-            <label for="input-comunidade" style="display: flex; align-items: center; gap: 4px; color: #94a3b8;">
-              Comunidade:
-              <span class="info-icon" title="O WhatsApp Web não enxerga comunidades, apenas grupos. Para coletar mensagens, informe o nome do grupo no campo acima.">ⓘ</span>
-            </label>
-            <div>
-              <input type="text" id="input-comunidade" value="Desabilitado (WhatsApp Web só lê grupos)" disabled style="background: #1e293b; color: #64748b; cursor: not-allowed; opacity: 0.7;">
-              <small style="color: #94a3b8; font-size: 11px; display: block; margin-top: 3px;">
-                ⓘ <i>O WhatsApp Web não possui histórico de comunidades inteiras, apenas de grupos. Informe o nome do grupo acima.</i>
-              </small>
-            </div>
-
-            <label for="select-filtro">Filtro:</label>
-            <select id="select-filtro">
-              <option value="mes">Por mês</option>
-              <option value="dias">Por dias</option>
-            </select>
-
-            <label for="input-valor">Valor:</label>
-            <input type="number" id="input-valor" min="1" max="120" value="1">
-          </div>
+  <!-- =============================================================
+       MODAL DIALOG: DETALHES DA MENSAGEM
+       ============================================================= -->
+  <div id="modal-backdrop" class="modal-backdrop" onclick="fecharModalDetalhes(event)">
+    <div class="modal-dialog" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>🔍 Detalhes da mensagem</span>
+          <span id="modal-msg-id" style="font-size: 11.5px; color: #94a3b8; font-family: monospace; background: #1e293b; padding: 2px 6px; border-radius: 4px;">-</span>
         </div>
-
-        <!-- Botões de Ação -->
-        <div class="btn-group">
-          <button id="btn-coletar" onclick="iniciarColeta()">Coletar mensagens</button>
-          <a href="/api/exportar/download" class="btn secondary" download="export_messages.csv">Baixar CSV</a>
-          <button id="btn-atualizar" class="secondary" onclick="carregarMensagens()">Atualizar tabela</button>
-        </div>
-
-        <!-- Console de Log -->
-        <div class="log-container" id="log-output">
-          <div class="log-entry">[Início] Interface inicializada. Conectando aos serviços...</div>
-        </div>
-
-        <!-- Tabela de Mensagens -->
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th style="width: 170px;">Data/Hora</th>
-                <th style="width: 180px;">Remetente</th>
-                <th>Texto</th>
-                <th style="width: 80px;">Anexos</th>
-                <th style="width: 120px;">ID</th>
-              </tr>
-            </thead>
-            <tbody id="messages-tbody">
-              <tr>
-                <td colspan="5" style="text-align: center; padding: 20px; color: #64748b;">Nenhuma mensagem carregada.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <button class="modal-close" onclick="fecharModalDetalhes()">✕</button>
       </div>
 
-      <!-- PÁGINA 3: DETALHES -->
-      <div id="page-detalhes" class="page">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h1>Detalhes da mensagem</h1>
-          <button class="secondary" onclick="navegarPara('page-mensagens')">Voltar para mensagens</button>
-        </div>
-
-        <div class="group-box">
-          <div class="group-box-title">Informações gerais</div>
-          <div class="form-grid">
-            <label>ID:</label>
-            <div id="detail-id" style="color: #93c5fd;">-</div>
-
+      <div class="modal-body">
+        <div class="card" style="padding: 14px; background: #0b1120;">
+          <div class="form-grid" style="grid-template-columns: 100px 1fr; gap: 8px; font-size: 13px;">
             <label>Data/Hora:</label>
-            <div id="detail-data">-</div>
+            <div id="modal-msg-data" style="color: #f1f5f9;">-</div>
 
             <label>Remetente:</label>
-            <div id="detail-remetente">-</div>
-
-            <label>Anexos:</label>
-            <div id="detail-anexos">-</div>
+            <div id="modal-msg-remetente" style="color: #38bdf8; font-weight: 600;">-</div>
 
             <label>Grupo:</label>
-            <div id="detail-grupo">-</div>
+            <div id="modal-msg-grupo" style="color: #cbd5e1;">-</div>
 
-            <label>Comunidade:</label>
-            <div id="detail-comunidade">-</div>
+            <label>Anexos:</label>
+            <div id="modal-msg-anexos" style="color: #cbd5e1;">-</div>
+
+            <label id="label-modal-reply" style="display: none;">Citação:</label>
+            <div id="modal-msg-reply" style="display: none; background: #1e293b; padding: 8px; border-radius: 6px; font-size: 12.5px; border-left: 3px solid #3b82f6;">-</div>
           </div>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
-          <label style="font-weight: 600;">Texto completo:</label>
-          <textarea id="detail-texto" style="height: 120px; resize: vertical;" readonly></textarea>
-
-          <label style="font-weight: 600; margin-top: 8px;">Metadados extras:</label>
-          <textarea id="detail-metadata" style="flex: 1; min-height: 150px; font-family: monospace;" readonly></textarea>
-        </div>
-      </div>
-
-      <!-- PÁGINA 4: BANCO DE DADOS -->
-      <div id="page-database" class="page">
-        <h1>Banco de Dados</h1>
-        <div class="group-box">
-          <div class="group-box-title">Banco de dados local</div>
-          <p style="color: #cbd5e1; margin-bottom: 14px;">Arquivo salvo localmente para consulta e análise rápida.</p>
-          <div style="display: flex; gap: 10px; margin-bottom: 14px;">
-            <input type="text" id="db-path-input" readonly>
-            <button class="secondary" onclick="abrirBanco()">Abrir banco</button>
-            <button class="secondary" onclick="abrirPastaDB()">Abrir pasta</button>
-            <button class="secondary" onclick="copiarCaminhoDB()">Copiar caminho</button>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label style="font-weight: 600; color: #93c5fd;">Texto completo da mensagem:</label>
+            <button class="secondary btn-sm" onclick="copiarTextoMensagem()">📋 Copiar texto</button>
           </div>
+          <textarea id="modal-msg-texto" style="height: 120px; resize: vertical; background: #0b1120;" readonly></textarea>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-weight: 600; color: #93c5fd;">Metadados adicionais (JSON):</label>
+          <textarea id="modal-msg-metadata" style="height: 110px; font-family: monospace; font-size: 12px; background: #0b1120;" readonly></textarea>
         </div>
       </div>
 
-      <!-- PÁGINA 5: EXPORTAÇÃO -->
-      <div id="page-exportacao" class="page">
-        <h1>Exportação de Dados</h1>
-        <div class="group-box">
-          <div class="group-box-title">Formatos de Exportação</div>
-          <p style="color: #cbd5e1; margin-bottom: 16px; font-size: 14px;">
-            Exporte e faça o download de todas as mensagens gravadas no banco de dados local para o seu computador:
-          </p>
-          <div class="btn-group">
-            <a href="/api/exportar/download" class="btn" download="export_messages.csv">Baixar CSV (.csv)</a>
-            <a href="/api/exportar/json" class="btn secondary" download="export_messages.json">Baixar JSON (.json)</a>
-          </div>
-        </div>
+      <div class="modal-footer">
+        <button class="secondary" onclick="fecharModalDetalhes()">Fechar</button>
       </div>
-
     </div>
   </div>
 
+  <!-- =============================================================
+       MODAL DIALOG: CONFIRMAR TROCA DE GRUPO ATIVO
+       ============================================================= -->
+  <div id="modal-troca-grupo" class="modal-backdrop" onclick="fecharModalTrocaGrupo(event)">
+    <div class="modal-dialog" style="max-width: 520px;" onclick="event.stopPropagation()">
+      <div class="modal-header" style="border-bottom-color: rgba(239, 68, 68, 0.3);">
+        <div class="modal-title" style="color: #fca5a5;">
+          <span>⚠️ Confirmar troca de grupo ativo</span>
+        </div>
+        <button class="modal-close" onclick="fecharModalTrocaGrupo()">✕</button>
+      </div>
+
+      <div class="modal-body" style="gap: 14px;">
+        <div class="card" style="padding: 14px; background: rgba(127, 29, 29, 0.25); border: 1px solid rgba(239, 68, 68, 0.45);">
+          <div style="font-size: 13.5px; color: #fee2e2; line-height: 1.5; font-weight: 500;">
+            Ao mudar de grupo, a base atual de mensagens locais (<code style="color: #fca5a5; background: rgba(0,0,0,0.3); padding: 2px 4px; border-radius: 4px;">messages.db</code>) será limpa para dar lugar à nova coleta ou importação.
+          </div>
+        </div>
+
+        <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 14px; font-size: 13px; color: #cbd5e1; line-height: 1.6;">
+          <div style="margin-bottom: 6px;">
+            <b>Grupo atual:</b> <span id="modal-troca-grupo-nome" style="color: #38bdf8; font-weight: 600;">-</span>
+          </div>
+          <div>
+            <b>Mensagens na base:</b> <span id="modal-troca-grupo-msgs" style="color: #f1f5f9;">0 mensagens</span>
+          </div>
+        </div>
+
+        <div style="background: rgba(37, 99, 235, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 12px 14px; font-size: 12.5px; color: #bae6fd; line-height: 1.55;">
+          💡 <b>Recomendação importante:</b> Se você deseja guardar o histórico atual, faça a exportação em <b>CSV</b> ou <b>JSON</b> na aba <b>"Visualização"</b> antes de confirmar a troca.
+        </div>
+      </div>
+
+      <div class="modal-footer" style="justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+        <button type="button" class="secondary" onclick="irParaExportacaoVisualizacao()">
+          <span>📥 Ir para Visualização (Exportar)</span>
+        </button>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="secondary" onclick="fecharModalTrocaGrupo()">Cancelar</button>
+          <button type="button" class="danger" onclick="executarTrocaGrupoConfirmada()">
+            <span>🗑️ Limpar e mudar de grupo</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST DE NOTIFICAÇÃO -->
   <div id="toast" class="toast">Mensagem</div>
 
+  <!-- =============================================================
+       JAVASCRIPT DA APLICAÇÃO
+       ============================================================= -->
   <script>
     let isBusy = false;
+    let mensagensCache = [];
+    let dbPathGlobal = "";
+    let grupoAtivoGlobal = null;
+    let grupoAtivoMensagensGlobal = 0;
 
-    // Navegação entre Abas
+    // -------------------------------------------------------------
+    // Controle do Drawer (Móvel / Redimensionável / Toggle)
+    // -------------------------------------------------------------
+    const sidebar = document.getElementById('app-sidebar');
+    const resizer = document.getElementById('sidebar-resizer');
+
+    function toggleSidebar() {
+      if (sidebar) {
+        sidebar.classList.toggle('collapsed');
+      }
+    }
+
+    if (resizer && sidebar) {
+      let isResizing = false;
+      let startX, startWidth;
+
+      resizer.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        startX = e.clientX;
+        startWidth = parseInt(document.defaultView.getComputedStyle(sidebar).width, 10);
+        resizer.classList.add('resizing');
+        document.body.style.cursor = 'col-resize';
+        e.preventDefault();
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+        const newWidth = startWidth + (e.clientX - startX);
+        if (newWidth < 140) {
+          sidebar.classList.add('collapsed');
+        } else {
+          sidebar.classList.remove('collapsed');
+          if (newWidth >= 200 && newWidth <= 500) {
+            sidebar.style.width = newWidth + 'px';
+          }
+        }
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (isResizing) {
+          isResizing = false;
+          resizer.classList.remove('resizing');
+          document.body.style.cursor = 'default';
+        }
+      });
+    }
+
+    // -------------------------------------------------------------
+    // Controle do Console Fixo (Redimensionável por Drag)
+    // -------------------------------------------------------------
+    const consolePanel = document.getElementById('console-panel');
+    const consoleResizer = document.getElementById('console-resizer');
+
+    if (consoleResizer && consolePanel) {
+      let isConsoleResizing = false;
+      let startY, startHeight;
+
+      consoleResizer.addEventListener('mousedown', (e) => {
+        isConsoleResizing = true;
+        startY = e.clientY;
+        startHeight = parseInt(document.defaultView.getComputedStyle(consolePanel).height, 10);
+        consoleResizer.classList.add('resizing');
+        document.body.style.cursor = 'row-resize';
+        e.preventDefault();
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isConsoleResizing) return;
+        const newHeight = startHeight - (e.clientY - startY);
+        if (newHeight <= 38) {
+          consolePanel.classList.add('minimized');
+        } else {
+          consolePanel.classList.remove('minimized');
+          if (newHeight >= 50 && newHeight <= 480) {
+            consolePanel.style.height = newHeight + 'px';
+          }
+        }
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (isConsoleResizing) {
+          isConsoleResizing = false;
+          consoleResizer.classList.remove('resizing');
+          document.body.style.cursor = 'default';
+        }
+      });
+    }
+
+    function toggleConsole() {
+      if (consolePanel) {
+        consolePanel.classList.toggle('minimized');
+        const btn = document.getElementById('btn-toggle-console');
+        if (btn) {
+          btn.innerText = consolePanel.classList.contains('minimized') ? '🔼' : '🔽';
+        }
+      }
+    }
+
+    function limparConsole() {
+      const logOutput = document.getElementById('log-output');
+      if (logOutput) {
+        logOutput.innerHTML = '<div class="log-entry">[Sistema] Console limpo.</div>';
+      }
+    }
+
+    // -------------------------------------------------------------
+    // Navegação entre Telas
+    // -------------------------------------------------------------
     const sidebarItems = document.querySelectorAll('.sidebar-item');
     const pages = document.querySelectorAll('.page');
 
     function navegarPara(pageId) {
+      const targetSidebar = document.querySelector(`[data-page="${pageId}"]`);
+      if (targetSidebar && targetSidebar.classList.contains('disabled')) {
+        showToast("Etapa bloqueada. É necessário extrair ou importar mensagens primeiro.");
+        return;
+      }
+
       pages.forEach(p => p.classList.remove('active'));
       sidebarItems.forEach(i => i.classList.remove('active'));
 
       const targetPage = document.getElementById(pageId);
       if (targetPage) targetPage.classList.add('active');
-
-      const targetSidebar = document.querySelector(`[data-page="${pageId}"]`);
       if (targetSidebar) targetSidebar.classList.add('active');
+
+      if (pageId === 'page-visualizacao') {
+        carregarMensagens();
+      }
     }
 
     sidebarItems.forEach(item => {
       item.addEventListener('click', () => {
+        if (item.classList.contains('disabled')) {
+          showToast("Etapa bloqueada. É necessário extrair ou importar mensagens primeiro.");
+          return;
+        }
         navegarPara(item.getAttribute('data-page'));
       });
     });
 
+    // -------------------------------------------------------------
     // Notificações Toast
+    // -------------------------------------------------------------
     function showToast(msg) {
       const toast = document.getElementById('toast');
       toast.innerText = msg;
@@ -599,9 +1925,12 @@
       setTimeout(() => { toast.style.display = 'none'; }, 3500);
     }
 
-    // Adiciona entrada de log no console
+    // -------------------------------------------------------------
+    // Logs no Console Unificado
+    // -------------------------------------------------------------
     function appendLog(msg) {
       const box = document.getElementById('log-output');
+      if (!box) return;
       const entry = document.createElement('div');
       entry.className = 'log-entry';
       entry.innerText = msg;
@@ -609,84 +1938,361 @@
       box.scrollTop = box.scrollHeight;
     }
 
-    // Atualiza estado de carregamento/ocupado
+    // -------------------------------------------------------------
+    // Estado de Bloqueio/Carregamento
+    // -------------------------------------------------------------
     function setBusy(busy) {
       isBusy = busy;
-      document.querySelectorAll('button').forEach(btn => {
+      document.querySelectorAll('button:not(.modal-close):not(.appbar-menu-btn)').forEach(btn => {
         btn.disabled = busy;
       });
     }
 
-    // Atualiza a visualização do status de sessão na interface
-    function atualizarStatusSessaoUI(hasSession) {
-      const sidebarBadge = document.getElementById('sidebar-session-badge');
-      const sidebarText = document.getElementById('sidebar-session-text');
-      const btnSidebarConectar = document.getElementById('btn-sidebar-conectar');
-      const btnSidebarDesconectar = document.getElementById('btn-sidebar-desconectar');
+    // -------------------------------------------------------------
+    // Atualização de Status na UI e no Drawer (Alertas & Bloqueios)
+    // -------------------------------------------------------------
+    // -------------------------------------------------------------
+    // Atualização de Status na UI e no Drawer (Alertas & Bloqueios)
+    // -------------------------------------------------------------
+    function atualizarStatusUI(hasSession, messageCount, activeGroup) {
+      const drawerConectar = document.getElementById('drawer-item-conectar');
+      const drawerConectarBadge = document.getElementById('drawer-conectar-badge');
+      const drawerExtracao = document.getElementById('drawer-item-extracao');
+      const drawerExtracaoBadge = document.getElementById('drawer-extracao-badge');
 
-      const resumoBadge = document.getElementById('resumo-session-badge');
-      const resumoText = document.getElementById('resumo-session-text');
-      const btnResumoDesconectar = document.getElementById('btn-resumo-desconectar');
+      const drawerVisualizacao = document.getElementById('drawer-item-visualizacao');
+      const drawerVisualizacaoLock = document.getElementById('drawer-visualizacao-lock');
+      const drawerInsights = document.getElementById('drawer-item-insights');
+      const drawerInsightsLock = document.getElementById('drawer-insights-lock');
 
-      const mensagensBadge = document.getElementById('mensagens-session-badge');
-      const mensagensText = document.getElementById('mensagens-session-text');
+      const sidebarSessionStatus = document.getElementById('sidebar-session-status');
+      const sidebarSessionLabel = document.getElementById('sidebar-session-label');
+      const sidebarMessagesCount = document.getElementById('sidebar-messages-count');
 
+      const conectarStatusBadge = document.getElementById('conectar-status-badge');
+      const conectarStatusText = document.getElementById('conectar-status-text');
+      const btnConectarMain = document.getElementById('btn-conectar-main');
+      const btnDesconectarMain = document.getElementById('btn-desconectar-main');
+      const btnDesconectarSidebar = document.getElementById('btn-desconectar-sidebar');
+
+      // 1. Alerta do Drawer para Conectar ao WhatsApp
       if (hasSession) {
-        if (sidebarBadge) {
-          sidebarBadge.className = 'session-badge connected';
-          sidebarText.innerText = 'Conectado';
-        }
-        if (btnSidebarConectar) btnSidebarConectar.innerText = 'Reabrir WhatsApp';
-        if (btnSidebarDesconectar) btnSidebarDesconectar.style.display = 'block';
+        drawerConectar.classList.remove('alert-danger');
+        drawerConectarBadge.style.display = 'inline-block';
+        drawerConectarBadge.className = 'sidebar-success-badge';
+        drawerConectarBadge.innerText = '✅ Conectado';
 
-        if (resumoBadge) {
-          resumoBadge.className = 'session-badge connected';
-          resumoText.innerText = 'Conectado (Sessão Ativa)';
-        }
-        if (btnResumoDesconectar) btnResumoDesconectar.style.display = 'inline-flex';
+        sidebarSessionStatus.className = 'status-badge connected';
+        sidebarSessionLabel.innerText = 'Online';
 
-        if (mensagensBadge) {
-          mensagensBadge.className = 'session-badge connected';
-          mensagensText.innerText = 'WhatsApp Conectado';
+        conectarStatusBadge.className = 'status-badge connected';
+        conectarStatusText.innerText = 'Conectado (sessão ativa)';
+        btnConectarMain.innerHTML = '<span>🔄 Reabrir / testar WhatsApp</span>';
+        btnDesconectarMain.style.display = 'inline-flex';
+        if (btnDesconectarSidebar) btnDesconectarSidebar.style.display = 'inline-flex';
+      } else {
+        drawerConectar.classList.add('alert-danger');
+        drawerConectarBadge.style.display = 'inline-block';
+        drawerConectarBadge.className = 'sidebar-alert-badge';
+        drawerConectarBadge.innerText = 'Desconectado';
+
+        sidebarSessionStatus.className = 'status-badge disconnected';
+        sidebarSessionLabel.innerText = 'Offline';
+
+        conectarStatusBadge.className = 'status-badge disconnected';
+        conectarStatusText.innerText = 'Desconectado';
+        btnConectarMain.innerHTML = '<span>📱 Conectar ao WhatsApp</span>';
+        btnDesconectarMain.style.display = 'none';
+        if (btnDesconectarSidebar) btnDesconectarSidebar.style.display = 'none';
+      }
+
+      // 2. Banner de Grupo Ativo na Memória / Sessão Local
+      const bannerAtivo = document.getElementById('active-group-banner');
+      const nomeAtivoDisplay = document.getElementById('active-group-name-display');
+      const msgsAtivoDisplay = document.getElementById('active-group-messages-display');
+      const idAtivoBadge = document.getElementById('active-group-id-badge');
+
+      const introBanner = document.getElementById('extraction-intro-banner');
+      const pathwaysContainer = document.getElementById('extraction-pathways-container');
+      const dividerOu = document.getElementById('divider-ou-extracao');
+      const cardImportacao = document.getElementById('card-importacao');
+      const fileImportInput = document.getElementById('file-import-input');
+      const btnImportar = document.getElementById('btn-importar');
+
+      // Elementos do card de coleta adaptáveis ao modo incremental / novo
+      const selectGrupo = document.getElementById('select-grupo');
+      const containerGrupoManual = document.getElementById('container-grupo-manual');
+      const btnSyncGrupos = document.getElementById('btn-sync-grupos');
+      const statusGruposCount = document.getElementById('status-grupos-count');
+      const coletaCardBadge = document.getElementById('coleta-card-badge');
+      const coletaCardTitle = document.getElementById('coleta-card-title');
+      const coletaCardDesc = document.getElementById('coleta-card-desc');
+      const btnColetar = document.getElementById('btn-coletar');
+
+      const count = Number(messageCount) || 0;
+      sidebarMessagesCount.innerText = count.toLocaleString('pt-BR');
+
+      const isGrupoAtivo = Boolean(activeGroup && (activeGroup.nome || activeGroup.id) && count > 0);
+      grupoAtivoGlobal = isGrupoAtivo ? activeGroup : null;
+      grupoAtivoMensagensGlobal = count;
+
+      if (isGrupoAtivo) {
+        if (bannerAtivo) bannerAtivo.style.display = 'flex';
+        if (nomeAtivoDisplay) nomeAtivoDisplay.innerText = activeGroup.nome || activeGroup.id;
+        if (msgsAtivoDisplay) msgsAtivoDisplay.innerText = `${count.toLocaleString('pt-BR')} mensagem(ns) deste grupo carregadas no banco`;
+        if (idAtivoBadge) idAtivoBadge.innerText = activeGroup.id ? `[ID: ${activeGroup.id}]` : '';
+
+        // Se houver grupo ativo: oculta/bloqueia as opções de importação e o divisor OU
+        if (introBanner) introBanner.style.display = 'none';
+        if (dividerOu) dividerOu.style.display = 'none';
+        if (cardImportacao) cardImportacao.style.display = 'none';
+        if (pathwaysContainer) pathwaysContainer.classList.add('has-active-group');
+        if (fileImportInput) fileImportInput.disabled = true;
+        if (btnImportar) btnImportar.disabled = true;
+
+        // Desativa dropdown de grupo, oculta sync e ajusta textos para Coleta Incremental
+        if (selectGrupo) selectGrupo.disabled = true;
+        if (containerGrupoManual) containerGrupoManual.style.display = 'none';
+        if (btnSyncGrupos) btnSyncGrupos.style.display = 'none';
+        if (statusGruposCount) statusGruposCount.innerText = `Grupo fixado na sessão ativa: "${activeGroup.nome || activeGroup.id}"`;
+        if (coletaCardBadge) {
+          coletaCardBadge.innerText = 'Coleta Incremental';
+        }
+        if (coletaCardTitle) {
+          coletaCardTitle.innerText = '⚡ Complementar dados do grupo';
+        }
+        if (coletaCardDesc) {
+          coletaCardDesc.innerHTML = `Conecta ao WhatsApp Web para buscar mensagens mais recentes ou de outros períodos do grupo <b>${activeGroup.nome || activeGroup.id}</b>, complementando a base do banco SQLite sem duplicar ou apagar as mensagens já existentes.`;
+        }
+        if (btnColetar) {
+          btnColetar.innerHTML = '<span>⚡ Complementar mensagens no banco</span>';
         }
       } else {
-        if (sidebarBadge) {
-          sidebarBadge.className = 'session-badge disconnected';
-          sidebarText.innerText = 'Desconectado';
-        }
-        if (btnSidebarConectar) btnSidebarConectar.innerText = 'Conectar (QR Code)';
-        if (btnSidebarDesconectar) btnSidebarDesconectar.style.display = 'none';
+        if (bannerAtivo) bannerAtivo.style.display = 'none';
 
-        if (resumoBadge) {
-          resumoBadge.className = 'session-badge disconnected';
-          resumoText.innerText = 'Desconectado (Necessário QR Code)';
-        }
-        if (btnResumoDesconectar) btnResumoDesconectar.style.display = 'none';
+        // Sem grupo ativo: exibe opções de importação e divisor OU
+        if (introBanner) introBanner.style.display = 'block';
+        if (dividerOu) dividerOu.style.display = 'flex';
+        if (cardImportacao) cardImportacao.style.display = 'flex';
+        if (pathwaysContainer) pathwaysContainer.classList.remove('has-active-group');
+        if (fileImportInput) fileImportInput.disabled = false;
+        if (btnImportar) btnImportar.disabled = false;
 
-        if (mensagensBadge) {
-          mensagensBadge.className = 'session-badge disconnected';
-          mensagensText.innerText = 'Não Conectado (QR Code)';
+        // Reativa dropdown de grupo e textos normais
+        if (selectGrupo) selectGrupo.disabled = false;
+        if (btnSyncGrupos) btnSyncGrupos.style.display = 'inline-flex';
+        if (coletaCardBadge) {
+          coletaCardBadge.innerText = 'Opção 1';
+        }
+        if (coletaCardTitle) {
+          coletaCardTitle.innerText = '⚡ Coleta via WhatsApp Web';
+        }
+        if (coletaCardDesc) {
+          coletaCardDesc.innerText = 'Conecta ao WhatsApp Web no navegador e extrai as mensagens diretamente do histórico do grupo.';
+        }
+        if (btnColetar) {
+          btnColetar.innerHTML = '<span>⚡ Iniciar coleta de mensagens</span>';
+        }
+      }
+
+      // 3. Alerta do Drawer para Extração e Bloqueio de Visualização / Insights
+      if (count > 0) {
+        drawerExtracao.classList.remove('alert-danger');
+        drawerExtracaoBadge.style.display = 'inline-block';
+        drawerExtracaoBadge.className = 'sidebar-success-badge';
+        drawerExtracaoBadge.innerText = '✅ OK';
+
+        // Desbloqueia Visualização e Insights
+        drawerVisualizacao.classList.remove('disabled');
+        if (drawerVisualizacaoLock) drawerVisualizacaoLock.style.display = 'none';
+
+        drawerInsights.classList.remove('disabled');
+        if (drawerInsightsLock) drawerInsightsLock.style.display = 'none';
+      } else {
+        drawerExtracao.classList.add('alert-danger');
+        drawerExtracaoBadge.style.display = 'inline-block';
+        drawerExtracaoBadge.className = 'sidebar-alert-badge';
+        drawerExtracaoBadge.innerText = 'Sem dados';
+
+        // Bloqueia Visualização e Insights
+        drawerVisualizacao.classList.add('disabled');
+        if (drawerVisualizacaoLock) drawerVisualizacaoLock.style.display = 'inline-block';
+
+        drawerInsights.classList.add('disabled');
+        if (drawerInsightsLock) drawerInsightsLock.style.display = 'inline-block';
+
+        // Se estiver em uma tela bloqueada, redireciona para Extração
+        const activePage = document.querySelector('.page.active');
+        if (activePage && (activePage.id === 'page-visualizacao' || activePage.id === 'page-insights')) {
+          navegarPara('page-extracao');
         }
       }
     }
 
-    // Carregar Informações do Sistema e Status
+    // -------------------------------------------------------------
+    // Obter Status do Servidor e Grupos Catalogados
+    // -------------------------------------------------------------
     async function carregarStatus() {
       try {
         const res = await fetch('/api/status');
         const data = await res.json();
-        document.getElementById('resumo-db-path').innerText = data.db_path;
-        document.getElementById('db-path-input').value = data.db_path;
-        if (data.default_grupo) {
-          document.getElementById('input-grupo').value = data.default_grupo;
-        }
-        atualizarStatusSessaoUI(Boolean(data.has_session));
+        dbPathGlobal = data.db_path || "";
+        atualizarStatusUI(Boolean(data.has_session), data.message_count || 0, data.active_group);
+
+        const grupoSugerido = data.active_group ? data.active_group.nome : data.default_grupo;
+        await carregarGrupos(grupoSugerido);
       } catch (err) {
         console.error("Erro ao obter status:", err);
       }
     }
 
+    // -------------------------------------------------------------
+    // Modal de Confirmação de Troca de Grupo Ativo
+    // -------------------------------------------------------------
+    function abrirModalTrocaGrupo() {
+      const modal = document.getElementById('modal-troca-grupo');
+      const nomeDisplay = document.getElementById('modal-troca-grupo-nome');
+      const msgsDisplay = document.getElementById('modal-troca-grupo-msgs');
+      
+      const nomeAtivo = (grupoAtivoGlobal && (grupoAtivoGlobal.nome || grupoAtivoGlobal.id)) || document.getElementById('active-group-name-display').innerText;
+      const msgsAtivo = `${grupoAtivoMensagensGlobal.toLocaleString('pt-BR')} mensagem(ns)`;
+      
+      if (nomeDisplay) nomeDisplay.innerText = nomeAtivo || '-';
+      if (msgsDisplay) msgsDisplay.innerText = msgsAtivo || '0 mensagens';
+      if (modal) modal.classList.add('active');
+    }
+
+    function fecharModalTrocaGrupo(event) {
+      if (event && event.target !== document.getElementById('modal-troca-grupo') && !event.target.classList.contains('modal-close') && event.target.tagName !== 'BUTTON') {
+        return;
+      }
+      const modal = document.getElementById('modal-troca-grupo');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function irParaExportacaoVisualizacao() {
+      fecharModalTrocaGrupo();
+      navegarPara('page-visualizacao');
+      showToast("Exporte seus dados em CSV ou JSON no canto superior direito antes de mudar de grupo.");
+    }
+
+    async function executarTrocaGrupoConfirmada() {
+      fecharModalTrocaGrupo();
+      await limparGrupoAtivo();
+    }
+
+    async function limparGrupoAtivo() {
+      try {
+        const res = await fetch('/api/state/clear-group', { method: 'POST' });
+        const json = await res.json();
+        if (json.success) {
+          showToast("Grupo ativo desmarcado e base messages.db limpa.");
+          appendLog("[Grupo] Base da sessão limpa. Pronto para selecionar ou coletar outro grupo.");
+          await carregarStatus();
+          await carregarMensagens();
+        }
+      } catch (err) {
+        showToast("Erro ao limpar grupo ativo.");
+      }
+    }
+
+    function aoMudarSelectGrupo() {
+      const selectGrupo = document.getElementById('select-grupo');
+      const containerManual = document.getElementById('container-grupo-manual');
+      const inputManual = document.getElementById('input-grupo-manual');
+      if (!selectGrupo || !containerManual) return;
+
+      if (selectGrupo.value === '__manual__') {
+        containerManual.style.display = 'block';
+        if (inputManual) inputManual.focus();
+      } else {
+        containerManual.style.display = 'none';
+      }
+    }
+
+    function obterGrupoSelecionado() {
+      const selectGrupo = document.getElementById('select-grupo');
+      if (!selectGrupo) return "";
+      if (selectGrupo.value === '__manual__') {
+        const inputManual = document.getElementById('input-grupo-manual');
+        return inputManual ? inputManual.value.trim() : "";
+      }
+      return selectGrupo.value.trim();
+    }
+
+    async function carregarGrupos(defaultGrupo) {
+      try {
+        const statusCount = document.getElementById('status-grupos-count');
+        const selectGrupo = document.getElementById('select-grupo');
+        if (!selectGrupo) return;
+
+        const valorAnterior = selectGrupo.value;
+
+        const res = await fetch('/api/grupos');
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          const grupos = json.data;
+          
+          let html = '';
+          if (grupos.length === 0 && !defaultGrupo) {
+            html += '<option value="" disabled selected>Nenhum grupo catalogado (clique em Atualizar grupos)</option>';
+          } else {
+            html += grupos.map(g => `<option value="${g.replace(/"/g, '&quot;')}">👥 ${g}</option>`).join('');
+          }
+          if (defaultGrupo && !grupos.includes(defaultGrupo) && defaultGrupo !== '__manual__') {
+            html = `<option value="${defaultGrupo.replace(/"/g, '&quot;')}" selected>👥 ${defaultGrupo} (Grupo Ativo)</option>` + html;
+          }
+          html += '<option value="__manual__">✏️ Digitar outro grupo manualmente...</option>';
+          selectGrupo.innerHTML = html;
+
+          if (defaultGrupo && (grupos.includes(defaultGrupo) || selectGrupo.querySelector(`option[value="${defaultGrupo.replace(/"/g, '&quot;')}"]`))) {
+            selectGrupo.value = defaultGrupo;
+          } else if (valorAnterior && (grupos.includes(valorAnterior) || valorAnterior === '__manual__')) {
+            selectGrupo.value = valorAnterior;
+          } else if (grupos.length > 0) {
+            selectGrupo.value = grupos[0];
+          }
+
+          aoMudarSelectGrupo();
+
+          if (statusCount) {
+            if (grupoAtivoGlobal && (grupoAtivoGlobal.nome || grupoAtivoGlobal.id)) {
+              statusCount.innerText = `Grupo fixado na sessão: "${grupoAtivoGlobal.nome || grupoAtivoGlobal.id}"`;
+            } else if (grupos.length === 0) {
+              statusCount.innerText = "Nenhum grupo catalogado.";
+            } else {
+              statusCount.innerText = `${grupos.length} grupo(s) catalogado(s)`;
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Erro ao carregar grupos:", err);
+      }
+    }
+
+    async function sincronizarGruposWeb() {
+      const btn = document.getElementById('btn-sync-grupos');
+      if (btn) btn.disabled = true;
+      try {
+        showToast("Disparando varredura de grupos no WhatsApp Web...");
+        const res = await fetch('/api/grupos/sincronizar', { method: 'POST' });
+        const json = await res.json();
+        if (json.success) {
+          showToast(json.message || "Varredura de grupos em andamento...");
+          appendLog("[Sincronização] Solicitação de busca de grupos enviada.");
+        } else {
+          showToast(json.message || "Não foi possível sincronizar os grupos.");
+        }
+      } catch (err) {
+        showToast("Erro ao solicitar sincronização de grupos.");
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    // -------------------------------------------------------------
     // Ações de Sessão do WhatsApp
+    // -------------------------------------------------------------
     async function conectarWhatsApp() {
       setBusy(true);
       try {
@@ -695,14 +2301,14 @@
         showToast(json.message || "Iniciando conector do WhatsApp...");
         appendLog("[Sessão] Conector de WhatsApp acionado.");
       } catch (err) {
-        showToast("Erro ao iniciar conexão do WhatsApp.");
+        showToast("Erro ao iniciar conector do WhatsApp.");
         appendLog(`Erro ao acionar conector: ${err}`);
         setBusy(false);
       }
     }
 
     async function desconectarWhatsApp() {
-      if (!confirm("Tem certeza de que deseja sair e desconectar a conta do WhatsApp deste dispositivo?")) {
+      if (!confirm("Tem certeza de que deseja encerrar e desconectar a conta do WhatsApp deste dispositivo?")) {
         return;
       }
       setBusy(true);
@@ -717,106 +2323,258 @@
           showToast(json.error || "Erro ao desconectar sessão.");
         }
       } catch (err) {
-        showToast("Erro ao comunicar com o servidor para desconexão.");
+        showToast("Erro ao comunicar com o servidor.");
       } finally {
         setBusy(false);
       }
     }
 
-    // Carregar Tabela de Mensagens
-    async function carregarMensagens() {
-      try {
-        const res = await fetch('/api/messages');
-        const json = await res.json();
-        const tbody = document.getElementById('messages-tbody');
-        tbody.innerHTML = '';
-
-        if (!json.success || !json.data || json.data.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:#64748b;">Nenhuma mensagem encontrada.</td></tr>';
-          return;
-        }
-
-        json.data.forEach(msg => {
-          const tr = document.createElement('tr');
-          tr.onclick = () => abrirDetalhes(msg.id);
-
-          tr.innerHTML = `
-            <td>${msg.data_hora || '-'}</td>
-            <td>${msg.remetente || '-'}</td>
-            <td>${(msg.texto || '').substring(0, 150)}</td>
-            <td>${msg.has_attachments ? 'Sim' : 'Não'}</td>
-            <td style="color:#93c5fd;">${msg.id || '-'}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-
-        appendLog(`[${new Date().toLocaleTimeString()}] Tabela atualizada com ${json.data.length} registros.`);
-      } catch (err) {
-        appendLog(`Erro ao carregar mensagens: ${err}`);
-      }
-    }
-
-    // Abrir Detalhes da Mensagem
-    async function abrirDetalhes(id) {
-      try {
-        const res = await fetch(`/api/messages/${id}`);
-        const json = await res.json();
-        if (!json.success || !json.data) return;
-
-        const d = json.data;
-        document.getElementById('detail-id').innerText = d.id || '-';
-        document.getElementById('detail-data').innerText = d.data_hora || '-';
-        document.getElementById('detail-remetente').innerText = d.remetente || '-';
-        document.getElementById('detail-anexos').innerText = d.has_attachments ? 'Sim' : 'Não';
-        document.getElementById('detail-grupo').innerText = d.grupo_nome || '-';
-        document.getElementById('detail-comunidade').innerText = d.comunidade_nome || '-';
-        document.getElementById('detail-texto').value = d.texto || d.transcript || 'Mensagem sem texto.';
-
-        const extra = {
-          coleta_id: d.coleta_id,
-          coletado_em: d.coletado_em,
-          meses_back: d.meses_back,
-          semanas_back: d.semanas_back,
-          is_reply: Boolean(d.is_reply),
-          reply_author: d.reply_author,
-          reply_text: d.reply_text,
-          texto_normalizado: d.texto_normalizado,
-          attachments_json: d.attachments_json,
-          reactions_json: d.reactions_json,
-          topics_json: d.topics_json,
-          created_at: d.created_at
-        };
-        document.getElementById('detail-metadata').value = JSON.stringify(extra, null, 2);
-
-        navegarPara('page-detalhes');
-      } catch (err) {
-        showToast("Erro ao abrir detalhes da mensagem.");
-      }
-    }
-
-    // Disparar Coleta
+    // -------------------------------------------------------------
+    // Disparar Coleta de Mensagens (Scraper)
+    // -------------------------------------------------------------
     async function iniciarColeta() {
-      const grupo = document.getElementById('input-grupo').value;
-      const comunidade = document.getElementById('input-comunidade').value;
-      const tipo_filtro = document.getElementById('select-filtro').value;
-      const valor = parseInt(document.getElementById('input-valor').value, 10) || 1;
+      let grupo = obterGrupoSelecionado();
+      if (grupoAtivoGlobal && (grupoAtivoGlobal.nome || grupoAtivoGlobal.id)) {
+        grupo = grupoAtivoGlobal.nome || grupoAtivoGlobal.id;
+      }
+      if (!grupo) {
+        showToast("Por favor, selecione ou digite o nome do grupo antes de iniciar a coleta.");
+        return;
+      }
+
+      const valor = parseInt(document.getElementById('input-janela-valor').value, 10) || 7;
+      const unidade_tempo = document.getElementById('select-janela-unidade').value || 'dias';
 
       setBusy(true);
       try {
         const res = await fetch('/api/coletar', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ grupo, comunidade, tipo_filtro, valor })
+          body: JSON.stringify({ grupo, unidade_tempo, valor })
         });
         const json = await res.json();
-        showToast(json.message);
+        showToast(json.message || "Coleta iniciada.");
+        appendLog(`[Coleta] Solicitada coleta do grupo '${grupo}' por janela de ${valor} ${unidade_tempo}.`);
       } catch (err) {
         appendLog(`Erro ao iniciar coleta: ${err}`);
+        showToast("Erro ao iniciar coleta.");
         setBusy(false);
       }
     }
 
-    // Ações de Banco de Dados
+    async function atualizarColetaIncremental() {
+      let grupo = (grupoAtivoGlobal && (grupoAtivoGlobal.nome || grupoAtivoGlobal.id)) || obterGrupoSelecionado();
+      if (!grupo) {
+        showToast("Nenhum grupo ativo detectado para atualização incremental.");
+        return;
+      }
+      appendLog(`[Visualização] Atalho acionado: Disparando coleta incremental para o grupo '${grupo}'...`);
+      await iniciarColeta();
+    }
+
+    // -------------------------------------------------------------
+    // Importação de Arquivo (CSV / JSON)
+    // -------------------------------------------------------------
+    async function importarArquivo() {
+      const fileInput = document.getElementById('file-import-input');
+      if (!fileInput.files || fileInput.files.length === 0) {
+        showToast("Por favor, selecione um arquivo CSV ou JSON primeiro.");
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const filename = file.name;
+      const format = filename.toLowerCase().endsWith('.json') ? 'json' : 'csv';
+
+      setBusy(true);
+      appendLog(`[Importação] Lendo arquivo '${filename}'...`);
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const content = e.target.result;
+        try {
+          const res = await fetch('/api/importar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content, format, filename })
+          });
+          const json = await res.json();
+          if (json.success) {
+            showToast(json.message);
+            appendLog(`[Importação] Sucesso: ${json.message}`);
+            fileInput.value = '';
+            await carregarStatus();
+            await carregarMensagens();
+          } else {
+            showToast(json.error || json.message || "Erro na importação.");
+            appendLog(`[Importação - Erro] ${json.error || json.message}`);
+          }
+        } catch (err) {
+          showToast("Erro ao enviar dados para importação.");
+          appendLog(`[Importação - Erro] ${err}`);
+        } finally {
+          setBusy(false);
+        }
+      };
+
+      reader.onerror = function() {
+        showToast("Erro ao ler arquivo local.");
+        setBusy(false);
+      };
+
+      reader.readAsText(file, "UTF-8");
+    }
+
+    // -------------------------------------------------------------
+    // Carregar Tabela de Mensagens
+    // -------------------------------------------------------------
+    async function carregarMensagens() {
+      try {
+        const res = await fetch('/api/messages?limit=250');
+        const json = await res.json();
+        const tbody = document.getElementById('messages-tbody');
+        const totalCount = document.getElementById('table-total-count');
+        tbody.innerHTML = '';
+
+        if (!json.success || !json.data || json.data.length === 0) {
+          mensagensCache = [];
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:24px; color:#64748b;">Nenhuma mensagem encontrada no banco local.</td></tr>';
+          if (totalCount) totalCount.innerText = '0';
+          return;
+        }
+
+        mensagensCache = json.data;
+        if (totalCount) totalCount.innerText = mensagensCache.length.toLocaleString('pt-BR');
+        renderizarTabelaMensagens(mensagensCache);
+      } catch (err) {
+        appendLog(`Erro ao carregar mensagens: ${err}`);
+      }
+    }
+
+    function renderizarTabelaMensagens(lista) {
+      const tbody = document.getElementById('messages-tbody');
+      tbody.innerHTML = '';
+
+      if (lista.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:24px; color:#64748b;">Nenhum resultado para a busca.</td></tr>';
+        return;
+      }
+
+      lista.forEach(msg => {
+        const tr = document.createElement('tr');
+        tr.onclick = () => abrirModalDetalhes(msg.id);
+
+        const textoPreview = (msg.texto || '').replace(/\n/g, ' ').substring(0, 140);
+
+        tr.innerHTML = `
+          <td>${msg.data_hora || '-'}</td>
+          <td style="font-weight: 600; color: #38bdf8;">${msg.remetente || '-'}</td>
+          <td>${textoPreview || '<i style="color:#64748b;">(Sem texto)</i>'}</td>
+          <td style="text-align: center;">${msg.has_attachments ? '📎 Sim' : '-'}</td>
+          <td style="color:#94a3b8; font-family: monospace; font-size: 11.5px;">${(msg.id || '-').substring(0, 14)}...</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filtrarTabelaMensagens() {
+      const query = document.getElementById('table-search-input').value.toLowerCase().trim();
+      if (!query) {
+        renderizarTabelaMensagens(mensagensCache);
+        return;
+      }
+
+      const filtradas = mensagensCache.filter(m => {
+        const r = (m.remetente || '').toLowerCase();
+        const t = (m.texto || '').toLowerCase();
+        const id = (m.id || '').toLowerCase();
+        return r.includes(query) || t.includes(query) || id.includes(query);
+      });
+
+      renderizarTabelaMensagens(filtradas);
+    }
+
+    // -------------------------------------------------------------
+    // MODAL DIALOG DE DETALHES DA MENSAGEM
+    // -------------------------------------------------------------
+    async function abrirModalDetalhes(id) {
+      try {
+        const res = await fetch(`/api/messages/${id}`);
+        const json = await res.json();
+        if (!json.success || !json.data) {
+          showToast("Mensagem não encontrada.");
+          return;
+        }
+
+        const d = json.data;
+        document.getElementById('modal-msg-id').innerText = d.id || '-';
+        document.getElementById('modal-msg-data').innerText = d.data_hora || '-';
+        document.getElementById('modal-msg-remetente').innerText = d.remetente || '-';
+        document.getElementById('modal-msg-grupo').innerText = d.grupo_nome || 'Não especificado';
+        document.getElementById('modal-msg-anexos').innerText = d.has_attachments ? 'Sim' : 'Não';
+        document.getElementById('modal-msg-texto').value = d.texto || d.transcript || '(Mensagem sem texto)';
+
+        const labelReply = document.getElementById('label-modal-reply');
+        const divReply = document.getElementById('modal-msg-reply');
+        if (d.is_reply && (d.reply_author || d.reply_text)) {
+          labelReply.style.display = 'block';
+          divReply.style.display = 'block';
+          divReply.innerHTML = `<b>${d.reply_author || 'Autor'}:</b> ${d.reply_text || ''}`;
+        } else {
+          labelReply.style.display = 'none';
+          divReply.style.display = 'none';
+        }
+
+        const metadata = {
+          coleta_id: d.coleta_id,
+          comunidade_nome: d.comunidade_nome,
+          coletado_em: d.coletado_em,
+          meses_back: d.meses_back,
+          semanas_back: d.semanas_back,
+          is_reply: Boolean(d.is_reply),
+          reply_author: d.reply_author,
+          reply_text: d.reply_text,
+          attachments_json: d.attachments_json,
+          reactions_json: d.reactions_json,
+          topics_json: d.topics_json,
+          created_at: d.created_at
+        };
+        document.getElementById('modal-msg-metadata').value = JSON.stringify(metadata, null, 2);
+
+        const modal = document.getElementById('modal-backdrop');
+        modal.classList.add('active');
+      } catch (err) {
+        showToast("Erro ao carregar detalhes da mensagem.");
+      }
+    }
+
+    function fecharModalDetalhes(event) {
+      if (event && event.target !== document.getElementById('modal-backdrop') && !event.target.classList.contains('modal-close') && event.target.tagName !== 'BUTTON') {
+        return;
+      }
+      const modal = document.getElementById('modal-backdrop');
+      modal.classList.remove('active');
+    }
+
+    function copiarTextoMensagem() {
+      const txt = document.getElementById('modal-msg-texto').value;
+      navigator.clipboard.writeText(txt).then(() => {
+        showToast("Texto copiado para a área de transferência!");
+      });
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('modal-backdrop');
+        if (modal.classList.contains('active')) {
+          modal.classList.remove('active');
+        }
+      }
+    });
+
+    // -------------------------------------------------------------
+    // Ações de Banco de Dados Local
+    // -------------------------------------------------------------
     async function abrirBanco() {
       try {
         const res = await fetch('/api/abrir-banco', { method: 'POST' });
@@ -838,15 +2596,18 @@
     }
 
     function copiarCaminhoDB() {
-      const val = document.getElementById('db-path-input').value;
-      navigator.clipboard.writeText(val).then(() => {
-        showToast("Caminho do banco copiado para a área de transferência!");
-      }).catch(() => {
-        showToast("Falha ao copiar caminho.");
+      if (!dbPathGlobal) {
+        showToast("Caminho do banco não disponível.");
+        return;
+      }
+      navigator.clipboard.writeText(dbPathGlobal).then(() => {
+        showToast("Caminho do SQLite copiado para a área de transferência!");
       });
     }
 
+    // -------------------------------------------------------------
     // Streaming de Logs via SSE
+    // -------------------------------------------------------------
     function conectarSSE() {
       const evtSource = new EventSource('/api/logs/stream');
       evtSource.onmessage = (e) => {
@@ -873,7 +2634,9 @@
       };
     }
 
-    // Inicialização
+    // -------------------------------------------------------------
+    // Inicialização ao Carregar a Página
+    // -------------------------------------------------------------
     window.addEventListener('DOMContentLoaded', () => {
       carregarStatus();
       carregarMensagens();
