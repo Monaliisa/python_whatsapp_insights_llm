@@ -1175,6 +1175,149 @@
       text-decoration: underline;
       background: transparent;
     }
+
+    /* -------------------------------------------------------------
+       ESTILOS DO MÓDULO BYOK & GOOGLE GEMINI
+       ------------------------------------------------------------- */
+    .byok-config-card {
+      background: linear-gradient(135deg, rgba(30, 27, 75, 0.45), rgba(15, 23, 42, 0.95));
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      border-radius: 12px;
+      padding: 22px;
+      position: relative;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .byok-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .byok-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #c084fc;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .byok-badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .byok-badge.active {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .byok-badge.pending {
+      background: rgba(245, 158, 11, 0.18);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+
+    .byok-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 280px auto;
+      gap: 14px;
+      align-items: flex-end;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 960px) {
+      .byok-form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .input-action-group {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+
+    .input-action-group input {
+      padding-right: 80px;
+      font-family: monospace;
+      letter-spacing: 0.5px;
+    }
+
+    .input-action-group .inline-buttons {
+      position: absolute;
+      right: 4px;
+      display: flex;
+      gap: 4px;
+    }
+
+    .btn-input-action {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      padding: 5px 8px;
+      font-size: 11.5px;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: none;
+    }
+
+    .btn-input-action:hover {
+      background: #334155;
+      color: #ffffff;
+      transform: none;
+    }
+
+    .byok-docs-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(139, 92, 246, 0.2);
+    }
+
+    .byok-doc-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      color: #93c5fd;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .byok-doc-link:hover {
+      background: rgba(37, 99, 235, 0.2);
+      border-color: rgba(96, 165, 250, 0.5);
+      color: #bfdbfe;
+      transform: translateY(-1px);
+    }
+
+    .byok-info-banner {
+      background: rgba(30, 41, 59, 0.5);
+      border-left: 3px solid #a855f7;
+      padding: 10px 14px;
+      border-radius: 0 8px 8px 0;
+      font-size: 12.5px;
+      color: #cbd5e1;
+      line-height: 1.5;
+      margin-top: 12px;
+    }
   </style>
 </head>
 <body>
@@ -1319,18 +1462,39 @@
                 <div><b>2. Extração flexível:</b> Colete mensagens de grupos definindo filtros de tempo (dias ou meses) ou importe dados prévios via CSV/JSON.</div>
                 <div><b>3. Armazenamento persistente:</b> As mensagens são salvas e deduplicadas em um banco local SQLite, permitindo coletas cumulativas.</div>
                 <div><b>4. Visualização e auditoria:</b> Consulte as mensagens em tabela com pesquisa dinâmica e modal de detalhes.</div>
-                <div><b>5. Insights via IA:</b> Em breve, processe discussões com Modelos de Linguagem (LLMs) para gerar relatórios acionáveis.</div>
+                <div><b>5. Insights via IA (BYOK):</b> Analise conversas com o <b>Google Gemini</b> utilizando sua própria chave de API (Bring Your Own Key), sem intermediários.</div>
               </div>
             </div>
 
             <div class="card">
               <div class="card-title">✨ O que esperar da ferramenta</div>
               <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
-                <div>🔒 <b>Privacidade total:</b> Seus dados e mensagens ficam restritos ao banco local, sem envio desnecessário a servidores terceiros.</div>
+                <div>🔒 <b>Privacidade total:</b> Seus dados e mensagens ficam restritos ao banco local, sem envio a servidores de terceiros.</div>
                 <div>⚡ <b>Sem perda de histórico:</b> A persistência incremental garante que coletas futuras apenas complementem as existentes.</div>
+                <div>🔑 <b>Filosofia BYOK:</b> Sua chave de API do Gemini fica gravada apenas no seu navegador, dando a você controle direto de custos e cotas.</div>
                 <div>📊 <b>Exportação imediata:</b> Faça o download integral do banco de dados nos formatos CSV e JSON com um clique.</div>
-                <div>💡 <b>Navegação guiada:</b> Os indicadores no menu lateral alertam sobre etapas pendentes (como conexão ou ausência de dados).</div>
               </div>
+            </div>
+          </div>
+
+          <!-- Card de Destaque: BYOK e Google Gemini -->
+          <div class="card" style="background: linear-gradient(135deg, rgba(30, 27, 75, 0.5), rgba(15, 23, 42, 0.8)); border-color: rgba(139, 92, 246, 0.35);">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+              <h3 style="font-size: 14.5px; color: #c084fc; display: flex; align-items: center; gap: 8px;">
+                <span>🧠</span> Inteligência Artificial Soberana: Google Gemini & BYOK
+              </h3>
+              <span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(139, 92, 246, 0.2); color: #d8b4fe; border: 1px solid rgba(139, 92, 246, 0.4); font-weight: 600;">Bring Your Own Key</span>
+            </div>
+            <p style="color: #cbd5e1; font-size: 13px; line-height: 1.6; margin-bottom: 10px;">
+              O ZapInsights adota a abordagem <b>BYOK (Bring Your Own Key)</b>. Isso significa que a aplicação se conecta diretamente à API do <b>Google Gemini</b> através da sua chave pessoal gerada no Google AI Studio. Você tem total controle sobre seus limites de uso, privacidade de prompts e liberdade para escolher entre modelos rápidos (como o <i>Gemini 2.5 Flash</i>) ou avançados (como o <i>Gemini 2.5 Pro</i>).
+            </p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="byok-doc-link">
+                <span>🔑 Obter chave no Google AI Studio</span>
+              </a>
+              <a href="https://ai.google.dev/gemini-api/docs/models/gemini" target="_blank" rel="noopener noreferrer" class="byok-doc-link">
+                <span>📖 Documentação de Modelos Gemini</span>
+              </a>
             </div>
           </div>
 
@@ -1589,16 +1753,102 @@
         <div id="page-insights" class="page">
           <div class="page-header">
             <h1 class="page-title">🧠 Geração de insights com IA (LLM)</h1>
-            <p class="page-subtitle">Transforme as conversas coletadas em relatórios analíticos, tópicos e tendências.</p>
+            <p class="page-subtitle">Transforme as conversas coletadas em relatórios analíticos, tópicos e tendências com o Google Gemini.</p>
           </div>
 
-          <div class="card" style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.15), rgba(37, 99, 235, 0.15)); border-color: rgba(168, 85, 247, 0.35);">
+          <!-- =========================================================
+               CARD DE CONFIGURAÇÃO DO GOOGLE GEMINI (FILOSOFIA BYOK)
+               ========================================================= -->
+          <div class="byok-config-card">
+            <div class="byok-header-row">
+              <div class="byok-title">
+                <span style="font-size: 20px;">🔑</span>
+                <span>Configuração do Provedor de IA — Google Gemini</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 12px; color: #94a3b8;">Status da Chave:</span>
+                <span id="byok-status-badge" class="byok-badge pending">⚠️ Chave não testada</span>
+              </div>
+            </div>
+
+            <p style="color: #cbd5e1; font-size: 13.5px; line-height: 1.6;">
+              O módulo de inteligência opera sob o modelo <b>BYOK (Bring Your Own Key)</b>. Sua chave pessoal do <b>Google AI Studio</b> é utilizada diretamente para inferência, garantindo soberania dos dados, controle total sobre o consumo de tokens e privacidade absoluta.
+            </p>
+
+            <!-- Formulário de API Key e Seleção de Modelo -->
+            <div class="byok-form-grid">
+              
+              <!-- Campo 1: API Key com botão de revelar / ocultar e colar -->
+              <div>
+                <label for="input-gemini-api-key" style="display: block; font-size: 12.5px; font-weight: 600; color: #d8b4fe; margin-bottom: 6px;">
+                  Chave de API (Gemini API Key):
+                </label>
+                <div class="input-action-group">
+                  <input type="password" id="input-gemini-api-key" placeholder="Cole sua chave AIzaSy... aqui" oninput="aoAlterarCredenciaisLLM()">
+                  <div class="inline-buttons">
+                    <button type="button" class="btn-input-action" id="btn-toggle-key-visibility" onclick="alternarVisibilidadeApiKey()" title="Revelar ou ocultar chave de API">
+                      👁️ Revelar
+                    </button>
+                    <button type="button" class="btn-input-action" onclick="colarApiKeyClipboard()" title="Colar chave da área de transferência">
+                      📋 Colar
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Campo 2: Dropdown de Seleção de Modelo -->
+              <div>
+                <label for="select-gemini-model" style="display: block; font-size: 12.5px; font-weight: 600; color: #d8b4fe; margin-bottom: 6px;">
+                  Modelo do Gemini:
+                </label>
+                <div class="select-wrapper">
+                  <select id="select-gemini-model" class="custom-select" onchange="aoAlterarCredenciaisLLM()">
+                    <option value="gemini-2.5-flash" selected>⚡ Gemini 2.5 Flash (Recomendado / Rápido)</option>
+                    <option value="gemini-2.5-pro">🧠 Gemini 2.5 Pro (Raciocínio Avançado)</option>
+                    <option value="gemini-3.7-flash">🚀 Gemini 3.7 Flash (Alta Performance)</option>
+                    <option value="gemini-3.5-flash-lite">💨 Gemini 3.5 Flash Lite (Ultra Rápido / Leve)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Botão 3: Testar / Validar Conexão -->
+              <div>
+                <button type="button" id="btn-validar-chave" class="secondary" onclick="testarChaveGemini()" style="width: 100%; white-space: nowrap;">
+                  <span>🧪 Testar Chave</span>
+                </button>
+              </div>
+
+            </div>
+
+            <!-- Banner de Informação e Segurança -->
+            <div class="byok-info-banner">
+              🔒 <b>Segurança e Privacidade:</b> Sua chave de API é mantida com segurança no armazenamento local do seu navegador (<code>localStorage</code>) e é utilizada exclusivamente pelo servidor local durante as requisições de geração de relatórios.
+            </div>
+
+            <!-- Links de Documentação e Recursos -->
+            <div class="byok-docs-row">
+              <span style="font-size: 12px; color: #94a3b8; font-weight: 600;">Documentações & Recursos:</span>
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="byok-doc-link" title="Gere sua chave gratuita ou gerencie cotas no Google AI Studio">
+                <span>🔑 Obter API Key no Google AI Studio</span> ↗
+              </a>
+              <a href="https://ai.google.dev/gemini-api/docs/models/gemini" target="_blank" rel="noopener noreferrer" class="byok-doc-link" title="Veja os limites de contexto, benchmarks e custos dos modelos Gemini">
+                <span>📖 Comparativo de Modelos Gemini</span> ↗
+              </a>
+              <a href="https://pt.wikipedia.org/wiki/BYOK" target="_blank" rel="noopener noreferrer" class="byok-doc-link" title="Entenda o modelo de Bring Your Own Key em aplicações modernas">
+                <span>💡 O que é a Filosofia BYOK?</span> ↗
+              </a>
+            </div>
+
+          </div>
+
+          <!-- Destaque de Preparação dos Módulos Analíticos -->
+          <div class="card" style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.12), rgba(37, 99, 235, 0.12)); border-color: rgba(168, 85, 247, 0.25);">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
               <span style="font-size: 20px;">🚀</span>
-              <h2 style="font-size: 16px; color: #c084fc;">Módulo em preparação arquitetural</h2>
+              <h2 style="font-size: 15px; color: #c084fc;">Módulos analíticos prontos para orquestração</h2>
             </div>
-            <p style="color: #e2e8f0; font-size: 13.5px; line-height: 1.6;">
-              A camada de orquestração de LLMs será conectada nesta etapa para ler as mensagens persistidas no banco local SQLite e executar inferências de inteligência artificial.
+            <p style="color: #cbd5e1; font-size: 13px; line-height: 1.6;">
+              Com sua chave de API configurada acima, os relatórios abaixo serão gerados sob demanda processando as mensagens do grupo ativo armazenadas no banco local SQLite.
             </p>
           </div>
 
@@ -2635,11 +2885,169 @@
     }
 
     // -------------------------------------------------------------
+    // Gerenciamento de Provedor LLM & Filosofia BYOK (Google Gemini)
+    // -------------------------------------------------------------
+    const STORAGE_KEY_API = 'zap_gemini_api_key';
+    const STORAGE_KEY_MODEL = 'zap_gemini_model';
+    const STORAGE_KEY_VALIDATED = 'zap_gemini_validated';
+
+    function carregarConfiguracaoLLM() {
+      const savedKey = localStorage.getItem(STORAGE_KEY_API) || '';
+      const savedModel = localStorage.getItem(STORAGE_KEY_MODEL) || 'gemini-2.5-flash';
+      const isValidated = localStorage.getItem(STORAGE_KEY_VALIDATED) === 'true';
+
+      const inputKey = document.getElementById('input-gemini-api-key');
+      const selectModel = document.getElementById('select-gemini-model');
+      const badge = document.getElementById('byok-status-badge');
+
+      if (inputKey) inputKey.value = savedKey;
+      if (selectModel) selectModel.value = savedModel;
+
+      if (badge) {
+        if (savedKey && isValidated) {
+          badge.className = 'byok-badge active';
+          badge.innerText = '✅ Conectada e validada';
+        } else if (savedKey) {
+          badge.className = 'byok-badge pending';
+          badge.innerText = '⚠️ Chave configurada (não testada)';
+        } else {
+          badge.className = 'byok-badge pending';
+          badge.innerText = '⚠️ Chave não configurada';
+        }
+      }
+    }
+
+    function aoAlterarCredenciaisLLM() {
+      const inputKey = document.getElementById('input-gemini-api-key');
+      const selectModel = document.getElementById('select-gemini-model');
+      const badge = document.getElementById('byok-status-badge');
+
+      const key = inputKey ? inputKey.value.trim() : '';
+      const model = selectModel ? selectModel.value : 'gemini-2.5-flash';
+
+      localStorage.setItem(STORAGE_KEY_API, key);
+      localStorage.setItem(STORAGE_KEY_MODEL, model);
+      localStorage.setItem(STORAGE_KEY_VALIDATED, 'false');
+
+      if (badge) {
+        if (key) {
+          badge.className = 'byok-badge pending';
+          badge.innerText = '⚠️ Chave pendente de teste';
+        } else {
+          badge.className = 'byok-badge pending';
+          badge.innerText = '⚠️ Chave não configurada';
+        }
+      }
+    }
+
+    function alternarVisibilidadeApiKey() {
+      const inputKey = document.getElementById('input-gemini-api-key');
+      const btnToggle = document.getElementById('btn-toggle-key-visibility');
+      if (!inputKey || !btnToggle) return;
+
+      if (inputKey.type === 'password') {
+        inputKey.type = 'text';
+        btnToggle.innerText = '🙈 Ocultar';
+        btnToggle.title = 'Ocultar chave de API';
+      } else {
+        inputKey.type = 'password';
+        btnToggle.innerText = '👁️ Revelar';
+        btnToggle.title = 'Revelar chave de API';
+      }
+    }
+
+    async function colarApiKeyClipboard() {
+      try {
+        if (!navigator.clipboard || !navigator.clipboard.readText) {
+          showToast("Acesso à área de transferência não suportado ou bloqueado pelo navegador.");
+          return;
+        }
+        const text = await navigator.clipboard.readText();
+        if (!text) {
+          showToast("Área de transferência vazia.");
+          return;
+        }
+        const inputKey = document.getElementById('input-gemini-api-key');
+        if (inputKey) {
+          inputKey.value = text.trim();
+          aoAlterarCredenciaisLLM();
+          showToast("Chave colada com sucesso!");
+        }
+      } catch (err) {
+        showToast("Não foi possível ler da área de transferência.");
+      }
+    }
+
+    async function testarChaveGemini() {
+      const inputKey = document.getElementById('input-gemini-api-key');
+      const selectModel = document.getElementById('select-gemini-model');
+      const btnValidar = document.getElementById('btn-validar-chave');
+      const badge = document.getElementById('byok-status-badge');
+
+      const apiKey = inputKey ? inputKey.value.trim() : '';
+      const model = selectModel ? selectModel.value : 'gemini-2.5-flash';
+
+      if (!apiKey) {
+        showToast("Por favor, digite ou cole sua API Key do Google Gemini antes de testar.");
+        if (inputKey) inputKey.focus();
+        return;
+      }
+
+      if (btnValidar) {
+        btnValidar.disabled = true;
+        btnValidar.innerHTML = '<span>⏳ Testando conexão...</span>';
+      }
+
+      appendLog(`[BYOK / Gemini] Iniciando teste de autenticação com o modelo '${model}'...`);
+
+      try {
+        const res = await fetch('/api/llm/validar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ api_key: apiKey, model: model })
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          localStorage.setItem(STORAGE_KEY_VALIDATED, 'true');
+          if (badge) {
+            badge.className = 'byok-badge active';
+            badge.innerText = `✅ Conectada (${model})`;
+          }
+          showToast("API Key do Google Gemini validada com sucesso!");
+          appendLog(`[BYOK / Gemini] ${json.message}`);
+        } else {
+          localStorage.setItem(STORAGE_KEY_VALIDATED, 'false');
+          if (badge) {
+            badge.className = 'byok-badge pending';
+            badge.innerText = '❌ Falha na autenticação';
+          }
+          showToast(json.message || "Falha ao validar API Key.");
+          appendLog(`[BYOK / Gemini - Erro] ${json.message}`);
+        }
+      } catch (err) {
+        localStorage.setItem(STORAGE_KEY_VALIDATED, 'false');
+        if (badge) {
+          badge.className = 'byok-badge pending';
+          badge.innerText = '❌ Erro de rede';
+        }
+        showToast("Erro ao conectar com o servidor para validar a chave.");
+        appendLog(`[BYOK / Gemini - Erro] Falha na requisição de validação: ${err}`);
+      } finally {
+        if (btnValidar) {
+          btnValidar.disabled = false;
+          btnValidar.innerHTML = '<span>🧪 Testar Chave</span>';
+        }
+      }
+    }
+
+    // -------------------------------------------------------------
     // Inicialização ao Carregar a Página
     // -------------------------------------------------------------
     window.addEventListener('DOMContentLoaded', () => {
       carregarStatus();
       carregarMensagens();
+      carregarConfiguracaoLLM();
       conectarSSE();
     });
   </script>

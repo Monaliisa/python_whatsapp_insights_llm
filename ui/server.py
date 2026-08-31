@@ -45,6 +45,7 @@ from services.storage import (
     save_catalog_groups,
     set_active_group,
 )
+from services.llm import GeminiService, MODELOS_DISPONIVEIS
 from services.paths import get_base_dir, get_data_dir, get_db_path, get_templates_dir
 
 BASE_DIR = get_base_dir()
@@ -141,6 +142,11 @@ class ImportRequest(BaseModel):
     content: str
     format: str = "csv"  # 'csv' ou 'json'
     filename: str | None = None
+
+
+class ValidateLLMKeyRequest(BaseModel):
+    api_key: str
+    model: str = "gemini-2.5-flash"
 
 
 @app.on_event("startup")
@@ -579,6 +585,38 @@ async def abrir_banco():
     except Exception as exc:
         state.add_log(f"Erro ao abrir banco: {exc}")
         return {"success": False, "error": str(exc)}
+
+
+@app.get("/api/llm/modelos")
+async def get_llm_modelos():
+    """Retorna os modelos de LLM suportados (Google Gemini)."""
+    return {
+        "success": True,
+        "provedor": "Google Gemini",
+        "filosofia": "BYOK (Bring Your Own Key)",
+        "modelos": GeminiService.listar_modelos(),
+    }
+
+
+@app.post("/api/llm/validar")
+async def validar_chave_llm(req: ValidateLLMKeyRequest):
+    """Valida a API Key informada pelo usuário executando um teste contra o Google Gemini."""
+    api_key = req.api_key.strip()
+    if not api_key:
+        return {"success": False, "message": "Nenhuma API Key informada. Digite sua chave do Google Gemini."}
+
+    modelo = req.model.strip() or "gemini-2.5-flash"
+    service = GeminiService(api_key=api_key, model=modelo)
+
+    state.add_log(f"[BYOK / Gemini] Validando API Key informada para o modelo '{modelo}'...")
+    valida, msg = service.validar_api_key(api_key=api_key, model=modelo)
+
+    if valida:
+        state.add_log(f"[BYOK / Gemini] ✅ {msg}")
+        return {"success": True, "message": msg, "model": modelo}
+    else:
+        state.add_log(f"[BYOK / Gemini] ⚠️ {msg}")
+        return {"success": False, "message": msg, "model": modelo}
 
 
 def start_server(host: str = "127.0.0.1", port: int = 8000):
