@@ -148,7 +148,7 @@
     }
 
     /* -------------------------------------------------------------
-       2. CONTAINER PRINCIPAL (DRAWER + CONTEÚDO)
+       2. CONTAINER PRINCIPAL (DRAWER + CONTEÚDO PRINCIPAL)
        ------------------------------------------------------------- */
     .app-container {
       display: flex;
@@ -356,13 +356,22 @@
     }
 
     /* -------------------------------------------------------------
-       4. CONTEÚDO PRINCIPAL (STACKED PAGES)
+       4. CONTEÚDO PRINCIPAL & PAINEL DO CONSOLE FIXO (REDIMENSIONÁVEL)
        ------------------------------------------------------------- */
     .main-content {
       flex: 1;
       background: var(--bg-surface);
       border: 1px solid var(--border-color);
       border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      position: relative;
+    }
+
+    .page-container {
+      flex: 1;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
@@ -464,71 +473,6 @@
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
     }
 
-    .select-wrapper {
-      position: relative;
-      width: 100%;
-    }
-
-    .custom-select {
-      background-color: #0b1120;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2338bdf8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 14px center;
-      background-size: 16px;
-      border: 1px solid var(--border-color-light);
-      border-radius: 8px;
-      color: #f8fafc;
-      padding: 11px 40px 11px 14px;
-      font-size: 13.5px;
-      font-weight: 500;
-      appearance: none;
-      -webkit-appearance: none;
-      cursor: pointer;
-      width: 100%;
-      transition: all 0.2s ease;
-    }
-
-    .custom-select:focus {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
-    }
-
-    .custom-select option {
-      background: #0f172a;
-      color: #f8fafc;
-      padding: 10px;
-    }
-
-    .group-helper-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 6px;
-      padding: 0 2px;
-    }
-
-    .group-sync-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      background: transparent;
-      border: none;
-      color: #38bdf8;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      padding: 3px 6px;
-      border-radius: 4px;
-      transition: all 0.2s;
-      box-shadow: none;
-    }
-
-    .group-sync-link:hover {
-      background: rgba(56, 189, 248, 0.1);
-      color: #7dd3fc;
-      transform: none;
-    }
-
     input:disabled, textarea:disabled {
       background: #1e293b;
       color: #64748b;
@@ -606,7 +550,7 @@
     }
 
     .btn-sm {
-      padding: 6px 12px;
+      padding: 5px 10px;
       font-size: 12px;
       border-radius: 6px;
     }
@@ -654,21 +598,76 @@
       box-shadow: 0 0 8px #10b981;
     }
 
-    /* Console de Logs */
-    .log-container {
+    /* -------------------------------------------------------------
+       PAINEL FIXO DO CONSOLE (REDIMENSIONÁVEL VIA DRAG)
+       ------------------------------------------------------------- */
+    .console-resizer {
+      height: 8px;
+      min-height: 8px;
       background: #090e1a;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 12px 14px;
+      border-top: 1px solid var(--border-color);
+      cursor: row-resize;
+      z-index: 20;
+      transition: background 0.2s ease;
+    }
+
+    .console-resizer:hover, .console-resizer.resizing {
+      background: rgba(59, 130, 246, 0.45);
+    }
+
+    .console-panel {
       height: 160px;
-      min-height: 160px;
-      max-height: 160px;
+      min-height: 38px;
+      max-height: 480px;
+      background: #090e1a;
+      display: flex;
+      flex-direction: column;
+      transition: height 0.15s ease;
+      user-select: none;
+    }
+
+    .console-panel.minimized {
+      height: 38px !important;
+      min-height: 38px !important;
+    }
+
+    .console-header {
+      height: 38px;
+      min-height: 38px;
+      background: #0d1527;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+    }
+
+    .console-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #93c5fd;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .console-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .log-container {
+      flex: 1;
+      background: #090e1a;
+      padding: 10px 14px;
       overflow-y: auto;
       font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
       font-size: 12px;
       color: #94a3b8;
       white-space: pre-wrap;
       word-break: break-all;
+      user-select: text;
     }
 
     .log-entry {
@@ -687,7 +686,7 @@
       border-radius: 8px;
       overflow: auto;
       background: var(--bg-card);
-      min-height: 300px;
+      min-height: 250px;
     }
 
     table {
@@ -878,7 +877,7 @@
   </header>
 
   <!-- =============================================================
-       2. CONTAINER GERAL (DRAWER + CONTEÚDO)
+       2. CONTAINER GERAL (DRAWER + CONTEÚDO PRINCIPAL)
        ============================================================= -->
   <div class="app-container">
 
@@ -957,293 +956,285 @@
       </div>
     </nav>
 
-    <!-- CONTEÚDO PRINCIPAL -->
+    <!-- CONTEÚDO PRINCIPAL (ÁREA DE PÁGINAS + PAINEL DO CONSOLE) -->
     <main class="main-content">
 
-      <!-- =========================================================
-           TELA 1: RESUMO (APENAS INFORMATIVA)
-           ========================================================= -->
-      <div id="page-resumo" class="page active">
-        <div class="page-header">
-          <h1 class="page-title">📄 Visão geral da aplicação</h1>
-          <p class="page-subtitle">Entenda como a ferramenta funciona e o que esperar de cada etapa do fluxo.</p>
-        </div>
+      <!-- CONTAINER DE PÁGINAS -->
+      <div class="page-container">
 
-        <div class="card" style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(15, 23, 42, 0.6)); border-color: rgba(59, 130, 246, 0.3);">
-          <h2 style="font-size: 16px; color: #93c5fd; margin-bottom: 8px;">Bem-vindo ao ZapInsights Hub!</h2>
-          <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6;">
-            Esta aplicação foi desenvolvida para coletar, armazenar incrementalmente e extrair inteligência qualitativa de grupos de estudo e comunidades do WhatsApp. Todo o processamento respeita a privacidade local-first, mantendo os dados salvos com segurança no seu próprio computador.
-          </p>
-        </div>
-
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-title">🚀 Como a aplicação funciona</div>
-            <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
-              <div><b>1. Conexão segura:</b> Você conecta sua sessão pelo QR Code do WhatsApp Web em um navegador local isolado.</div>
-              <div><b>2. Extração flexível:</b> Colete mensagens de grupos definindo filtros de tempo (dias ou meses) ou importe dados prévios via CSV/JSON.</div>
-              <div><b>3. Armazenamento persistente:</b> As mensagens são salvas e deduplicadas em um banco local SQLite, permitindo coletas cumulativas.</div>
-              <div><b>4. Visualização e auditoria:</b> Consulte as mensagens em tabela com pesquisa dinâmica e modal de detalhes.</div>
-              <div><b>5. Insights via IA:</b> Em breve, processe discussões com Modelos de Linguagem (LLMs) para gerar relatórios acionáveis.</div>
-            </div>
+        <!-- =========================================================
+             TELA 1: RESUMO (APENAS INFORMATIVA)
+             ========================================================= -->
+        <div id="page-resumo" class="page active">
+          <div class="page-header">
+            <h1 class="page-title">📄 Visão geral da aplicação</h1>
+            <p class="page-subtitle">Entenda como a ferramenta funciona e o que esperar de cada etapa do fluxo.</p>
           </div>
 
-          <div class="card">
-            <div class="card-title">✨ O que esperar da ferramenta</div>
-            <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
-              <div>🔒 <b>Privacidade total:</b> Seus dados e mensagens ficam restritos ao banco local, sem envio desnecessário a servidores terceiros.</div>
-              <div>⚡ <b>Sem perda de histórico:</b> A persistência incremental garante que coletas futuras apenas complementem as existentes.</div>
-              <div>📊 <b>Exportação imediata:</b> Faça o download integral do banco de dados nos formatos CSV e JSON com um clique.</div>
-              <div>💡 <b>Navegação guiada:</b> Os indicadores em vermelho no menu lateral alertam sobre etapas pendentes (como conexão ou ausência de dados).</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top: auto; background: #090e1a; border-style: dashed;">
-          <p style="font-size: 13px; color: #94a3b8; text-align: center;">
-            💡 <i>Dica: Para começar, clique em <b>"2. Conectar ao WhatsApp"</b> no menu lateral à esquerda.</i>
-          </p>
-        </div>
-      </div>
-
-      <!-- =========================================================
-           TELA 2: CONECTAR AO WHATSAPP
-           ========================================================= -->
-      <div id="page-conectar" class="page">
-        <div class="page-header">
-          <h1 class="page-title">💬 Conectar ao WhatsApp</h1>
-          <p class="page-subtitle">Gerencie sua sessão e autenticação no WhatsApp Web de forma segura.</p>
-        </div>
-
-        <div class="card" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 24px 20px; gap: 14px;">
-          <!-- Ícone do WhatsApp -->
-          <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(37, 211, 102, 0.15); border: 2px solid rgba(37, 211, 102, 0.4); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 16px rgba(37, 211, 102, 0.2);">
-            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-            </svg>
-          </div>
-
-          <div style="max-width: 520px;">
-            <h2 style="font-size: 16px; color: #f8fafc; margin-bottom: 6px;">Autenticação no WhatsApp Web</h2>
-            <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
-              Ao clicar no botão abaixo, o navegador será iniciado. Aponte a câmera do seu celular para escanear o <b>QR Code</b> na tela. Sua sessão será mantida ativa para coletas futuras.
+          <div class="card" style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(15, 23, 42, 0.6)); border-color: rgba(59, 130, 246, 0.3);">
+            <h2 style="font-size: 16px; color: #93c5fd; margin-bottom: 8px;">Bem-vindo ao ZapInsights Hub!</h2>
+            <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6;">
+              Esta aplicação foi desenvolvida para coletar, armazenar incrementalmente e extrair inteligência qualitativa de grupos de estudo e comunidades do WhatsApp. Todo o processamento respeita a privacidade local-first, mantendo os dados salvos com segurança no seu próprio computador.
             </p>
           </div>
 
-          <!-- Status da Conexão -->
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 13px; color: #94a3b8;">Status atual:</span>
-            <div id="conectar-status-badge" class="status-badge disconnected">
-              <span class="dot"></span>
-              <span id="conectar-status-text">Desconectado</span>
-            </div>
-          </div>
-
-          <!-- Botões de Ação (Tamanho Padrão Compacto) -->
-          <div class="btn-group" style="margin-top: 4px;">
-            <button id="btn-conectar-main" class="success" onclick="conectarWhatsApp()">
-              <span>📱 Conectar ao WhatsApp</span>
-            </button>
-            <button id="btn-desconectar-main" class="danger" onclick="desconectarWhatsApp()" style="display: none;">
-              <span>🚪 Desconectar e limpar sessão</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Console de Logs da Sessão -->
-        <div class="card">
-          <div class="card-title">📟 Console de conexão em tempo real</div>
-          <div class="log-container" id="log-output-conectar">
-            <div class="log-entry">[Sistema] Pronto para conectar. Clique no botão acima para iniciar o navegador.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- =========================================================
-           TELA 3: EXTRAÇÃO (& IMPORTAÇÃO)
-           ========================================================= -->
-      <div id="page-extracao" class="page">
-        <div class="page-header">
-          <h1 class="page-title">⚡ Extração e coleta de dados</h1>
-          <p class="page-subtitle">Configure os parâmetros de coleta no WhatsApp ou importe arquivos de mensagens.</p>
-        </div>
-
-        <!-- Bloco 1: Parâmetros de Coleta -->
-        <div class="card">
-          <div class="card-title">🤖 Parâmetros do coletor web</div>
-          <div class="form-grid">
-            <label for="select-grupo">Grupo:</label>
-            <div>
-              <div class="select-wrapper">
-                <select id="select-grupo" class="custom-select" onchange="aoMudarSelectGrupo()">
-                  <option value="" disabled selected>🔄 Carregando grupos do WhatsApp...</option>
-                </select>
-              </div>
-
-              <div id="container-grupo-manual" style="display: none; margin-top: 8px;">
-                <input type="text" id="input-grupo-manual" placeholder="Digite o nome exato do grupo no WhatsApp...">
-              </div>
-
-              <div class="group-helper-bar">
-                <span id="status-grupos-count" style="color: var(--text-dim); font-size: 11.5px;">Aguardando catálogo de grupos...</span>
-                <button type="button" id="btn-sync-grupos" class="group-sync-link" onclick="sincronizarGruposWeb()" title="Escanear e atualizar grupos do WhatsApp Web">
-                  <span>🔄</span> <span>Atualizar grupos</span>
-                </button>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title">🚀 Como a aplicação funciona</div>
+              <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
+                <div><b>1. Conexão segura:</b> Você conecta sua sessão pelo QR Code do WhatsApp Web em um navegador local isolado.</div>
+                <div><b>2. Extração flexível:</b> Colete mensagens de grupos definindo filtros de tempo (dias ou meses) ou importe dados prévios via CSV/JSON.</div>
+                <div><b>3. Armazenamento persistente:</b> As mensagens são salvas e deduplicadas em um banco local SQLite, permitindo coletas cumulativas.</div>
+                <div><b>4. Visualização e auditoria:</b> Consulte as mensagens em tabela com pesquisa dinâmica e modal de detalhes.</div>
+                <div><b>5. Insights via IA:</b> Em breve, processe discussões com Modelos de Linguagem (LLMs) para gerar relatórios acionáveis.</div>
               </div>
             </div>
 
-            <label for="input-comunidade" style="color: #94a3b8;">Comunidade:</label>
-            <div>
-              <input type="text" id="input-comunidade" value="Desabilitado (WhatsApp Web só indexa grupos)" disabled>
-              <small style="color: #94a3b8; font-size: 11.5px; display: block; margin-top: 4px;">
-                ⓘ <i>O WhatsApp Web não possui histórico agregado de comunidades inteiras. Informe o nome do grupo no campo acima.</i>
-              </small>
-            </div>
-
-            <label for="select-filtro">Tipo de filtro:</label>
-            <select id="select-filtro">
-              <option value="mes">Por mês (meses anteriores)</option>
-              <option value="dias">Por dias (dias recentes)</option>
-            </select>
-
-            <label for="input-valor">Quantidade:</label>
-            <input type="number" id="input-valor" min="1" max="120" value="1">
-          </div>
-
-          <div class="btn-group" style="margin-top: 16px;">
-            <button id="btn-coletar" onclick="iniciarColeta()">⚡ Iniciar coleta de mensagens</button>
-          </div>
-        </div>
-
-        <!-- Console de Logs da Extração -->
-        <div class="card">
-          <div class="card-title">📟 Console de execução do coletor</div>
-          <div class="log-container" id="log-output-extracao">
-            <div class="log-entry">[Sistema] Aguardando comando de extração ou importação.</div>
-          </div>
-        </div>
-
-        <!-- Bloco 2: Importação de Dados (Sem Scraper) -->
-        <div class="card">
-          <div class="card-title">📥 Importação de dados (sem coletor)</div>
-          <p style="color: #cbd5e1; font-size: 13.5px; margin-bottom: 14px; line-height: 1.5;">
-            Deseja testar ou analisar dados sem precisar abrir o navegador? Importe um arquivo <b>CSV</b> ou <b>JSON</b> exportado anteriormente:
-          </p>
-
-          <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px;">
-            <input type="file" id="file-import-input" accept=".csv,.json" style="max-width: 380px;">
-            <button id="btn-importar" class="secondary" onclick="importarArquivo()">📥 Importar arquivo selecionado</button>
-          </div>
-
-          <div style="border-top: 1px solid var(--border-color); padding-top: 14px; margin-top: 10px;">
-            <div style="font-size: 12.5px; color: #94a3b8; margin-bottom: 8px; font-weight: 600;">AÇÕES DO BANCO DE DADOS LOCAL (SQLITE):</div>
-            <div class="btn-group">
-              <button class="secondary btn-sm" onclick="abrirBanco()">🗄️ Abrir arquivo SQLite</button>
-              <button class="secondary btn-sm" onclick="abrirPastaDB()">📂 Abrir pasta local</button>
-              <button class="secondary btn-sm" onclick="copiarCaminhoDB()">📋 Copiar caminho</button>
+            <div class="card">
+              <div class="card-title">✨ O que esperar da ferramenta</div>
+              <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
+                <div>🔒 <b>Privacidade total:</b> Seus dados e mensagens ficam restritos ao banco local, sem envio desnecessário a servidores terceiros.</div>
+                <div>⚡ <b>Sem perda de histórico:</b> A persistência incremental garante que coletas futuras apenas complementem as existentes.</div>
+                <div>📊 <b>Exportação imediata:</b> Faça o download integral do banco de dados nos formatos CSV e JSON com um clique.</div>
+                <div>💡 <b>Navegação guiada:</b> Os indicadores no menu lateral alertam sobre etapas pendentes (como conexão ou ausência de dados).</div>
+              </div>
             </div>
           </div>
+
+          <div class="card" style="margin-top: auto; background: #090e1a; border-style: dashed;">
+            <p style="font-size: 13px; color: #94a3b8; text-align: center;">
+              💡 <i>Dica: Para começar, clique em <b>"2. Conectar ao WhatsApp"</b> no menu lateral à esquerda.</i>
+            </p>
+          </div>
         </div>
+
+        <!-- =========================================================
+             TELA 2: CONECTAR AO WHATSAPP
+             ========================================================= -->
+        <div id="page-conectar" class="page">
+          <div class="page-header">
+            <h1 class="page-title">💬 Conectar ao WhatsApp</h1>
+            <p class="page-subtitle">Gerencie sua sessão e autenticação no WhatsApp Web de forma segura.</p>
+          </div>
+
+          <div class="card" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 24px 20px; gap: 14px;">
+            <!-- Ícone do WhatsApp -->
+            <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(37, 211, 102, 0.15); border: 2px solid rgba(37, 211, 102, 0.4); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 16px rgba(37, 211, 102, 0.2);">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+              </svg>
+            </div>
+
+            <div style="max-width: 520px;">
+              <h2 style="font-size: 16px; color: #f8fafc; margin-bottom: 6px;">Autenticação no WhatsApp Web</h2>
+              <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
+                Ao clicar no botão abaixo, o navegador será iniciado. Aponte a câmera do seu celular para escanear o <b>QR Code</b> na tela. Sua sessão será mantida ativa para coletas futuras.
+              </p>
+            </div>
+
+            <!-- Status da Conexão -->
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 13px; color: #94a3b8;">Status atual:</span>
+              <div id="conectar-status-badge" class="status-badge disconnected">
+                <span class="dot"></span>
+                <span id="conectar-status-text">Desconectado</span>
+              </div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="btn-group" style="margin-top: 4px;">
+              <button id="btn-conectar-main" class="success" onclick="conectarWhatsApp()">
+                <span>📱 Conectar ao WhatsApp</span>
+              </button>
+              <button id="btn-desconectar-main" class="danger" onclick="desconectarWhatsApp()" style="display: none;">
+                <span>🚪 Desconectar e limpar sessão</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- =========================================================
+             TELA 3: EXTRAÇÃO (& IMPORTAÇÃO)
+             ========================================================= -->
+        <div id="page-extracao" class="page">
+          <div class="page-header">
+            <h1 class="page-title">⚡ Extração e coleta de dados</h1>
+            <p class="page-subtitle">Configure os parâmetros de coleta no WhatsApp ou importe arquivos de mensagens.</p>
+          </div>
+
+          <!-- Bloco 1: Parâmetros de Coleta -->
+          <div class="card">
+            <div class="card-title">🤖 Parâmetros do coletor web</div>
+            <div class="form-grid">
+              <label for="input-grupo">Grupo:</label>
+              <input type="text" id="input-grupo" value="Ciência de Dados | Comunidade Alura" placeholder="Ex: Ciência de Dados">
+
+              <label for="input-comunidade" style="color: #94a3b8;">Comunidade:</label>
+              <div>
+                <input type="text" id="input-comunidade" value="Desabilitado (WhatsApp Web só indexa grupos)" disabled>
+                <small style="color: #94a3b8; font-size: 11.5px; display: block; margin-top: 4px;">
+                  ⓘ <i>O WhatsApp Web não possui histórico agregado de comunidades inteiras. Informe o nome do grupo no campo acima.</i>
+                </small>
+              </div>
+
+              <label for="select-filtro">Tipo de filtro:</label>
+              <select id="select-filtro">
+                <option value="mes">Por mês (meses anteriores)</option>
+                <option value="dias">Por dias (dias recentes)</option>
+              </select>
+
+              <label for="input-valor">Quantidade:</label>
+              <input type="number" id="input-valor" min="1" max="120" value="1">
+            </div>
+
+            <div class="btn-group" style="margin-top: 16px;">
+              <button id="btn-coletar" onclick="iniciarColeta()">⚡ Iniciar coleta de mensagens</button>
+            </div>
+          </div>
+
+          <!-- Bloco 2: Importação de Dados (Sem Scraper) -->
+          <div class="card">
+            <div class="card-title">📥 Importação de dados (sem coletor)</div>
+            <p style="color: #cbd5e1; font-size: 13.5px; margin-bottom: 14px; line-height: 1.5;">
+              Deseja testar ou analisar dados sem precisar abrir o navegador? Importe um arquivo <b>CSV</b> ou <b>JSON</b> exportado anteriormente:
+            </p>
+
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px;">
+              <input type="file" id="file-import-input" accept=".csv,.json" style="max-width: 380px;">
+              <button id="btn-importar" class="secondary" onclick="importarArquivo()">📥 Importar arquivo selecionado</button>
+            </div>
+
+            <div style="border-top: 1px solid var(--border-color); padding-top: 14px; margin-top: 10px;">
+              <div style="font-size: 12.5px; color: #94a3b8; margin-bottom: 8px; font-weight: 600;">AÇÕES DO BANCO DE DADOS LOCAL (SQLITE):</div>
+              <div class="btn-group">
+                <button class="secondary btn-sm" onclick="abrirBanco()">🗄️ Abrir arquivo SQLite</button>
+                <button class="secondary btn-sm" onclick="abrirPastaDB()">📂 Abrir pasta local</button>
+                <button class="secondary btn-sm" onclick="copiarCaminhoDB()">📋 Copiar caminho</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- =========================================================
+             TELA 4: VISUALIZAÇÃO (TABELA + DIALOG)
+             ========================================================= -->
+        <div id="page-visualizacao" class="page">
+          <div class="page-header">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <div>
+                <h1 class="page-title">📋 Visualização de mensagens</h1>
+                <p class="page-subtitle">Consulte, filtre e audite as mensagens armazenadas no banco local.</p>
+              </div>
+              <div class="btn-group">
+                <a href="/api/exportar/download" class="btn secondary" download="export_messages.csv">📥 Baixar CSV</a>
+                <a href="/api/exportar/json" class="btn secondary" download="export_messages.json">📥 Baixar JSON</a>
+                <button class="secondary" onclick="carregarMensagens()">🔄 Atualizar</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Barra de Busca Rápida -->
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <input type="text" id="table-search-input" placeholder="🔍 Pesquisar por remetente ou texto da mensagem..." oninput="filtrarTabelaMensagens()">
+            <div style="white-space: nowrap; font-size: 13px; color: #94a3b8;">
+              Total: <b id="table-total-count" style="color: #38bdf8;">0</b> mensagens
+            </div>
+          </div>
+
+          <!-- Tabela -->
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 160px;">Data/Hora</th>
+                  <th style="width: 180px;">Remetente</th>
+                  <th>Mensagem</th>
+                  <th style="width: 80px; text-align: center;">Anexos</th>
+                  <th style="width: 120px;">ID</th>
+                </tr>
+              </thead>
+              <tbody id="messages-tbody">
+                <tr>
+                  <td colspan="5" style="text-align: center; padding: 24px; color: #64748b;">Carregando mensagens...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- =========================================================
+             TELA 5: GERAR INSIGHTS (MOCKUP IA / LLM)
+             ========================================================= -->
+        <div id="page-insights" class="page">
+          <div class="page-header">
+            <h1 class="page-title">🧠 Geração de insights com IA (LLM)</h1>
+            <p class="page-subtitle">Transforme as conversas coletadas em relatórios analíticos, tópicos e tendências.</p>
+          </div>
+
+          <div class="card" style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.15), rgba(37, 99, 235, 0.15)); border-color: rgba(168, 85, 247, 0.35);">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+              <span style="font-size: 20px;">🚀</span>
+              <h2 style="font-size: 16px; color: #c084fc;">Módulo em preparação arquitetural</h2>
+            </div>
+            <p style="color: #e2e8f0; font-size: 13.5px; line-height: 1.6;">
+              A camada de orquestração de LLMs será conectada nesta etapa para ler as mensagens persistidas no banco local SQLite e executar inferências de inteligência artificial.
+            </p>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title">📊 Resumo executivo e destaques</div>
+              <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
+                Síntese automática dos assuntos mais debatidos no período, identificando os tópicos mais relevantes levantados pelos participantes.
+              </p>
+              <button class="secondary btn-sm" disabled style="opacity: 0.5;">Em breve</button>
+            </div>
+
+            <div class="card">
+              <div class="card-title">💡 Mapeamento de dúvidas recorrentes</div>
+              <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
+                Identificação e agrupamento temático das principais dificuldades técnicas e pedagógicas trazidas pelos alunos nos grupos.
+              </p>
+              <button class="secondary btn-sm" disabled style="opacity: 0.5;">Em breve</button>
+            </div>
+
+            <div class="card">
+              <div class="card-title">📈 Análise de sentimento e clima</div>
+              <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
+                Termômetro de engajamento e satisfação da comunidade, destacando membros participativos e potenciais pontos de atrito.
+              </p>
+              <button class="secondary btn-sm" disabled style="opacity: 0.5;">Em breve</button>
+            </div>
+
+            <div class="card">
+              <div class="card-title">🎯 Recomendações e planos de ação</div>
+              <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
+                Sugestões automáticas de novos conteúdos, lives, artigos e intervenções dos instrutores baseadas nas conversas reais.
+              </p>
+              <button class="secondary btn-sm" disabled style="opacity: 0.5;">Em breve</button>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- =========================================================
-           TELA 4: VISUALIZAÇÃO (TABELA + DIALOG)
+           PAINEL FIXO DO CONSOLE (SEMPRE VISÍVEL & REDIMENSIONÁVEL)
            ========================================================= -->
-      <div id="page-visualizacao" class="page">
-        <div class="page-header">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-            <div>
-              <h1 class="page-title">📋 Visualização de mensagens</h1>
-              <p class="page-subtitle">Consulte, filtre e audite as mensagens armazenadas no banco local.</p>
-            </div>
-            <div class="btn-group">
-              <a href="/api/exportar/download" class="btn secondary" download="export_messages.csv">📥 Baixar CSV</a>
-              <a href="/api/exportar/json" class="btn secondary" download="export_messages.json">📥 Baixar JSON</a>
-              <button class="secondary" onclick="carregarMensagens()">🔄 Atualizar</button>
-            </div>
+      <div id="console-resizer" class="console-resizer" title="Arraste para redimensionar a altura do console"></div>
+      
+      <div id="console-panel" class="console-panel">
+        <div class="console-header">
+          <div class="console-title">
+            <span>📟 Console de execução em tempo real</span>
+          </div>
+          <div class="console-actions">
+            <button class="btn-sm secondary" onclick="limparConsole()" title="Limpar mensagens do console">🧹 Limpar</button>
+            <button class="btn-sm secondary" id="btn-toggle-console" onclick="toggleConsole()" title="Minimizar/Expandir console">🔽</button>
           </div>
         </div>
-
-        <!-- Barra de Busca Rápida -->
-        <div style="display: flex; gap: 12px; align-items: center;">
-          <input type="text" id="table-search-input" placeholder="🔍 Pesquisar por remetente ou texto da mensagem..." oninput="filtrarTabelaMensagens()">
-          <div style="white-space: nowrap; font-size: 13px; color: #94a3b8;">
-            Total: <b id="table-total-count" style="color: #38bdf8;">0</b> mensagens
-          </div>
-        </div>
-
-        <!-- Tabela -->
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th style="width: 160px;">Data/Hora</th>
-                <th style="width: 180px;">Remetente</th>
-                <th>Mensagem</th>
-                <th style="width: 80px; text-align: center;">Anexos</th>
-                <th style="width: 120px;">ID</th>
-              </tr>
-            </thead>
-            <tbody id="messages-tbody">
-              <tr>
-                <td colspan="5" style="text-align: center; padding: 24px; color: #64748b;">Carregando mensagens...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- =========================================================
-           TELA 5: GERAR INSIGHTS (MOCKUP IA / LLM)
-           ========================================================= -->
-      <div id="page-insights" class="page">
-        <div class="page-header">
-          <h1 class="page-title">🧠 Geração de insights com IA (LLM)</h1>
-          <p class="page-subtitle">Transforme as conversas coletadas em relatórios analíticos, tópicos e tendências.</p>
-        </div>
-
-        <div class="card" style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.15), rgba(37, 99, 235, 0.15)); border-color: rgba(168, 85, 247, 0.35);">
-          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
-            <span style="font-size: 20px;">🚀</span>
-            <h2 style="font-size: 16px; color: #c084fc;">Módulo em preparação arquitetural</h2>
-          </div>
-          <p style="color: #e2e8f0; font-size: 13.5px; line-height: 1.6;">
-            A camada de orquestração de LLMs será conectada nesta etapa para ler as mensagens persistidas no banco local SQLite e executar inferências de inteligência artificial.
-          </p>
-        </div>
-
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-title">📊 Resumo executivo e destaques</div>
-            <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
-              Síntese automática dos assuntos mais debatidos no período, identificando os tópicos mais relevantes levantados pelos participantes.
-            </p>
-            <button class="secondary btn-sm" disabled style="opacity: 0.5;">Em breve</button>
-          </div>
-
-          <div class="card">
-            <div class="card-title">💡 Mapeamento de dúvidas recorrentes</div>
-            <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
-              Identificação e agrupamento temático das principais dificuldades técnicas e pedagógicas trazidas pelos alunos nos grupos.
-            </p>
-            <button class="secondary btn-sm" disabled style="opacity: 0.5;">Em breve</button>
-          </div>
-
-          <div class="card">
-            <div class="card-title">📈 Análise de sentimento e clima</div>
-            <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
-              Termômetro de engajamento e satisfação da comunidade, destacando membros participativos e potenciais pontos de atrito.
-            </p>
-            <button class="secondary btn-sm" disabled style="opacity: 0.5;">Em breve</button>
-          </div>
-
-          <div class="card">
-            <div class="card-title">🎯 Recomendações e planos de ação</div>
-            <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
-              Sugestões automáticas de novos conteúdos, lives, artigos e intervenções dos instrutores baseadas nas conversas reais.
-            </p>
-            <button class="secondary btn-sm" disabled style="opacity: 0.5;">Em breve</button>
-          </div>
+        <div id="log-output" class="log-container">
+          <div class="log-entry">[Sistema] ZapInsights Hub iniciado. Aguardando comandos...</div>
         </div>
       </div>
 
@@ -1326,7 +1317,6 @@
       }
     }
 
-    // Redimensionamento interativo por arrasto
     if (resizer && sidebar) {
       let isResizing = false;
       let startX, startWidth;
@@ -1360,6 +1350,64 @@
           document.body.style.cursor = 'default';
         }
       });
+    }
+
+    // -------------------------------------------------------------
+    // Controle do Console Fixo (Redimensionável por Drag)
+    // -------------------------------------------------------------
+    const consolePanel = document.getElementById('console-panel');
+    const consoleResizer = document.getElementById('console-resizer');
+
+    if (consoleResizer && consolePanel) {
+      let isConsoleResizing = false;
+      let startY, startHeight;
+
+      consoleResizer.addEventListener('mousedown', (e) => {
+        isConsoleResizing = true;
+        startY = e.clientY;
+        startHeight = parseInt(document.defaultView.getComputedStyle(consolePanel).height, 10);
+        consoleResizer.classList.add('resizing');
+        document.body.style.cursor = 'row-resize';
+        e.preventDefault();
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isConsoleResizing) return;
+        const newHeight = startHeight - (e.clientY - startY);
+        if (newHeight <= 38) {
+          consolePanel.classList.add('minimized');
+        } else {
+          consolePanel.classList.remove('minimized');
+          if (newHeight >= 50 && newHeight <= 480) {
+            consolePanel.style.height = newHeight + 'px';
+          }
+        }
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (isConsoleResizing) {
+          isConsoleResizing = false;
+          consoleResizer.classList.remove('resizing');
+          document.body.style.cursor = 'default';
+        }
+      });
+    }
+
+    function toggleConsole() {
+      if (consolePanel) {
+        consolePanel.classList.toggle('minimized');
+        const btn = document.getElementById('btn-toggle-console');
+        if (btn) {
+          btn.innerText = consolePanel.classList.contains('minimized') ? '🔼' : '🔽';
+        }
+      }
+    }
+
+    function limparConsole() {
+      const logOutput = document.getElementById('log-output');
+      if (logOutput) {
+        logOutput.innerHTML = '<div class="log-entry">[Sistema] Console limpo.</div>';
+      }
     }
 
     // -------------------------------------------------------------
@@ -1408,22 +1456,16 @@
     }
 
     // -------------------------------------------------------------
-    // Logs no Console
+    // Logs no Console Unificado
     // -------------------------------------------------------------
     function appendLog(msg) {
-      const targets = [
-        document.getElementById('log-output-conectar'),
-        document.getElementById('log-output-extracao')
-      ];
-
-      targets.forEach(box => {
-        if (!box) return;
-        const entry = document.createElement('div');
-        entry.className = 'log-entry';
-        entry.innerText = msg;
-        box.appendChild(entry);
-        box.scrollTop = box.scrollHeight;
-      });
+      const box = document.getElementById('log-output');
+      if (!box) return;
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerText = msg;
+      box.appendChild(entry);
+      box.scrollTop = box.scrollHeight;
     }
 
     // -------------------------------------------------------------
@@ -1536,99 +1578,15 @@
         const res = await fetch('/api/status');
         const data = await res.json();
         dbPathGlobal = data.db_path || "";
+        if (data.default_grupo) {
+          const inputGrupo = document.getElementById('input-grupo');
+          if (inputGrupo && !inputGrupo.value) {
+            inputGrupo.value = data.default_grupo;
+          }
+        }
         atualizarStatusUI(Boolean(data.has_session), data.message_count || 0);
-        await carregarGrupos(data.default_grupo);
       } catch (err) {
         console.error("Erro ao obter status:", err);
-      }
-    }
-
-    function aoMudarSelectGrupo() {
-      const selectGrupo = document.getElementById('select-grupo');
-      const containerManual = document.getElementById('container-grupo-manual');
-      const inputManual = document.getElementById('input-grupo-manual');
-      if (!selectGrupo || !containerManual) return;
-
-      if (selectGrupo.value === '__manual__') {
-        containerManual.style.display = 'block';
-        if (inputManual) inputManual.focus();
-      } else {
-        containerManual.style.display = 'none';
-      }
-    }
-
-    function obterGrupoSelecionado() {
-      const selectGrupo = document.getElementById('select-grupo');
-      if (!selectGrupo) return "";
-      if (selectGrupo.value === '__manual__') {
-        const inputManual = document.getElementById('input-grupo-manual');
-        return inputManual ? inputManual.value.trim() : "";
-      }
-      return selectGrupo.value.trim();
-    }
-
-    async function carregarGrupos(defaultGrupo) {
-      try {
-        const statusCount = document.getElementById('status-grupos-count');
-        const selectGrupo = document.getElementById('select-grupo');
-        if (!selectGrupo) return;
-
-        const valorAnterior = selectGrupo.value;
-
-        const res = await fetch('/api/grupos');
-        const json = await res.json();
-        if (json.success && Array.isArray(json.data)) {
-          const grupos = json.data;
-          
-          let html = '';
-          if (grupos.length === 0) {
-            html += '<option value="" disabled selected>Nenhum grupo catalogado (clique em Atualizar grupos)</option>';
-          } else {
-            html += grupos.map(g => `<option value="${g.replace(/"/g, '&quot;')}">👥 ${g}</option>`).join('');
-          }
-          html += '<option value="__manual__">✏️ Digitar outro grupo manualmente...</option>';
-          selectGrupo.innerHTML = html;
-
-          if (valorAnterior && (grupos.includes(valorAnterior) || valorAnterior === '__manual__')) {
-            selectGrupo.value = valorAnterior;
-          } else if (defaultGrupo && grupos.includes(defaultGrupo)) {
-            selectGrupo.value = defaultGrupo;
-          } else if (grupos.length > 0) {
-            selectGrupo.value = grupos[0];
-          }
-
-          aoMudarSelectGrupo();
-
-          if (statusCount) {
-            if (grupos.length === 0) {
-              statusCount.innerText = "Nenhum grupo na sessão.";
-            } else {
-              statusCount.innerText = `${grupos.length} grupo(s) disponível(is)`;
-            }
-          }
-        }
-      } catch (err) {
-        console.error("Erro ao carregar grupos:", err);
-      }
-    }
-
-    async function sincronizarGruposWeb() {
-      const btn = document.getElementById('btn-sync-grupos');
-      if (btn) btn.disabled = true;
-      try {
-        showToast("Disparando varredura de grupos no WhatsApp Web...");
-        const res = await fetch('/api/grupos/sincronizar', { method: 'POST' });
-        const json = await res.json();
-        if (json.success) {
-          showToast(json.message || "Varredura de grupos em andamento...");
-          appendLog("[Sincronização] Solicitação de busca de grupos enviada.");
-        } else {
-          showToast(json.message || "Não foi possível sincronizar os grupos.");
-        }
-      } catch (err) {
-        showToast("Erro ao solicitar sincronização de grupos.");
-      } finally {
-        if (btn) btn.disabled = false;
       }
     }
 
@@ -1675,12 +1633,7 @@
     // Disparar Coleta de Mensagens (Scraper)
     // -------------------------------------------------------------
     async function iniciarColeta() {
-      const grupo = obterGrupoSelecionado();
-      if (!grupo) {
-        showToast("Por favor, selecione ou digite o nome do grupo antes de iniciar a coleta.");
-        return;
-      }
-
+      const grupo = document.getElementById('input-grupo').value;
       const comunidade = document.getElementById('input-comunidade').value;
       const tipo_filtro = document.getElementById('select-filtro').value;
       const valor = parseInt(document.getElementById('input-valor').value, 10) || 1;

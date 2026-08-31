@@ -26,16 +26,20 @@ from services.coletor import (
 )
 from services.extrator import NOME_DO_GRUPO, extrair_dados_comunidade
 from services.storage import (
+    clear_active_group,
     count_messages,
     export_to_csv,
     export_to_json,
     fetch_known_groups,
+    fetch_known_groups_details,
     fetch_message_by_id,
     fetch_recent,
+    get_app_state,
     import_from_csv_data,
     import_from_json_data,
     init_db,
     save_known_groups,
+    set_active_group,
 )
 from services.paths import get_base_dir, get_data_dir, get_db_path, get_templates_dir
 
@@ -113,13 +117,20 @@ class StdoutRedirector(io.TextIOBase):
 
 class ColetaRequest(BaseModel):
     grupo: str = NOME_DO_GRUPO
-    comunidade: str = ""
-    tipo_filtro: str = "mes"  # 'mes' ou 'dias'
-    valor: int = 1
+    unidade_tempo: str = "dias"  # 'horas', 'dias', 'semanas', 'meses'
+    valor: int = 7
+    tipo_filtro: str | None = None
+
+
+class SelectGroupRequest(BaseModel):
+    grupo_id: str | None = None
+    grupo_nome: str | None = None
 
 
 class ExportRequest(BaseModel):
     destino: str = str(DEFAULT_EXPORT_PATH)
+    grupo_id: str | None = None
+    grupo_nome: str | None = None
 
 
 class ImportRequest(BaseModel):
@@ -131,7 +142,12 @@ class ImportRequest(BaseModel):
 @app.on_event("startup")
 def startup_event():
     init_db(get_db_path())
-    state.add_log("Interface Web inicializada com sucesso.")
+    app_state = get_app_state()
+    grp = app_state.get("active_group_name")
+    if grp:
+        state.add_log(f"Interface inicializada. Grupo ativo na sessão: '{grp}'.")
+    else:
+        state.add_log("Interface Web inicializada com sucesso.")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -146,7 +162,20 @@ async def serve_index():
 async def get_status():
     db_path = get_db_path()
     has_session = verificar_status_sessao()
+    app_state = get_app_state()
     total_messages = count_messages(db_path)
+
+    active_group = None
+    if app_state.get("active_group_name") or app_state.get("active_group_id"):
+        grp_nome = app_state.get("active_group_name")
+        grp_id = app_state.get("active_group_id")
+        grp_count = count_messages(db_path, grupo_id=grp_id, grupo_nome=grp_nome)
+        active_group = {
+            "id": grp_id,
+            "nome": grp_nome,
+            "total_messages": grp_count,
+        }
+
     return {
         "status": "online",
         "is_busy": state.is_busy,
@@ -158,7 +187,34 @@ async def get_status():
         "has_data": total_messages > 0,
         "default_grupo": NOME_DO_GRUPO,
         "default_export_path": str(DEFAULT_EXPORT_PATH),
+        "app_state": app_state,
+        "active_group": active_group,
     }
+
+
+@app.get("/api/state")
+async def get_state_endpoint():
+    """Retorna o estado persistido do grupo ativo."""
+    return {"success": True, "data": get_app_state()}
+
+
+@app.post("/api/state/select-group")
+async def select_group_endpoint(req: SelectGroupRequest):
+    """Define o grupo ativo na memória e persiste no app_state.json."""
+    if not req.grupo_nome and not req.grupo_id:
+        return {"success": False, "message": "Nome ou ID do grupo não informado."}
+
+    new_state = set_active_group(group_id=req.grupo_id, group_name=req.grupo_nome)
+    state.add_log(f"[Grupo] Grupo ativo definido: '{req.grupo_nome or req.grupo_id}'.")
+    return {"success": True, "state": new_state}
+
+
+@app.post("/api/state/clear-group")
+async def clear_group_endpoint():
+    """Limpa o grupo ativo da memória (sem apagar as mensagens do banco)."""
+    new_state = clear_active_group()
+    state.add_log("[Grupo] Grupo ativo limpo da memória. Pronto para nova seleção/extração.")
+    return {"success": True, "state": new_state, "message": "Grupo desmarcado da memória."}
 
 
 @app.post("/api/importar")
@@ -171,7 +227,6 @@ async def import_data(req: ImportRequest):
         return {"success": False, "message": "Nenhum conteúdo fornecido para importação."}
 
     fmt = req.format.lower().strip()
-    # Se o nome do arquivo foi fornecido, verifica a extensão
     if req.filename:
         if req.filename.lower().endswith(".json"):
             fmt = "json"
@@ -180,14 +235,22 @@ async def import_data(req: ImportRequest):
 
     try:
         if fmt == "json":
-            count = import_from_json_data(content, db_path=get_db_path())
+            count, grupo_nome = import_from_json_data(content, db_path=get_db_path())
         else:
-            count = import_from_csv_data(content, db_path=get_db_path())
+            count, grupo_nome = import_from_csv_data(content, db_path=get_db_path())
 
         nome_arq = f" '{req.filename}'" if req.filename else ""
         msg = f"Importação concluída com sucesso! {count} mensagens processadas a partir de{nome_arq}."
+        if grupo_nome:
+            msg += f" Grupo ativo fixado: '{grupo_nome}'."
         state.add_log(f"[Importação] {msg}")
-        return {"success": True, "count": count, "message": msg}
+        return {
+            "success": True,
+            "count": count,
+            "grupo": grupo_nome,
+            "message": msg,
+            "app_state": get_app_state(),
+        }
     except Exception as exc:
         err_msg = f"Erro ao importar dados: {exc}"
         state.add_log(f"[Importação - Erro] {err_msg}")
@@ -250,10 +313,16 @@ async def trigger_desconectar_sessao():
 @app.get("/api/grupos")
 async def get_grupos():
     try:
-        grupos = fetch_known_groups(get_db_path())
-        return {"success": True, "count": len(grupos), "data": grupos}
+        details = fetch_known_groups_details(get_db_path())
+        nomes = [d["nome"] for d in details if d.get("nome")]
+        return {
+            "success": True,
+            "count": len(details),
+            "data": nomes,
+            "details": details,
+        }
     except Exception as exc:
-        return {"success": False, "error": str(exc), "data": []}
+        return {"success": False, "error": str(exc), "data": [], "details": []}
 
 
 def _run_sincronizar_grupos_thread():
@@ -287,13 +356,21 @@ async def trigger_sincronizar_grupos(background_tasks: BackgroundTasks):
     return {"success": True, "message": "Sincronização de grupos iniciada em segundo plano."}
 
 
-
-
 @app.get("/api/messages")
-async def get_messages(limit: int = 100):
+async def get_messages(
+    limit: int = 250,
+    grupo_id: str | None = None,
+    grupo_nome: str | None = None,
+    apenas_ativo: bool = False,
+):
     try:
         init_db(get_db_path())
-        messages = fetch_recent(limit=limit, db_path=get_db_path())
+        if apenas_ativo and not grupo_id and not grupo_nome:
+            app_state = get_app_state()
+            grupo_id = app_state.get("active_group_id")
+            grupo_nome = app_state.get("active_group_name")
+
+        messages = fetch_recent(limit=limit, db_path=get_db_path(), grupo_id=grupo_id, grupo_nome=grupo_nome)
         return {"success": True, "count": len(messages), "data": messages}
     except Exception as exc:
         return {"success": False, "error": str(exc), "data": []}
@@ -310,21 +387,17 @@ async def get_message_detail(message_id: str):
 def _run_coleta_thread(req: ColetaRequest):
     state.is_busy = True
     grupo = req.grupo.strip() or NOME_DO_GRUPO
-    comunidade = req.comunidade.strip() or ""
-    tipo_filtro = req.tipo_filtro if req.tipo_filtro in ["mes", "dias"] else "mes"
-    valor = int(req.valor)
+    unidade_tempo = req.unidade_tempo.lower().strip() if req.unidade_tempo else "dias"
+    valor = int(req.valor) if req.valor else 7
 
     kwargs = {
         "nome_grupo": grupo,
-        "nome_comunidade": comunidade,
-        "tipo_filtro": tipo_filtro,
+        "unidade_tempo": unidade_tempo,
+        "valor": valor,
+        "tipo_filtro": req.tipo_filtro,
     }
-    if tipo_filtro == "mes":
-        kwargs["meses"] = valor
-    else:
-        kwargs["dias"] = valor
 
-    state.add_log(f"Iniciando coleta por {tipo_filtro} com valor {valor} (Grupo: '{grupo}')...")
+    state.add_log(f"Iniciando coleta por janela de {valor} {unidade_tempo} (Grupo: '{grupo}')...")
 
     orig_stdout = sys.stdout
     redirector = StdoutRedirector(orig_stdout)
@@ -392,7 +465,12 @@ async def export_csv(req: ExportRequest):
         os.makedirs(pasta, exist_ok=True)
 
     try:
-        export_to_csv(destino, db_path=get_db_path())
+        export_to_csv(
+            destino,
+            db_path=get_db_path(),
+            grupo_id=req.grupo_id,
+            grupo_nome=req.grupo_nome,
+        )
         state.add_log(f"CSV exportado com sucesso em: {destino}")
         return {"success": True, "path": destino, "message": f"Arquivo salvo em: {destino}"}
     except Exception as exc:
@@ -401,11 +479,16 @@ async def export_csv(req: ExportRequest):
 
 
 @app.get("/api/exportar/download")
-async def download_csv():
+async def download_csv(grupo_id: str | None = None, grupo_nome: str | None = None):
     destino = str(DEFAULT_EXPORT_PATH)
     os.makedirs(os.path.dirname(destino), exist_ok=True)
     try:
-        export_to_csv(destino, db_path=get_db_path())
+        export_to_csv(
+            destino,
+            db_path=get_db_path(),
+            grupo_id=grupo_id,
+            grupo_nome=grupo_nome,
+        )
         return FileResponse(
             path=destino,
             filename="export_messages.csv",
@@ -416,11 +499,16 @@ async def download_csv():
 
 
 @app.get("/api/exportar/json")
-async def download_json():
+async def download_json(grupo_id: str | None = None, grupo_nome: str | None = None):
     json_path = DATA_DIR / "export_messages.json"
     os.makedirs(os.path.dirname(str(json_path)), exist_ok=True)
     try:
-        export_to_json(str(json_path), db_path=get_db_path())
+        export_to_json(
+            str(json_path),
+            db_path=get_db_path(),
+            grupo_id=grupo_id,
+            grupo_nome=grupo_nome,
+        )
         return FileResponse(
             path=str(json_path),
             filename="export_messages.json",
