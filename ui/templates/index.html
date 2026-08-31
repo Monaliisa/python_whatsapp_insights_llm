@@ -1409,7 +1409,7 @@
               </div>
 
               <div>
-                <button type="button" id="btn-mudar-grupo" class="btn-mudar-grupo" onclick="limparGrupoAtivo()" title="Limpar base de mensagens da sessão local e escolher ou coletar outro grupo">
+                <button type="button" id="btn-mudar-grupo" class="btn-mudar-grupo" onclick="abrirModalTrocaGrupo()" title="Limpar base de mensagens da sessão local e escolher ou coletar outro grupo">
                   <span>🔄 Mudar de grupo</span>
                 </button>
               </div>
@@ -1448,10 +1448,10 @@
             <div id="card-coleta" class="pathway-card">
               <div>
                 <div class="pathway-header">
-                  <span class="pathway-badge pathway-badge-coleta">Opção 1</span>
-                  <h3 class="pathway-title">⚡ Coleta via WhatsApp Web</h3>
+                  <span id="coleta-card-badge" class="pathway-badge pathway-badge-coleta">Opção 1</span>
+                  <h3 id="coleta-card-title" class="pathway-title">⚡ Coleta via WhatsApp Web</h3>
                 </div>
-                <p class="pathway-desc">
+                <p id="coleta-card-desc" class="pathway-desc">
                   Conecta ao WhatsApp Web no navegador e extrai as mensagens diretamente do histórico do grupo.
                 </p>
 
@@ -1501,7 +1501,7 @@
               </div>
 
               <div style="margin-top: 16px;">
-                <button id="btn-coletar" style="width: 100%;" onclick="iniciarColeta()">⚡ Iniciar coleta de mensagens</button>
+                <button id="btn-coletar" style="width: 100%;" onclick="iniciarColeta()"><span>⚡ Iniciar coleta de mensagens</span></button>
               </div>
             </div>
 
@@ -1715,6 +1715,53 @@
     </div>
   </div>
 
+  <!-- =============================================================
+       MODAL DIALOG: CONFIRMAR TROCA DE GRUPO ATIVO
+       ============================================================= -->
+  <div id="modal-troca-grupo" class="modal-backdrop" onclick="fecharModalTrocaGrupo(event)">
+    <div class="modal-dialog" style="max-width: 520px;" onclick="event.stopPropagation()">
+      <div class="modal-header" style="border-bottom-color: rgba(239, 68, 68, 0.3);">
+        <div class="modal-title" style="color: #fca5a5;">
+          <span>⚠️ Confirmar troca de grupo ativo</span>
+        </div>
+        <button class="modal-close" onclick="fecharModalTrocaGrupo()">✕</button>
+      </div>
+
+      <div class="modal-body" style="gap: 14px;">
+        <div class="card" style="padding: 14px; background: rgba(127, 29, 29, 0.25); border: 1px solid rgba(239, 68, 68, 0.45);">
+          <div style="font-size: 13.5px; color: #fee2e2; line-height: 1.5; font-weight: 500;">
+            Ao mudar de grupo, a base atual de mensagens locais (<code style="color: #fca5a5; background: rgba(0,0,0,0.3); padding: 2px 4px; border-radius: 4px;">messages.db</code>) será limpa para dar lugar à nova coleta ou importação.
+          </div>
+        </div>
+
+        <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 14px; font-size: 13px; color: #cbd5e1; line-height: 1.6;">
+          <div style="margin-bottom: 6px;">
+            <b>Grupo atual:</b> <span id="modal-troca-grupo-nome" style="color: #38bdf8; font-weight: 600;">-</span>
+          </div>
+          <div>
+            <b>Mensagens na base:</b> <span id="modal-troca-grupo-msgs" style="color: #f1f5f9;">0 mensagens</span>
+          </div>
+        </div>
+
+        <div style="background: rgba(37, 99, 235, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 12px 14px; font-size: 12.5px; color: #bae6fd; line-height: 1.55;">
+          💡 <b>Recomendação importante:</b> Se você deseja guardar o histórico atual, faça a exportação em <b>CSV</b> ou <b>JSON</b> na aba <b>"Visualização"</b> antes de confirmar a troca.
+        </div>
+      </div>
+
+      <div class="modal-footer" style="justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+        <button type="button" class="secondary" onclick="irParaExportacaoVisualizacao()">
+          <span>📥 Ir para Visualização (Exportar)</span>
+        </button>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="secondary" onclick="fecharModalTrocaGrupo()">Cancelar</button>
+          <button type="button" class="danger" onclick="executarTrocaGrupoConfirmada()">
+            <span>🗑️ Limpar e mudar de grupo</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST DE NOTIFICAÇÃO -->
   <div id="toast" class="toast">Mensagem</div>
 
@@ -1725,6 +1772,8 @@
     let isBusy = false;
     let mensagensCache = [];
     let dbPathGlobal = "";
+    let grupoAtivoGlobal = null;
+    let grupoAtivoMensagensGlobal = 0;
 
     // -------------------------------------------------------------
     // Controle do Drawer (Móvel / Redimensionável / Toggle)
@@ -1970,10 +2019,22 @@
       const fileImportInput = document.getElementById('file-import-input');
       const btnImportar = document.getElementById('btn-importar');
 
+      // Elementos do card de coleta adaptáveis ao modo incremental / novo
+      const selectGrupo = document.getElementById('select-grupo');
+      const containerGrupoManual = document.getElementById('container-grupo-manual');
+      const btnSyncGrupos = document.getElementById('btn-sync-grupos');
+      const statusGruposCount = document.getElementById('status-grupos-count');
+      const coletaCardBadge = document.getElementById('coleta-card-badge');
+      const coletaCardTitle = document.getElementById('coleta-card-title');
+      const coletaCardDesc = document.getElementById('coleta-card-desc');
+      const btnColetar = document.getElementById('btn-coletar');
+
       const count = Number(messageCount) || 0;
       sidebarMessagesCount.innerText = count.toLocaleString('pt-BR');
 
       const isGrupoAtivo = Boolean(activeGroup && (activeGroup.nome || activeGroup.id) && count > 0);
+      grupoAtivoGlobal = isGrupoAtivo ? activeGroup : null;
+      grupoAtivoMensagensGlobal = count;
 
       if (isGrupoAtivo) {
         if (bannerAtivo) bannerAtivo.style.display = 'flex';
@@ -1988,6 +2049,24 @@
         if (pathwaysContainer) pathwaysContainer.classList.add('has-active-group');
         if (fileImportInput) fileImportInput.disabled = true;
         if (btnImportar) btnImportar.disabled = true;
+
+        // Desativa dropdown de grupo, oculta sync e ajusta textos para Coleta Incremental
+        if (selectGrupo) selectGrupo.disabled = true;
+        if (containerGrupoManual) containerGrupoManual.style.display = 'none';
+        if (btnSyncGrupos) btnSyncGrupos.style.display = 'none';
+        if (statusGruposCount) statusGruposCount.innerText = `Grupo fixado na sessão ativa: "${activeGroup.nome || activeGroup.id}"`;
+        if (coletaCardBadge) {
+          coletaCardBadge.innerText = 'Coleta Incremental';
+        }
+        if (coletaCardTitle) {
+          coletaCardTitle.innerText = '⚡ Complementar dados do grupo';
+        }
+        if (coletaCardDesc) {
+          coletaCardDesc.innerHTML = `Conecta ao WhatsApp Web para buscar mensagens mais recentes ou de outros períodos do grupo <b>${activeGroup.nome || activeGroup.id}</b>, complementando a base do banco SQLite sem duplicar ou apagar as mensagens já existentes.`;
+        }
+        if (btnColetar) {
+          btnColetar.innerHTML = '<span>⚡ Complementar mensagens no banco</span>';
+        }
       } else {
         if (bannerAtivo) bannerAtivo.style.display = 'none';
 
@@ -1998,6 +2077,22 @@
         if (pathwaysContainer) pathwaysContainer.classList.remove('has-active-group');
         if (fileImportInput) fileImportInput.disabled = false;
         if (btnImportar) btnImportar.disabled = false;
+
+        // Reativa dropdown de grupo e textos normais
+        if (selectGrupo) selectGrupo.disabled = false;
+        if (btnSyncGrupos) btnSyncGrupos.style.display = 'inline-flex';
+        if (coletaCardBadge) {
+          coletaCardBadge.innerText = 'Opção 1';
+        }
+        if (coletaCardTitle) {
+          coletaCardTitle.innerText = '⚡ Coleta via WhatsApp Web';
+        }
+        if (coletaCardDesc) {
+          coletaCardDesc.innerText = 'Conecta ao WhatsApp Web no navegador e extrai as mensagens diretamente do histórico do grupo.';
+        }
+        if (btnColetar) {
+          btnColetar.innerHTML = '<span>⚡ Iniciar coleta de mensagens</span>';
+        }
       }
 
       // 3. Alerta do Drawer para Extração e Bloqueio de Visualização / Insights
@@ -2051,12 +2146,47 @@
       }
     }
 
+    // -------------------------------------------------------------
+    // Modal de Confirmação de Troca de Grupo Ativo
+    // -------------------------------------------------------------
+    function abrirModalTrocaGrupo() {
+      const modal = document.getElementById('modal-troca-grupo');
+      const nomeDisplay = document.getElementById('modal-troca-grupo-nome');
+      const msgsDisplay = document.getElementById('modal-troca-grupo-msgs');
+      
+      const nomeAtivo = (grupoAtivoGlobal && (grupoAtivoGlobal.nome || grupoAtivoGlobal.id)) || document.getElementById('active-group-name-display').innerText;
+      const msgsAtivo = `${grupoAtivoMensagensGlobal.toLocaleString('pt-BR')} mensagem(ns)`;
+      
+      if (nomeDisplay) nomeDisplay.innerText = nomeAtivo || '-';
+      if (msgsDisplay) msgsDisplay.innerText = msgsAtivo || '0 mensagens';
+      if (modal) modal.classList.add('active');
+    }
+
+    function fecharModalTrocaGrupo(event) {
+      if (event && event.target !== document.getElementById('modal-troca-grupo') && !event.target.classList.contains('modal-close') && event.target.tagName !== 'BUTTON') {
+        return;
+      }
+      const modal = document.getElementById('modal-troca-grupo');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function irParaExportacaoVisualizacao() {
+      fecharModalTrocaGrupo();
+      navegarPara('page-visualizacao');
+      showToast("Exporte seus dados em CSV ou JSON no canto superior direito antes de mudar de grupo.");
+    }
+
+    async function executarTrocaGrupoConfirmada() {
+      fecharModalTrocaGrupo();
+      await limparGrupoAtivo();
+    }
+
     async function limparGrupoAtivo() {
       try {
         const res = await fetch('/api/state/clear-group', { method: 'POST' });
         const json = await res.json();
         if (json.success) {
-          showToast("Grupo ativo e mensagens desmarcados da sessão.");
+          showToast("Grupo ativo desmarcado e base messages.db limpa.");
           appendLog("[Grupo] Base da sessão limpa. Pronto para selecionar ou coletar outro grupo.");
           await carregarStatus();
           await carregarMensagens();
@@ -2104,18 +2234,21 @@
           const grupos = json.data;
           
           let html = '';
-          if (grupos.length === 0) {
+          if (grupos.length === 0 && !defaultGrupo) {
             html += '<option value="" disabled selected>Nenhum grupo catalogado (clique em Atualizar grupos)</option>';
           } else {
             html += grupos.map(g => `<option value="${g.replace(/"/g, '&quot;')}">👥 ${g}</option>`).join('');
           }
+          if (defaultGrupo && !grupos.includes(defaultGrupo) && defaultGrupo !== '__manual__') {
+            html = `<option value="${defaultGrupo.replace(/"/g, '&quot;')}" selected>👥 ${defaultGrupo} (Grupo Ativo)</option>` + html;
+          }
           html += '<option value="__manual__">✏️ Digitar outro grupo manualmente...</option>';
           selectGrupo.innerHTML = html;
 
-          if (valorAnterior && (grupos.includes(valorAnterior) || valorAnterior === '__manual__')) {
-            selectGrupo.value = valorAnterior;
-          } else if (defaultGrupo && grupos.includes(defaultGrupo)) {
+          if (defaultGrupo && (grupos.includes(defaultGrupo) || selectGrupo.querySelector(`option[value="${defaultGrupo.replace(/"/g, '&quot;')}"]`))) {
             selectGrupo.value = defaultGrupo;
+          } else if (valorAnterior && (grupos.includes(valorAnterior) || valorAnterior === '__manual__')) {
+            selectGrupo.value = valorAnterior;
           } else if (grupos.length > 0) {
             selectGrupo.value = grupos[0];
           }
@@ -2123,7 +2256,9 @@
           aoMudarSelectGrupo();
 
           if (statusCount) {
-            if (grupos.length === 0) {
+            if (grupoAtivoGlobal && (grupoAtivoGlobal.nome || grupoAtivoGlobal.id)) {
+              statusCount.innerText = `Grupo fixado na sessão: "${grupoAtivoGlobal.nome || grupoAtivoGlobal.id}"`;
+            } else if (grupos.length === 0) {
               statusCount.innerText = "Nenhum grupo catalogado.";
             } else {
               statusCount.innerText = `${grupos.length} grupo(s) catalogado(s)`;
@@ -2198,7 +2333,10 @@
     // Disparar Coleta de Mensagens (Scraper)
     // -------------------------------------------------------------
     async function iniciarColeta() {
-      const grupo = obterGrupoSelecionado();
+      let grupo = obterGrupoSelecionado();
+      if (grupoAtivoGlobal && (grupoAtivoGlobal.nome || grupoAtivoGlobal.id)) {
+        grupo = grupoAtivoGlobal.nome || grupoAtivoGlobal.id;
+      }
       if (!grupo) {
         showToast("Por favor, selecione ou digite o nome do grupo antes de iniciar a coleta.");
         return;

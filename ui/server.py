@@ -387,7 +387,11 @@ async def get_message_detail(message_id: str):
 
 def _run_coleta_thread(req: ColetaRequest):
     state.is_busy = True
-    grupo = req.grupo.strip() or NOME_DO_GRUPO
+    active_group = detect_active_group_from_db(get_db_path())
+    if active_group and (active_group.get("nome") or active_group.get("id")):
+        grupo = active_group.get("nome") or active_group.get("id")
+    else:
+        grupo = req.grupo.strip() or NOME_DO_GRUPO
     unidade_tempo = req.unidade_tempo.lower().strip() if req.unidade_tempo else "dias"
     valor = int(req.valor) if req.valor else 7
 

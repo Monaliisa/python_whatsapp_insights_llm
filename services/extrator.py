@@ -7,9 +7,9 @@ from datetime import datetime, timedelta
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 from services.paths import get_session_dir
 from services.storage import (
+    count_messages,
     gerar_grupo_id,
     init_db,
-    reset_messages_db,
     save_messages,
     set_active_group,
 )
@@ -622,13 +622,13 @@ def extrair_dados_comunidade(
 
                 print("-" * 50)
 
-            # Persistir mensagens no banco local (SQLite) exclusivo para o grupo ativo
+            # Persistir mensagens no banco local (SQLite) incrementalmente para o grupo ativo
             try:
                 init_db()
-                reset_messages_db()
-                save_messages(lista_final)
-                set_active_group(group_id=grupo_id, group_name=nome_grupo, total_messages=len(lista_final))
-                print(f"[INFO] {len(lista_final)} mensagens salvas em data/messages.db. Grupo ativo fixado na sessão: '{nome_grupo}'")
+                novas_inseridas = save_messages(lista_final)
+                total_no_banco = count_messages()
+                set_active_group(group_id=grupo_id, group_name=nome_grupo, total_messages=total_no_banco)
+                print(f"[INFO] {novas_inseridas} mensagens processadas ({len(lista_final)} coletadas nesta rodada, {total_no_banco} mensagens totais no banco). Grupo ativo: '{nome_grupo}'")
             except Exception as e:
                 print(f"[ERRO] Falha ao salvar mensagens ou estado: {e}")
 
