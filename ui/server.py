@@ -218,6 +218,15 @@ async def import_data(req: ImportRequest):
     if not content:
         return {"success": False, "message": "Nenhum conteúdo fornecido para importação."}
 
+    # Bloqueia importação se já houver um grupo ativo na base
+    active_group = detect_active_group_from_db(get_db_path())
+    if active_group and (active_group.get("nome") or active_group.get("id")):
+        grp_nome = active_group.get("nome") or active_group.get("id")
+        return {
+            "success": False,
+            "message": f"Importação bloqueada: o grupo '{grp_nome}' já está ativo na sessão. Clique em 'Mudar de grupo' antes de importar.",
+        }
+
     fmt = req.format.lower().strip()
     if req.filename:
         if req.filename.lower().endswith(".json"):

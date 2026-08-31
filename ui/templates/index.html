@@ -915,6 +915,10 @@
       position: relative;
     }
 
+    .extraction-pathways-container.has-active-group {
+      grid-template-columns: 1fr;
+    }
+
     .pathway-card {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
@@ -1320,15 +1324,15 @@
           </div>
 
           <!-- Banner Explicativo sobre os Dois Caminhos Equivalentes -->
-          <div class="extraction-intro-banner">
+          <div id="extraction-intro-banner" class="extraction-intro-banner">
             💡 <b>Ambas as opções abaixo satisfazem a extração:</b> Você pode tanto <b>coletar ao vivo</b> do WhatsApp Web via automação quanto <b>importar um arquivo</b> (CSV ou JSON). Qualquer um dos caminhos carrega as mensagens para o banco SQLite local (<code>messages.db</code>), liberando imediatamente a visualização e os módulos de inteligência artificial.
           </div>
 
           <!-- Dois Caminhos Lado a Lado com Divisor Vertical "OU" -->
-          <div class="extraction-pathways-container">
+          <div id="extraction-pathways-container" class="extraction-pathways-container">
 
             <!-- OPÇÃO 1: COLETA AUTOMÁTICA VIA WHATSAPP WEB -->
-            <div class="pathway-card">
+            <div id="card-coleta" class="pathway-card">
               <div>
                 <div class="pathway-header">
                   <span class="pathway-badge pathway-badge-coleta">Opção 1</span>
@@ -1389,12 +1393,12 @@
             </div>
 
             <!-- DIVISOR VERTICAL "OU" -->
-            <div class="divider-ou-vertical">
+            <div id="divider-ou-extracao" class="divider-ou-vertical">
               <div class="badge-ou-circle">OU</div>
             </div>
 
             <!-- OPÇÃO 2: IMPORTAÇÃO DE ARQUIVO (CSV / JSON) -->
-            <div class="pathway-card">
+            <div id="card-importacao" class="pathway-card">
               <div>
                 <div class="pathway-header">
                   <span class="pathway-badge pathway-badge-import">Opção 2</span>
@@ -1414,24 +1418,20 @@
 
                 <button id="btn-importar" class="secondary" style="width: 100%;" onclick="importarArquivo()">📥 Carregar e importar arquivo</button>
               </div>
-
-              <div style="border-top: 1px solid var(--border-color); padding-top: 14px; margin-top: 20px;">
-                <div style="font-size: 11.5px; color: #94a3b8; margin-bottom: 8px; font-weight: 600;">BANCO LOCAL (SQLITE):</div>
-                <div class="btn-group">
-                  <button class="secondary btn-sm" onclick="abrirBanco()">🗄️ Abrir SQLite</button>
-                  <button class="secondary btn-sm" onclick="abrirPastaDB()">📂 Abrir pasta</button>
-                  <button class="secondary btn-sm" onclick="copiarCaminhoDB()">📋 Copiar caminho</button>
-                </div>
-              </div>
             </div>
 
           </div>
 
-          <!-- Console de Logs da Extração -->
-          <div class="card">
-            <div class="card-title">📟 Console de execução em tempo real</div>
-            <div class="log-container" id="log-output-extracao">
-              <div class="log-entry">[Sistema] Aguardando comando de extração ou importação.</div>
+          <!-- Barra de Gestão do Banco Local SQLite -->
+          <div class="card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 14px; padding: 14px 18px;">
+            <div>
+              <div style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Banco Local (SQLite):</div>
+              <div style="font-size: 12px; color: #cbd5e1; font-family: monospace; margin-top: 2px;">messages.db</div>
+            </div>
+            <div class="btn-group">
+              <button type="button" class="secondary btn-sm" onclick="abrirBanco()">🗄️ Abrir SQLite</button>
+              <button type="button" class="secondary btn-sm" onclick="abrirPastaDB()">📂 Abrir pasta</button>
+              <button type="button" class="secondary btn-sm" onclick="copiarCaminhoDB()">📋 Copiar caminho</button>
             </div>
           </div>
         </div>
@@ -1863,16 +1863,41 @@
       const msgsAtivoDisplay = document.getElementById('active-group-messages-display');
       const idAtivoBadge = document.getElementById('active-group-id-badge');
 
+      const introBanner = document.getElementById('extraction-intro-banner');
+      const pathwaysContainer = document.getElementById('extraction-pathways-container');
+      const dividerOu = document.getElementById('divider-ou-extracao');
+      const cardImportacao = document.getElementById('card-importacao');
+      const fileImportInput = document.getElementById('file-import-input');
+      const btnImportar = document.getElementById('btn-importar');
+
       const count = Number(messageCount) || 0;
       sidebarMessagesCount.innerText = count.toLocaleString('pt-BR');
 
-      if (activeGroup && (activeGroup.nome || activeGroup.id) && count > 0) {
+      const isGrupoAtivo = Boolean(activeGroup && (activeGroup.nome || activeGroup.id) && count > 0);
+
+      if (isGrupoAtivo) {
         if (bannerAtivo) bannerAtivo.style.display = 'flex';
         if (nomeAtivoDisplay) nomeAtivoDisplay.innerText = activeGroup.nome || activeGroup.id;
         if (msgsAtivoDisplay) msgsAtivoDisplay.innerText = `${count.toLocaleString('pt-BR')} mensagem(ns) deste grupo carregadas no banco`;
         if (idAtivoBadge) idAtivoBadge.innerText = activeGroup.id ? `[ID: ${activeGroup.id}]` : '';
+
+        // Se houver grupo ativo: oculta/bloqueia as opções de importação e o divisor OU
+        if (introBanner) introBanner.style.display = 'none';
+        if (dividerOu) dividerOu.style.display = 'none';
+        if (cardImportacao) cardImportacao.style.display = 'none';
+        if (pathwaysContainer) pathwaysContainer.classList.add('has-active-group');
+        if (fileImportInput) fileImportInput.disabled = true;
+        if (btnImportar) btnImportar.disabled = true;
       } else {
         if (bannerAtivo) bannerAtivo.style.display = 'none';
+
+        // Sem grupo ativo: exibe opções de importação e divisor OU
+        if (introBanner) introBanner.style.display = 'block';
+        if (dividerOu) dividerOu.style.display = 'flex';
+        if (cardImportacao) cardImportacao.style.display = 'flex';
+        if (pathwaysContainer) pathwaysContainer.classList.remove('has-active-group');
+        if (fileImportInput) fileImportInput.disabled = false;
+        if (btnImportar) btnImportar.disabled = false;
       }
 
       // 3. Alerta do Drawer para Extração e Bloqueio de Visualização / Insights
