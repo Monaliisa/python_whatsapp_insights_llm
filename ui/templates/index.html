@@ -847,23 +847,29 @@
        6. ESTILOS DO FLUXO DE EXTRAÇÃO E DIVISOR VERTICAL "OU"
        ------------------------------------------------------------- */
     .active-group-card {
-      background: linear-gradient(135deg, rgba(37, 99, 235, 0.18), rgba(56, 189, 248, 0.12));
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 58, 138, 0.28) 60%, rgba(14, 116, 144, 0.18) 100%);
       border: 1px solid rgba(56, 189, 248, 0.45);
       border-radius: 12px;
-      padding: 16px 20px;
+      padding: 18px 22px;
       margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    .active-group-top-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
       flex-wrap: wrap;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
     }
 
-    .active-group-info {
+    .active-group-title-col {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 5px;
     }
 
     .active-group-label-row {
@@ -884,16 +890,103 @@
       letter-spacing: 0.5px;
     }
 
+    .active-group-id-badge {
+      font-family: monospace;
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
     .active-group-name {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 700;
       color: #f8fafc;
       letter-spacing: 0.2px;
     }
 
+    .btn-mudar-grupo {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.92), rgba(29, 78, 216, 0.95));
+      border: 1.5px solid #60a5fa;
+      color: #ffffff;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+    }
+
+    .btn-mudar-grupo:hover {
+      background: linear-gradient(135deg, #1d4ed8, #2563eb);
+      border-color: #93c5fd;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(37, 99, 235, 0.5);
+    }
+
+    .active-group-divider {
+      height: 1px;
+      background: linear-gradient(to right, rgba(56, 189, 248, 0.3), rgba(56, 189, 248, 0.08), transparent);
+    }
+
+    .active-group-bottom-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
     .active-group-meta {
       font-size: 12.5px;
       color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .active-group-msg-count {
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    .active-group-db-tools {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .active-group-db-label {
+      font-size: 11.5px;
+      color: #94a3b8;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .db-tool-btn {
+      font-size: 11.5px;
+      padding: 4px 10px;
+    }
+
+    @media (max-width: 920px) {
+      .active-group-top-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .btn-mudar-grupo {
+        width: 100%;
+        justify-content: center;
+      }
+      .active-group-bottom-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
     }
 
     .extraction-intro-banner {
@@ -1304,23 +1397,43 @@
 
           <!-- Banner / Card de Grupo Ativo na Sessão Local -->
           <div id="active-group-banner" class="active-group-card" style="display: none;">
-            <div class="active-group-info">
-              <div class="active-group-label-row">
-                <span class="active-group-badge">🟢 Grupo Ativo na Sessão Local</span>
-                <span id="active-group-id-badge" style="font-family: monospace; font-size: 11px; color: #64748b;"></span>
+            
+            <!-- Linha Superior: Título/Grupo à esquerda e botão Mudar de Grupo com destaque à direita -->
+            <div class="active-group-top-row">
+              <div class="active-group-title-col">
+                <div class="active-group-label-row">
+                  <span class="active-group-badge">🟢 Grupo Ativo na Sessão Local</span>
+                  <span id="active-group-id-badge" class="active-group-id-badge"></span>
+                </div>
+                <div class="active-group-name" id="active-group-name-display">-</div>
               </div>
-              <div class="active-group-name" id="active-group-name-display">-</div>
+
+              <div>
+                <button type="button" id="btn-mudar-grupo" class="btn-mudar-grupo" onclick="limparGrupoAtivo()" title="Limpar base de mensagens da sessão local e escolher ou coletar outro grupo">
+                  <span>🔄 Mudar de grupo</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Divisor sutil -->
+            <div class="active-group-divider"></div>
+
+            <!-- Linha Inferior: Meta de mensagens à esquerda e Ferramentas SQLite à direita -->
+            <div class="active-group-bottom-row">
               <div class="active-group-meta">
-                <span id="active-group-messages-display">0 mensagens carregadas</span>
-                <span style="margin: 0 6px;">•</span>
+                <span id="active-group-messages-display" class="active-group-msg-count">0 mensagens carregadas</span>
+                <span style="margin: 0 4px; color: #64748b;">•</span>
                 <span>Base exclusiva pronta para visualização e insights</span>
               </div>
+
+              <div class="active-group-db-tools">
+                <span class="active-group-db-label">Banco local (SQLite):</span>
+                <button type="button" class="secondary btn-sm db-tool-btn" onclick="abrirBanco()" title="Abrir banco messages.db no visualizador do sistema">🗄️ Abrir SQLite</button>
+                <button type="button" class="secondary btn-sm db-tool-btn" onclick="abrirPastaDB()" title="Abrir pasta onde o arquivo messages.db está salvo">📂 Abrir pasta</button>
+                <button type="button" class="secondary btn-sm db-tool-btn" onclick="copiarCaminhoDB()" title="Copiar caminho completo do arquivo messages.db">📋 Copiar caminho</button>
+              </div>
             </div>
-            <div>
-              <button type="button" class="secondary" onclick="limparGrupoAtivo()" title="Limpar base de mensagens da sessão local e escolher ou coletar outro grupo">
-                <span>🔄 Mudar de grupo</span>
-              </button>
-            </div>
+
           </div>
 
           <!-- Banner Explicativo sobre os Dois Caminhos Equivalentes -->
@@ -1420,19 +1533,6 @@
               </div>
             </div>
 
-          </div>
-
-          <!-- Barra de Gestão do Banco Local SQLite -->
-          <div class="card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 14px; padding: 14px 18px;">
-            <div>
-              <div style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Banco Local (SQLite):</div>
-              <div style="font-size: 12px; color: #cbd5e1; font-family: monospace; margin-top: 2px;">messages.db</div>
-            </div>
-            <div class="btn-group">
-              <button type="button" class="secondary btn-sm" onclick="abrirBanco()">🗄️ Abrir SQLite</button>
-              <button type="button" class="secondary btn-sm" onclick="abrirPastaDB()">📂 Abrir pasta</button>
-              <button type="button" class="secondary btn-sm" onclick="copiarCaminhoDB()">📋 Copiar caminho</button>
-            </div>
           </div>
         </div>
 
