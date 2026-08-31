@@ -25,10 +25,13 @@ from services.coletor import (
 )
 from services.extrator import NOME_DO_GRUPO, extrair_dados_comunidade
 from services.storage import (
+    count_messages,
     export_to_csv,
     export_to_json,
     fetch_message_by_id,
     fetch_recent,
+    import_from_csv_data,
+    import_from_json_data,
     init_db,
 )
 from services.paths import get_base_dir, get_data_dir, get_db_path, get_templates_dir
@@ -116,6 +119,12 @@ class ExportRequest(BaseModel):
     destino: str = str(DEFAULT_EXPORT_PATH)
 
 
+class ImportRequest(BaseModel):
+    content: str
+    format: str = "csv"  # 'csv' ou 'json'
+    filename: str | None = None
+
+
 @app.on_event("startup")
 def startup_event():
     init_db(get_db_path())
@@ -134,6 +143,7 @@ async def serve_index():
 async def get_status():
     db_path = get_db_path()
     has_session = verificar_status_sessao()
+    total_messages = count_messages(db_path)
     return {
         "status": "online",
         "is_busy": state.is_busy,
@@ -141,9 +151,44 @@ async def get_status():
         "session_status": "connected" if has_session else "disconnected",
         "db_path": db_path,
         "db_exists": os.path.exists(db_path),
+        "message_count": total_messages,
+        "has_data": total_messages > 0,
         "default_grupo": NOME_DO_GRUPO,
         "default_export_path": str(DEFAULT_EXPORT_PATH),
     }
+
+
+@app.post("/api/importar")
+async def import_data(req: ImportRequest):
+    if state.is_busy:
+        return {"success": False, "message": "Existe outra tarefa em andamento. Aguarde."}
+
+    content = req.content.strip()
+    if not content:
+        return {"success": False, "message": "Nenhum conteúdo fornecido para importação."}
+
+    fmt = req.format.lower().strip()
+    # Se o nome do arquivo foi fornecido, verifica a extensão
+    if req.filename:
+        if req.filename.lower().endswith(".json"):
+            fmt = "json"
+        elif req.filename.lower().endswith(".csv"):
+            fmt = "csv"
+
+    try:
+        if fmt == "json":
+            count = import_from_json_data(content, db_path=get_db_path())
+        else:
+            count = import_from_csv_data(content, db_path=get_db_path())
+
+        nome_arq = f" '{req.filename}'" if req.filename else ""
+        msg = f"Importação concluída com sucesso! {count} mensagens processadas a partir de{nome_arq}."
+        state.add_log(f"[Importação] {msg}")
+        return {"success": True, "count": count, "message": msg}
+    except Exception as exc:
+        err_msg = f"Erro ao importar dados: {exc}"
+        state.add_log(f"[Importação - Erro] {err_msg}")
+        return {"success": False, "error": err_msg}
 
 
 @app.get("/api/session/status")

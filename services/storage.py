@@ -260,3 +260,132 @@ def export_to_json(path: str, limit: int | None = None, db_path: str | None = No
     data = [dict(zip(cols, r)) for r in rows]
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def count_messages(db_path: str | None = None) -> int:
+    """Retorna o total de mensagens armazenadas no banco SQLite."""
+    if db_path is None:
+        db_path = get_db_path()
+    if not os.path.exists(db_path):
+        return 0
+    try:
+        conn = sqlite3.connect(db_path)
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM messages")
+        row = cur.fetchone()
+        conn.close()
+        return row[0] if row else 0
+    except Exception:
+        return 0
+
+
+def import_from_csv_data(content: str, db_path: str | None = None) -> int:
+    """Importa mensagens a partir do conteúdo textual de um CSV."""
+    import csv
+    import io
+    import uuid
+
+    if not content or not content.strip():
+        return 0
+
+    if db_path is None:
+        db_path = get_db_path()
+    init_db(db_path)
+
+    linhas = content.strip().split("\n")
+    if not linhas:
+        return 0
+
+    primeira_linha = linhas[0]
+    delimiter = ";" if ";" in primeira_linha else ","
+
+    reader = csv.DictReader(io.StringIO(content), delimiter=delimiter)
+    messages = []
+    for row in reader:
+        msg_id = row.get("id") or str(uuid.uuid4())
+        meses_val = row.get("meses_back")
+        semanas_val = row.get("semanas_back")
+        
+        reply_author = row.get("reply_author")
+        reply_text = row.get("reply_text")
+
+        msg = {
+            "id": msg_id,
+            "coleta_id": row.get("coleta_id"),
+            "grupo_nome": row.get("grupo_nome") or row.get("grupo"),
+            "comunidade_nome": row.get("comunidade_nome") or row.get("comunidade"),
+            "coletado_em": row.get("coletado_em"),
+            "meses_back": int(meses_val) if meses_val and str(meses_val).isdigit() else None,
+            "semanas_back": int(semanas_val) if semanas_val and str(semanas_val).isdigit() else None,
+            "data_hora": row.get("data_hora"),
+            "remetente": row.get("remetente") or row.get("autor") or row.get("sender"),
+            "texto": row.get("texto") or row.get("mensagem") or row.get("content") or "",
+            "texto_normalizado": row.get("texto_normalizado"),
+            "is_reply": 1 if str(row.get("is_reply", "")).lower() in ["1", "true", "sim"] else 0,
+            "reply_data": {
+                "autor_citado": reply_author,
+                "texto_citado": reply_text,
+            } if reply_author or reply_text else None,
+            "has_attachments": 1 if str(row.get("has_attachments", "")).lower() in ["1", "true", "sim"] else 0,
+            "attachments": row.get("attachments_json"),
+            "reactions": row.get("reactions_json"),
+            "topics": row.get("topics_json"),
+            "transcript": row.get("transcript"),
+        }
+        messages.append(msg)
+
+    if messages:
+        save_messages(messages, db_path=db_path)
+    return len(messages)
+
+
+def import_from_json_data(content: str, db_path: str | None = None) -> int:
+    """Importa mensagens a partir do conteúdo textual de um JSON."""
+    import uuid
+
+    if not content or not content.strip():
+        return 0
+
+    if db_path is None:
+        db_path = get_db_path()
+    init_db(db_path)
+
+    data = json.loads(content)
+    if isinstance(data, dict):
+        data = data.get("messages") or data.get("data") or [data]
+    if not isinstance(data, list):
+        data = [data]
+
+    messages = []
+    for item in data:
+        if not isinstance(item, dict):
+            continue
+        msg_id = item.get("id") or str(uuid.uuid4())
+        msg = {
+            "id": msg_id,
+            "coleta_id": item.get("coleta_id"),
+            "grupo_nome": item.get("grupo_nome") or item.get("grupo"),
+            "comunidade_nome": item.get("comunidade_nome") or item.get("comunidade"),
+            "coletado_em": item.get("coletado_em"),
+            "meses_back": item.get("meses_back"),
+            "semanas_back": item.get("semanas_back"),
+            "data_hora": item.get("data_hora"),
+            "remetente": item.get("remetente") or item.get("autor") or item.get("sender"),
+            "texto": item.get("texto") or item.get("mensagem") or item.get("content") or "",
+            "texto_normalizado": item.get("texto_normalizado"),
+            "is_reply": item.get("is_reply"),
+            "reply_data": item.get("reply_data") or ({
+                "autor_citado": item.get("reply_author"),
+                "texto_citado": item.get("reply_text"),
+            } if item.get("reply_author") or item.get("reply_text") else None),
+            "has_attachments": item.get("has_attachments"),
+            "attachments": item.get("attachments") or item.get("attachments_json"),
+            "reactions": item.get("reactions") or item.get("reactions_json"),
+            "topics": item.get("topics") or item.get("topics_json"),
+            "transcript": item.get("transcript"),
+        }
+        messages.append(msg)
+
+    if messages:
+        save_messages(messages, db_path=db_path)
+    return len(messages)
