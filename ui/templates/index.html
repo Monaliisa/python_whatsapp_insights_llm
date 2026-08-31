@@ -41,7 +41,7 @@
     }
 
     /* -------------------------------------------------------------
-       1. APPBAR (ENDOMARKETING)
+       1. APPBAR (ENDOMARKETING & MENU SANDUÍCHE)
        ------------------------------------------------------------- */
     .appbar {
       height: 56px;
@@ -51,7 +51,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 20px;
+      padding: 0 16px;
       user-select: none;
       z-index: 50;
     }
@@ -62,18 +62,27 @@
       gap: 12px;
     }
 
-    .appbar-logo-icon {
-      width: 32px;
-      height: 32px;
+    .appbar-menu-btn {
+      width: 36px;
+      height: 36px;
       border-radius: 8px;
-      background: linear-gradient(135deg, #2563eb, #06b6d4);
+      background: #1e293b;
+      border: 1px solid #334155;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: white;
-      font-weight: 800;
-      font-size: 16px;
-      box-shadow: 0 0 12px rgba(37, 99, 235, 0.35);
+      color: #f1f5f9;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: none;
+      padding: 0;
+    }
+
+    .appbar-menu-btn:hover {
+      background: #2563eb;
+      border-color: #3b82f6;
+      color: #ffffff;
+      transform: none;
     }
 
     .appbar-title-group {
@@ -148,14 +157,16 @@
       padding: 12px;
       gap: 12px;
       overflow: hidden;
+      position: relative;
     }
 
     /* -------------------------------------------------------------
-       3. DRAWER / SIDEBAR
+       3. DRAWER / SIDEBAR (MÓVEL & REDIMENSIONÁVEL)
        ------------------------------------------------------------- */
     .sidebar {
-      width: 250px;
-      min-width: 250px;
+      width: 290px;
+      min-width: 200px;
+      max-width: 480px;
       background: var(--bg-surface);
       border: 1px solid var(--border-color);
       border-radius: 10px;
@@ -164,6 +175,41 @@
       padding: 10px;
       gap: 6px;
       user-select: none;
+      position: relative;
+      overflow: hidden;
+      transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                  min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                  margin-right 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                  padding 0.25s ease,
+                  opacity 0.2s ease,
+                  border-color 0.2s ease;
+    }
+
+    .sidebar.collapsed {
+      width: 0 !important;
+      min-width: 0 !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      margin-right: -12px !important;
+      border-color: transparent !important;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Alça de redimensionamento do Drawer */
+    .sidebar-resizer {
+      position: absolute;
+      top: 0;
+      right: -6px;
+      width: 10px;
+      height: 100%;
+      cursor: col-resize;
+      z-index: 20;
+    }
+
+    .sidebar-resizer:hover, .sidebar-resizer.resizing {
+      background: rgba(59, 130, 246, 0.35);
+      border-radius: 4px;
     }
 
     .sidebar-header {
@@ -173,6 +219,9 @@
       text-transform: uppercase;
       letter-spacing: 0.8px;
       padding: 6px 10px 4px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .sidebar-item {
@@ -195,42 +244,59 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .sidebar-item-icon {
-      font-size: 15px;
+      font-size: 14px;
       width: 18px;
       text-align: center;
     }
 
-    .sidebar-item:hover {
+    .sidebar-item:hover:not(.disabled) {
       background: var(--bg-card-hover);
       color: #ffffff;
     }
 
     .sidebar-item.active {
-      background: #1d4ed8;
-      color: #ffffff;
+      background: #1d4ed8 !important;
+      color: #ffffff !important;
       font-weight: 600;
       box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3);
+      border-color: #3b82f6 !important;
     }
 
     /* Alertas no Drawer (Vermelho Escuro) */
-    .sidebar-item.alert-danger {
+    .sidebar-item.alert-danger:not(.disabled) {
       background: var(--danger-bg);
       border-color: var(--danger-border);
       color: var(--danger-text);
     }
 
-    .sidebar-item.alert-danger:hover {
+    .sidebar-item.alert-danger:not(.disabled):hover {
       background: rgba(153, 27, 27, 0.6);
       color: #fee2e2;
     }
 
     .sidebar-item.alert-danger.active {
-      background: #991b1b;
-      color: #ffffff;
-      border-color: #ef4444;
+      background: #991b1b !important;
+      color: #ffffff !important;
+      border-color: #ef4444 !important;
+    }
+
+    /* Itens Bloqueados / Desabilitados */
+    .sidebar-item.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      color: #64748b;
+      background: transparent;
+    }
+
+    .sidebar-item.disabled:hover {
+      background: rgba(30, 41, 59, 0.4);
+      color: #94a3b8;
     }
 
     .sidebar-alert-badge {
@@ -239,6 +305,16 @@
       border-radius: 10px;
       background: rgba(239, 68, 68, 0.3);
       color: #fca5a5;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .sidebar-lock-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      background: rgba(100, 116, 139, 0.25);
+      color: #94a3b8;
       font-weight: 600;
       white-space: nowrap;
     }
@@ -701,13 +777,21 @@
        ============================================================= -->
   <header class="appbar">
     <div class="appbar-left">
-      <div class="appbar-logo-icon">⚡</div>
+      <!-- Botão de Menu Sanduíche -->
+      <button id="btn-toggle-sidebar" class="appbar-menu-btn" title="Alternar menu lateral" onclick="toggleSidebar()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+
       <div class="appbar-title-group">
         <div class="appbar-title">
           ZapInsights Hub
           <span class="appbar-badge">v1.0</span>
         </div>
-        <div class="appbar-subtitle">Inteligência & Análise de Comunidades WhatsApp</div>
+        <div class="appbar-subtitle">Inteligência e análise de comunidades WhatsApp</div>
       </div>
     </div>
     <div class="appbar-right">
@@ -723,15 +807,21 @@
        ============================================================= -->
   <div class="app-container">
 
-    <!-- DRAWER (MENU LATERAL) -->
-    <nav class="sidebar">
-      <div class="sidebar-header">Navegação</div>
+    <!-- DRAWER (MENU LATERAL MÓVEL / REDIMENSIONÁVEL) -->
+    <nav id="app-sidebar" class="sidebar">
+      <!-- Alça de redimensionamento do menu -->
+      <div id="sidebar-resizer" class="sidebar-resizer" title="Arraste para redimensionar o menu"></div>
+
+      <div class="sidebar-header">
+        <span>Navegação</span>
+        <span style="font-size: 10px; color: #64748b; font-weight: 500;">5 etapas</span>
+      </div>
       
       <!-- 1. Resumo -->
       <div class="sidebar-item active" data-page="page-resumo">
         <div class="sidebar-item-label">
           <span class="sidebar-item-icon">📄</span>
-          <span>Resumo</span>
+          <span>1. Resumo</span>
         </div>
       </div>
 
@@ -739,7 +829,7 @@
       <div id="drawer-item-conectar" class="sidebar-item alert-danger" data-page="page-conectar">
         <div class="sidebar-item-label">
           <span class="sidebar-item-icon">💬</span>
-          <span>Conectar ao WhatsApp</span>
+          <span>2. Conectar ao WhatsApp</span>
         </div>
         <span id="drawer-conectar-badge" class="sidebar-alert-badge">Desconectado</span>
       </div>
@@ -748,25 +838,27 @@
       <div id="drawer-item-extracao" class="sidebar-item alert-danger" data-page="page-extracao">
         <div class="sidebar-item-label">
           <span class="sidebar-item-icon">⚡</span>
-          <span>Extração</span>
+          <span>3. Extração</span>
         </div>
         <span id="drawer-extracao-badge" class="sidebar-alert-badge">Sem dados</span>
       </div>
 
-      <!-- 4. Visualização -->
-      <div class="sidebar-item" data-page="page-visualizacao">
+      <!-- 4. Visualização (Bloqueada se não houver dados) -->
+      <div id="drawer-item-visualizacao" class="sidebar-item disabled" data-page="page-visualizacao">
         <div class="sidebar-item-label">
           <span class="sidebar-item-icon">📋</span>
-          <span>Visualização</span>
+          <span>4. Visualização</span>
         </div>
+        <span id="drawer-visualizacao-lock" class="sidebar-lock-badge">🔒 Bloqueado</span>
       </div>
 
-      <!-- 5. Gerar insights -->
-      <div class="sidebar-item" data-page="page-insights">
+      <!-- 5. Gerar insights (Bloqueada se não houver dados) -->
+      <div id="drawer-item-insights" class="sidebar-item disabled" data-page="page-insights">
         <div class="sidebar-item-label">
           <span class="sidebar-item-icon">🧠</span>
-          <span>Gerar insights</span>
+          <span>5. Gerar insights</span>
         </div>
+        <span id="drawer-insights-lock" class="sidebar-lock-badge">🔒 Bloqueado</span>
       </div>
 
       <!-- FOOTER DA SIDEBAR -->
@@ -795,12 +887,12 @@
            ========================================================= -->
       <div id="page-resumo" class="page active">
         <div class="page-header">
-          <h1 class="page-title">📄 Visão Geral da Aplicação</h1>
+          <h1 class="page-title">📄 Visão geral da aplicação</h1>
           <p class="page-subtitle">Entenda como a ferramenta funciona e o que esperar de cada etapa do fluxo.</p>
         </div>
 
         <div class="card" style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(15, 23, 42, 0.6)); border-color: rgba(59, 130, 246, 0.3);">
-          <h2 style="font-size: 16px; color: #93c5fd; margin-bottom: 8px;">Bem-vindo ao WhatsApp Insights Hub!</h2>
+          <h2 style="font-size: 16px; color: #93c5fd; margin-bottom: 8px;">Bem-vindo ao ZapInsights Hub!</h2>
           <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6;">
             Esta aplicação foi desenvolvida para coletar, armazenar incrementalmente e extrair inteligência qualitativa de grupos de estudo e comunidades do WhatsApp. Todo o processamento respeita a privacidade local-first, mantendo os dados salvos com segurança no seu próprio computador.
           </p>
@@ -810,10 +902,10 @@
           <div class="card">
             <div class="card-title">🚀 Como a aplicação funciona</div>
             <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
-              <div><b>1. Conexão Segura:</b> Você conecta sua sessão pelo QR Code do WhatsApp Web em um navegador local isolado.</div>
-              <div><b>2. Extração Flexível:</b> Colete mensagens de grupos definindo filtros de tempo (dias ou meses) ou importe dados prévios via CSV/JSON.</div>
-              <div><b>3. Armazenamento Persistente:</b> As mensagens são salvas e deduplicadas em um banco local SQLite, permitindo coletas cumulativas.</div>
-              <div><b>4. Visualização e Auditoria:</b> Consulte as mensagens em tabela com pesquisa dinâmica e modal de detalhes.</div>
+              <div><b>1. Conexão segura:</b> Você conecta sua sessão pelo QR Code do WhatsApp Web em um navegador local isolado.</div>
+              <div><b>2. Extração flexível:</b> Colete mensagens de grupos definindo filtros de tempo (dias ou meses) ou importe dados prévios via CSV/JSON.</div>
+              <div><b>3. Armazenamento persistente:</b> As mensagens são salvas e deduplicadas em um banco local SQLite, permitindo coletas cumulativas.</div>
+              <div><b>4. Visualização e auditoria:</b> Consulte as mensagens em tabela com pesquisa dinâmica e modal de detalhes.</div>
               <div><b>5. Insights via IA:</b> Em breve, processe discussões com Modelos de Linguagem (LLMs) para gerar relatórios acionáveis.</div>
             </div>
           </div>
@@ -821,17 +913,17 @@
           <div class="card">
             <div class="card-title">✨ O que esperar da ferramenta</div>
             <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
-              <div>🔒 <b>Privacidade Total:</b> Seus dados e mensagens ficam restritos ao banco local, sem envio desnecessário a servidores terceiros.</div>
-              <div>⚡ <b>Sem Perda de Histórico:</b> A persistência incremental garante que coletas futuras apenas complementem as existentes.</div>
-              <div>📊 <b>Exportação Imediata:</b> Faça o download integral do banco de dados nos formatos CSV e JSON com um clique.</div>
-              <div>💡 <b>Navegação Guiada:</b> Os indicadores em vermelho no menu lateral alertam sobre etapas pendentes (como conexão ou ausência de dados).</div>
+              <div>🔒 <b>Privacidade total:</b> Seus dados e mensagens ficam restritos ao banco local, sem envio desnecessário a servidores terceiros.</div>
+              <div>⚡ <b>Sem perda de histórico:</b> A persistência incremental garante que coletas futuras apenas complementem as existentes.</div>
+              <div>📊 <b>Exportação imediata:</b> Faça o download integral do banco de dados nos formatos CSV e JSON com um clique.</div>
+              <div>💡 <b>Navegação guiada:</b> Os indicadores em vermelho no menu lateral alertam sobre etapas pendentes (como conexão ou ausência de dados).</div>
             </div>
           </div>
         </div>
 
         <div class="card" style="margin-top: auto; background: #090e1a; border-style: dashed;">
           <p style="font-size: 13px; color: #94a3b8; text-align: center;">
-            💡 <i>Dica: Para começar, clique em <b>"Conectar ao WhatsApp"</b> no menu lateral à esquerda.</i>
+            💡 <i>Dica: Para começar, clique em <b>"2. Conectar ao WhatsApp"</b> no menu lateral à esquerda.</i>
           </p>
         </div>
       </div>
@@ -865,24 +957,24 @@
             <span style="font-size: 14px; color: #94a3b8;">Status atual:</span>
             <div id="conectar-status-badge" class="status-badge disconnected">
               <span class="dot"></span>
-              <span id="conectar-status-text">Desconectado (Necessário QR Code)</span>
+              <span id="conectar-status-text">Desconectado (necessário QR Code)</span>
             </div>
           </div>
 
           <!-- Botões de Ação em Destaque -->
           <div class="btn-group" style="margin-top: 10px;">
             <button id="btn-conectar-main" class="btn-lg success" onclick="conectarWhatsApp()">
-              <span>📱 Conectar ao WhatsApp (Escanear QR Code)</span>
+              <span>📱 Conectar ao WhatsApp (escanear QR Code)</span>
             </button>
             <button id="btn-desconectar-main" class="btn-lg danger" onclick="desconectarWhatsApp()" style="display: none;">
-              <span>🚪 Desconectar e Limpar Sessão</span>
+              <span>🚪 Desconectar e limpar sessão</span>
             </button>
           </div>
         </div>
 
         <!-- Console de Logs da Sessão -->
         <div class="card">
-          <div class="card-title">📟 Console de Conexão em Tempo Real</div>
+          <div class="card-title">📟 Console de conexão em tempo real</div>
           <div class="log-container" id="log-output-conectar">
             <div class="log-entry">[Sistema] Pronto para conectar. Clique no botão acima para iniciar o navegador.</div>
           </div>
@@ -894,13 +986,13 @@
            ========================================================= -->
       <div id="page-extracao" class="page">
         <div class="page-header">
-          <h1 class="page-title">⚡ Extração & Coleta de Dados</h1>
+          <h1 class="page-title">⚡ Extração e coleta de dados</h1>
           <p class="page-subtitle">Configure os parâmetros de coleta no WhatsApp ou importe arquivos de mensagens.</p>
         </div>
 
         <!-- Bloco 1: Parâmetros de Coleta -->
         <div class="card">
-          <div class="card-title">🤖 Parâmetros do Scraper (Coletor Web)</div>
+          <div class="card-title">🤖 Parâmetros do coletor web</div>
           <div class="form-grid">
             <label for="input-grupo">Grupo:</label>
             <input type="text" id="input-grupo" value="Ciência de Dados | Comunidade Alura" placeholder="Ex: Ciência de Dados">
@@ -913,7 +1005,7 @@
               </small>
             </div>
 
-            <label for="select-filtro">Tipo de Filtro:</label>
+            <label for="select-filtro">Tipo de filtro:</label>
             <select id="select-filtro">
               <option value="mes">Por mês (meses anteriores)</option>
               <option value="dias">Por dias (dias recentes)</option>
@@ -924,13 +1016,13 @@
           </div>
 
           <div class="btn-group" style="margin-top: 16px;">
-            <button id="btn-coletar" onclick="iniciarColeta()">⚡ Iniciar Coleta de Mensagens</button>
+            <button id="btn-coletar" onclick="iniciarColeta()">⚡ Iniciar coleta de mensagens</button>
           </div>
         </div>
 
         <!-- Console de Logs da Extração -->
         <div class="card">
-          <div class="card-title">📟 Console de Execução do Scraper</div>
+          <div class="card-title">📟 Console de execução do coletor</div>
           <div class="log-container" id="log-output-extracao">
             <div class="log-entry">[Sistema] Aguardando comando de extração ou importação.</div>
           </div>
@@ -938,22 +1030,22 @@
 
         <!-- Bloco 2: Importação de Dados (Sem Scraper) -->
         <div class="card">
-          <div class="card-title">📥 Importação de Dados (Sem Scraper)</div>
+          <div class="card-title">📥 Importação de dados (sem coletor)</div>
           <p style="color: #cbd5e1; font-size: 13.5px; margin-bottom: 14px; line-height: 1.5;">
             Deseja testar ou analisar dados sem precisar abrir o navegador? Importe um arquivo <b>CSV</b> ou <b>JSON</b> exportado anteriormente:
           </p>
 
           <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px;">
             <input type="file" id="file-import-input" accept=".csv,.json" style="max-width: 380px;">
-            <button id="btn-importar" class="secondary" onclick="importarArquivo()">📥 Importar Arquivo Selecionado</button>
+            <button id="btn-importar" class="secondary" onclick="importarArquivo()">📥 Importar arquivo selecionado</button>
           </div>
 
           <div style="border-top: 1px solid var(--border-color); padding-top: 14px; margin-top: 10px;">
-            <div style="font-size: 12.5px; color: #94a3b8; margin-bottom: 8px; font-weight: 600;">AÇÕES DO BANCO DE DADOS LOCAL (SQLite):</div>
+            <div style="font-size: 12.5px; color: #94a3b8; margin-bottom: 8px; font-weight: 600;">AÇÕES DO BANCO DE DADOS LOCAL (SQLITE):</div>
             <div class="btn-group">
-              <button class="secondary btn-sm" onclick="abrirBanco()">🗄️ Abrir Arquivo SQLite</button>
-              <button class="secondary btn-sm" onclick="abrirPastaDB()">📂 Abrir Pasta Local</button>
-              <button class="secondary btn-sm" onclick="copiarCaminhoDB()">📋 Copiar Caminho</button>
+              <button class="secondary btn-sm" onclick="abrirBanco()">🗄️ Abrir arquivo SQLite</button>
+              <button class="secondary btn-sm" onclick="abrirPastaDB()">📂 Abrir pasta local</button>
+              <button class="secondary btn-sm" onclick="copiarCaminhoDB()">📋 Copiar caminho</button>
             </div>
           </div>
         </div>
@@ -966,7 +1058,7 @@
         <div class="page-header">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <div>
-              <h1 class="page-title">📋 Visualização de Mensagens</h1>
+              <h1 class="page-title">📋 Visualização de mensagens</h1>
               <p class="page-subtitle">Consulte, filtre e audite as mensagens armazenadas no banco local.</p>
             </div>
             <div class="btn-group">
@@ -1011,14 +1103,14 @@
            ========================================================= -->
       <div id="page-insights" class="page">
         <div class="page-header">
-          <h1 class="page-title">🧠 Geração de Insights com IA (LLM)</h1>
+          <h1 class="page-title">🧠 Geração de insights com IA (LLM)</h1>
           <p class="page-subtitle">Transforme as conversas coletadas em relatórios analíticos, tópicos e tendências.</p>
         </div>
 
         <div class="card" style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.15), rgba(37, 99, 235, 0.15)); border-color: rgba(168, 85, 247, 0.35);">
           <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
             <span style="font-size: 20px;">🚀</span>
-            <h2 style="font-size: 16px; color: #c084fc;">Módulo em Preparação Arquitetural</h2>
+            <h2 style="font-size: 16px; color: #c084fc;">Módulo em preparação arquitetural</h2>
           </div>
           <p style="color: #e2e8f0; font-size: 13.5px; line-height: 1.6;">
             A camada de orquestração de LLMs será conectada nesta etapa para ler as mensagens persistidas no banco local SQLite e executar inferências de inteligência artificial.
@@ -1027,7 +1119,7 @@
 
         <div class="grid-2">
           <div class="card">
-            <div class="card-title">📊 Resumo Executivo & Destaques</div>
+            <div class="card-title">📊 Resumo executivo e destaques</div>
             <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
               Síntese automática dos assuntos mais debatidos no período, identificando os tópicos mais relevantes levantados pelos participantes.
             </p>
@@ -1035,7 +1127,7 @@
           </div>
 
           <div class="card">
-            <div class="card-title">💡 Mapeamento de Dúvidas Recorrentes</div>
+            <div class="card-title">💡 Mapeamento de dúvidas recorrentes</div>
             <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
               Identificação e agrupamento temático das principais dificuldades técnicas e pedagógicas trazidas pelos alunos nos grupos.
             </p>
@@ -1043,7 +1135,7 @@
           </div>
 
           <div class="card">
-            <div class="card-title">📈 Análise de Sentimento & Clima</div>
+            <div class="card-title">📈 Análise de sentimento e clima</div>
             <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
               Termômetro de engajamento e satisfação da comunidade, destacando membros participativos e potenciais pontos de atrito.
             </p>
@@ -1051,7 +1143,7 @@
           </div>
 
           <div class="card">
-            <div class="card-title">🎯 Recomendações e Planos de Ação</div>
+            <div class="card-title">🎯 Recomendações e planos de ação</div>
             <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
               Sugestões automáticas de novos conteúdos, lives, artigos e intervenções dos instrutores baseadas nas conversas reais.
             </p>
@@ -1070,7 +1162,7 @@
     <div class="modal-dialog" onclick="event.stopPropagation()">
       <div class="modal-header">
         <div class="modal-title">
-          <span>🔍 Detalhes da Mensagem</span>
+          <span>🔍 Detalhes da mensagem</span>
           <span id="modal-msg-id" style="font-size: 11.5px; color: #94a3b8; font-family: monospace; background: #1e293b; padding: 2px 6px; border-radius: 4px;">-</span>
         </div>
         <button class="modal-close" onclick="fecharModalDetalhes()">✕</button>
@@ -1098,14 +1190,14 @@
 
         <div style="display: flex; flex-direction: column; gap: 6px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label style="font-weight: 600; color: #93c5fd;">Texto Completo da Mensagem:</label>
-            <button class="secondary btn-sm" onclick="copiarTextoMensagem()">📋 Copiar Texto</button>
+            <label style="font-weight: 600; color: #93c5fd;">Texto completo da mensagem:</label>
+            <button class="secondary btn-sm" onclick="copiarTextoMensagem()">📋 Copiar texto</button>
           </div>
           <textarea id="modal-msg-texto" style="height: 120px; resize: vertical; background: #0b1120;" readonly></textarea>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 6px;">
-          <label style="font-weight: 600; color: #93c5fd;">Metadados Extras (JSON):</label>
+          <label style="font-weight: 600; color: #93c5fd;">Metadados adicionais (JSON):</label>
           <textarea id="modal-msg-metadata" style="height: 110px; font-family: monospace; font-size: 12px; background: #0b1120;" readonly></textarea>
         </div>
       </div>
@@ -1128,19 +1220,71 @@
     let dbPathGlobal = "";
 
     // -------------------------------------------------------------
+    // Controle do Drawer (Móvel / Redimensionável / Toggle)
+    // -------------------------------------------------------------
+    const sidebar = document.getElementById('app-sidebar');
+    const resizer = document.getElementById('sidebar-resizer');
+
+    function toggleSidebar() {
+      if (sidebar) {
+        sidebar.classList.toggle('collapsed');
+      }
+    }
+
+    // Redimensionamento interativo por arrasto
+    if (resizer && sidebar) {
+      let isResizing = false;
+      let startX, startWidth;
+
+      resizer.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        startX = e.clientX;
+        startWidth = parseInt(document.defaultView.getComputedStyle(sidebar).width, 10);
+        resizer.classList.add('resizing');
+        document.body.style.cursor = 'col-resize';
+        e.preventDefault();
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+        const newWidth = startWidth + (e.clientX - startX);
+        if (newWidth < 140) {
+          sidebar.classList.add('collapsed');
+        } else {
+          sidebar.classList.remove('collapsed');
+          if (newWidth >= 200 && newWidth <= 500) {
+            sidebar.style.width = newWidth + 'px';
+          }
+        }
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (isResizing) {
+          isResizing = false;
+          resizer.classList.remove('resizing');
+          document.body.style.cursor = 'default';
+        }
+      });
+    }
+
+    // -------------------------------------------------------------
     // Navegação entre Telas
     // -------------------------------------------------------------
     const sidebarItems = document.querySelectorAll('.sidebar-item');
     const pages = document.querySelectorAll('.page');
 
     function navegarPara(pageId) {
+      const targetSidebar = document.querySelector(`[data-page="${pageId}"]`);
+      if (targetSidebar && targetSidebar.classList.contains('disabled')) {
+        showToast("Etapa bloqueada. É necessário extrair ou importar mensagens primeiro.");
+        return;
+      }
+
       pages.forEach(p => p.classList.remove('active'));
       sidebarItems.forEach(i => i.classList.remove('active'));
 
       const targetPage = document.getElementById(pageId);
       if (targetPage) targetPage.classList.add('active');
-
-      const targetSidebar = document.querySelector(`[data-page="${pageId}"]`);
       if (targetSidebar) targetSidebar.classList.add('active');
 
       if (pageId === 'page-visualizacao') {
@@ -1150,6 +1294,10 @@
 
     sidebarItems.forEach(item => {
       item.addEventListener('click', () => {
+        if (item.classList.contains('disabled')) {
+          showToast("Etapa bloqueada. É necessário extrair ou importar mensagens primeiro.");
+          return;
+        }
         navegarPara(item.getAttribute('data-page'));
       });
     });
@@ -1188,19 +1336,24 @@
     // -------------------------------------------------------------
     function setBusy(busy) {
       isBusy = busy;
-      document.querySelectorAll('button:not(.modal-close)').forEach(btn => {
+      document.querySelectorAll('button:not(.modal-close):not(.appbar-menu-btn)').forEach(btn => {
         btn.disabled = busy;
       });
     }
 
     // -------------------------------------------------------------
-    // Atualização de Status na UI e no Drawer (Alertas em Vermelho Escuro)
+    // Atualização de Status na UI e no Drawer (Alertas & Bloqueios)
     // -------------------------------------------------------------
     function atualizarStatusUI(hasSession, messageCount) {
       const drawerConectar = document.getElementById('drawer-item-conectar');
       const drawerConectarBadge = document.getElementById('drawer-conectar-badge');
       const drawerExtracao = document.getElementById('drawer-item-extracao');
       const drawerExtracaoBadge = document.getElementById('drawer-extracao-badge');
+
+      const drawerVisualizacao = document.getElementById('drawer-item-visualizacao');
+      const drawerVisualizacaoLock = document.getElementById('drawer-visualizacao-lock');
+      const drawerInsights = document.getElementById('drawer-item-insights');
+      const drawerInsightsLock = document.getElementById('drawer-insights-lock');
 
       const sidebarSessionStatus = document.getElementById('sidebar-session-status');
       const sidebarSessionLabel = document.getElementById('sidebar-session-label');
@@ -1220,8 +1373,8 @@
         sidebarSessionLabel.innerText = 'Online';
 
         conectarStatusBadge.className = 'status-badge connected';
-        conectarStatusText.innerText = 'Conectado (Sessão Ativa)';
-        btnConectarMain.innerHTML = '<span>🔄 Reabrir / Testar WhatsApp</span>';
+        conectarStatusText.innerText = 'Conectado (sessão ativa)';
+        btnConectarMain.innerHTML = '<span>🔄 Reabrir / testar WhatsApp</span>';
         btnDesconectarMain.style.display = 'inline-flex';
       } else {
         drawerConectar.classList.add('alert-danger');
@@ -1232,22 +1385,42 @@
         sidebarSessionLabel.innerText = 'Offline';
 
         conectarStatusBadge.className = 'status-badge disconnected';
-        conectarStatusText.innerText = 'Desconectado (Necessário QR Code)';
-        btnConectarMain.innerHTML = '<span>📱 Conectar ao WhatsApp (Escanear QR Code)</span>';
+        conectarStatusText.innerText = 'Desconectado (necessário QR Code)';
+        btnConectarMain.innerHTML = '<span>📱 Conectar ao WhatsApp (escanear QR Code)</span>';
         btnDesconectarMain.style.display = 'none';
       }
 
-      // 2. Alerta do Drawer para Extração (Sem dados no banco)
+      // 2. Alerta do Drawer para Extração e Bloqueio de Visualização / Insights
       const count = Number(messageCount) || 0;
       sidebarMessagesCount.innerText = count.toLocaleString('pt-BR');
 
       if (count > 0) {
         drawerExtracao.classList.remove('alert-danger');
         drawerExtracaoBadge.style.display = 'none';
+
+        // Desbloqueia Visualização e Insights
+        drawerVisualizacao.classList.remove('disabled');
+        if (drawerVisualizacaoLock) drawerVisualizacaoLock.style.display = 'none';
+
+        drawerInsights.classList.remove('disabled');
+        if (drawerInsightsLock) drawerInsightsLock.style.display = 'none';
       } else {
         drawerExtracao.classList.add('alert-danger');
         drawerExtracaoBadge.style.display = 'inline-block';
         drawerExtracaoBadge.innerText = 'Sem dados';
+
+        // Bloqueia Visualização e Insights
+        drawerVisualizacao.classList.add('disabled');
+        if (drawerVisualizacaoLock) drawerVisualizacaoLock.style.display = 'inline-block';
+
+        drawerInsights.classList.add('disabled');
+        if (drawerInsightsLock) drawerInsightsLock.style.display = 'inline-block';
+
+        // Se estiver em uma tela bloqueada, redireciona para Extração
+        const activePage = document.querySelector('.page.active');
+        if (activePage && (activePage.id === 'page-visualizacao' || activePage.id === 'page-insights')) {
+          navegarPara('page-extracao');
+        }
       }
     }
 
