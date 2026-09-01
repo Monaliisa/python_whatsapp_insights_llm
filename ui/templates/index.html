@@ -1543,6 +1543,9 @@
               <button id="btn-conectar-main" class="success" onclick="conectarWhatsApp()">
                 <span>📱 Conectar ao WhatsApp</span>
               </button>
+              <button id="btn-ir-extracao" class="btn" onclick="navegarPara('page-extracao')" style="display: none;">
+                <span>⚡ Ir para Extração ➔</span>
+              </button>
               <button id="btn-desconectar-main" class="danger" onclick="desconectarWhatsApp()" style="display: none;">
                 <span>🚪 Desconectar e limpar sessão</span>
               </button>
@@ -2024,6 +2027,8 @@
     let dbPathGlobal = "";
     let grupoAtivoGlobal = null;
     let grupoAtivoMensagensGlobal = 0;
+    let sessaoAtivaGlobal = false;
+    let tarefaEmAndamento = null;
 
     // -------------------------------------------------------------
     // Controle do Drawer (Móvel / Redimensionável / Toggle)
@@ -2222,8 +2227,11 @@
       const conectarStatusBadge = document.getElementById('conectar-status-badge');
       const conectarStatusText = document.getElementById('conectar-status-text');
       const btnConectarMain = document.getElementById('btn-conectar-main');
+      const btnIrExtracao = document.getElementById('btn-ir-extracao');
       const btnDesconectarMain = document.getElementById('btn-desconectar-main');
       const btnDesconectarSidebar = document.getElementById('btn-desconectar-sidebar');
+
+      sessaoAtivaGlobal = Boolean(hasSession);
 
       // 1. Alerta do Drawer para Conectar ao WhatsApp
       if (hasSession) {
@@ -2238,6 +2246,7 @@
         conectarStatusBadge.className = 'status-badge connected';
         conectarStatusText.innerText = 'Conectado (sessão ativa)';
         btnConectarMain.innerHTML = '<span>🔄 Reabrir / testar WhatsApp</span>';
+        if (btnIrExtracao) btnIrExtracao.style.display = 'inline-flex';
         btnDesconectarMain.style.display = 'inline-flex';
         if (btnDesconectarSidebar) btnDesconectarSidebar.style.display = 'inline-flex';
       } else {
@@ -2252,6 +2261,7 @@
         conectarStatusBadge.className = 'status-badge disconnected';
         conectarStatusText.innerText = 'Desconectado';
         btnConectarMain.innerHTML = '<span>📱 Conectar ao WhatsApp</span>';
+        if (btnIrExtracao) btnIrExtracao.style.display = 'none';
         btnDesconectarMain.style.display = 'none';
         if (btnDesconectarSidebar) btnDesconectarSidebar.style.display = 'none';
       }
@@ -2391,8 +2401,10 @@
 
         const grupoSugerido = data.active_group ? data.active_group.nome : data.default_grupo;
         await carregarGrupos(grupoSugerido);
+        return data;
       } catch (err) {
         console.error("Erro ao obter status:", err);
+        return null;
       }
     }
 
@@ -2544,13 +2556,21 @@
     // Ações de Sessão do WhatsApp
     // -------------------------------------------------------------
     async function conectarWhatsApp() {
+      tarefaEmAndamento = 'conectar';
       setBusy(true);
       try {
         const res = await fetch('/api/session/conectar', { method: 'POST' });
         const json = await res.json();
-        showToast(json.message || "Iniciando conector do WhatsApp...");
-        appendLog("[Sessão] Conector de WhatsApp acionado.");
+        if (json.success) {
+          showToast(json.message || "Iniciando conector do WhatsApp...");
+          appendLog("[Sessão] Conector de WhatsApp acionado.");
+        } else {
+          tarefaEmAndamento = null;
+          setBusy(false);
+          showToast(json.message || "Não foi possível iniciar o conector.");
+        }
       } catch (err) {
+        tarefaEmAndamento = null;
         showToast("Erro ao iniciar conector do WhatsApp.");
         appendLog(`Erro ao acionar conector: ${err}`);
         setBusy(false);
@@ -2595,6 +2615,7 @@
       const valor = parseInt(document.getElementById('input-janela-valor').value, 10) || 7;
       const unidade_tempo = document.getElementById('select-janela-unidade').value || 'dias';
 
+      tarefaEmAndamento = 'coleta';
       setBusy(true);
       try {
         const res = await fetch('/api/coletar', {
@@ -2603,9 +2624,16 @@
           body: JSON.stringify({ grupo, unidade_tempo, valor })
         });
         const json = await res.json();
-        showToast(json.message || "Coleta iniciada.");
-        appendLog(`[Coleta] Solicitada coleta do grupo '${grupo}' por janela de ${valor} ${unidade_tempo}.`);
+        if (json.success) {
+          showToast(json.message || "Coleta iniciada.");
+          appendLog(`[Coleta] Solicitada coleta do grupo '${grupo}' por janela de ${valor} ${unidade_tempo}.`);
+        } else {
+          tarefaEmAndamento = null;
+          setBusy(false);
+          showToast(json.message || "Erro ao iniciar coleta.");
+        }
       } catch (err) {
+        tarefaEmAndamento = null;
         appendLog(`Erro ao iniciar coleta: ${err}`);
         showToast("Erro ao iniciar coleta.");
         setBusy(false);
@@ -2655,6 +2683,8 @@
             fileInput.value = '';
             await carregarStatus();
             await carregarMensagens();
+            showToast("Importação concluída! Redirecionando para a tela de Visualização...");
+            navegarPara('page-visualizacao');
           } else {
             showToast(json.error || json.message || "Erro na importação.");
             appendLog(`[Importação - Erro] ${json.error || json.message}`);
@@ -2860,17 +2890,36 @@
     // -------------------------------------------------------------
     function conectarSSE() {
       const evtSource = new EventSource('/api/logs/stream');
-      evtSource.onmessage = (e) => {
+      evtSource.onmessage = async (e) => {
         try {
           const data = JSON.parse(e.data);
           if (data.message) {
             appendLog(data.message);
           }
           if (data.is_busy !== undefined && data.is_busy !== isBusy) {
+            const eraBusy = isBusy;
             setBusy(data.is_busy);
-            if (!data.is_busy) {
-              carregarStatus();
-              carregarMensagens();
+            if (!data.is_busy && eraBusy) {
+              const statusData = await carregarStatus();
+              await carregarMensagens();
+
+              // Transição de telas automática:
+              // 1. Ao conectar ao WhatsApp -> pula para a tela de Extração
+              if (tarefaEmAndamento === 'conectar') {
+                if (statusData && statusData.has_session) {
+                  showToast("WhatsApp conectado com sucesso! Redirecionando para Extração...");
+                  navegarPara('page-extracao');
+                }
+                tarefaEmAndamento = null;
+              }
+              // 2. Ao extrair ou coletar mensagens -> pula para a tela de Visualização
+              else if (tarefaEmAndamento === 'coleta') {
+                if ((statusData && statusData.message_count > 0) || grupoAtivoMensagensGlobal > 0 || (mensagensCache && mensagensCache.length > 0)) {
+                  showToast("Coleta concluída com sucesso! Redirecionando para Visualização...");
+                  navegarPara('page-visualizacao');
+                }
+                tarefaEmAndamento = null;
+              }
             }
           }
         } catch (err) {

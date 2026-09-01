@@ -15,7 +15,7 @@ from services.storage import (
 )
 
 NOME_DA_COMUNIDADE = ""
-NOME_DO_GRUPO = "Ciência de Dados | Comunidade Alura"
+NOME_DO_GRUPO = ""
 
 
 def normalizar_texto_busca(texto: str) -> str:
