@@ -1556,12 +1556,6 @@
       font-size: 12px;
     }
 
-    .range-presets-group {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
     /* -------------------------------------------------------------
        ESTILOS DO WORKSPACE DE CHAT & ANÁLISES
        ------------------------------------------------------------- */
@@ -2451,23 +2445,11 @@
                 oninput="aoMoverSliderRange('max')">
             </div>
 
-            <!-- Indicadores de Datas e Atalhos de Período -->
+            <!-- Indicadores de Datas -->
             <div class="range-footer-row">
               <div class="range-dates-info">
                 <span>Início: <b id="display-date-min" class="range-date-pill">-</b></span>
                 <span>Fim: <b id="display-date-max" class="range-date-pill">-</b></span>
-              </div>
-              <div class="range-presets-group">
-                <button type="button" class="btn-input-action" onclick="aplicarPresetRange('24h')"
-                  title="Filtrar últimas 24 horas">24h</button>
-                <button type="button" class="btn-input-action" onclick="aplicarPresetRange('7d')"
-                  title="Filtrar últimos 7 dias">7 Dias</button>
-                <button type="button" class="btn-input-action" onclick="aplicarPresetRange('15d')"
-                  title="Filtrar últimos 15 dias">15 Dias</button>
-                <button type="button" class="btn-input-action" onclick="aplicarPresetRange('30d')"
-                  title="Filtrar últimos 30 dias">30 Dias</button>
-                <button type="button" class="btn-input-action" onclick="aplicarPresetRange('all')"
-                  title="Filtrar todo o histórico">Todo o Histórico</button>
               </div>
             </div>
           </div>
@@ -4384,31 +4366,6 @@
       if (displayMax) displayMax.innerText = formatarTimestampBr(llmCurrentMaxTs);
 
       atualizarBadgeContador();
-    }
-
-    function aplicarPresetRange(preset) {
-      if (llmMaxTsGlobal <= 0) return;
-
-      if (preset === '24h') {
-        llmCurrentMaxTs = llmMaxTsGlobal;
-        llmCurrentMinTs = Math.max(llmMinTsGlobal, llmMaxTsGlobal - 86400);
-      } else if (preset === '7d') {
-        llmCurrentMaxTs = llmMaxTsGlobal;
-        llmCurrentMinTs = Math.max(llmMinTsGlobal, llmMaxTsGlobal - 7 * 86400);
-      } else if (preset === '15d') {
-        llmCurrentMaxTs = llmMaxTsGlobal;
-        llmCurrentMinTs = Math.max(llmMinTsGlobal, llmMaxTsGlobal - 15 * 86400);
-      } else if (preset === '30d') {
-        llmCurrentMaxTs = llmMaxTsGlobal;
-        llmCurrentMinTs = Math.max(llmMinTsGlobal, llmMaxTsGlobal - 30 * 86400);
-      } else if (preset === 'all') {
-        llmCurrentMaxTs = llmMaxTsGlobal;
-        llmCurrentMinTs = llmMinTsGlobal;
-      }
-
-      atualizarVisualSlider();
-      atualizarBadgeContador();
-      showToast(`Período ajustado para: ${preset.toUpperCase()}`);
     }
 
     function atualizarBadgeContador() {
