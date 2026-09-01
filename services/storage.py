@@ -6,10 +6,18 @@ import json
 import re
 import shutil
 import sqlite3
+import sys
 import unicodedata
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+# Permite leitura de CSV com campos grandes (ex: anexos base64)
+try:
+    csv.field_size_limit(sys.maxsize)
+except OverflowError:
+    csv.field_size_limit(2147483647)
+
 
 from services.paths import (
     get_data_dir,
@@ -400,6 +408,15 @@ def save_messages(messages: list[dict], db_path: str | None = None) -> int:
             grupo_detectado_nome = nome_grp
             grupo_detectado_id = id_grp
 
+        # Suporte defensivo a campos de citação (direto ou aninhado em reply_data)
+        is_reply_val = 1 if m.get("is_reply") else 0
+        reply_author_val = m.get("reply_author")
+        reply_text_val = m.get("reply_text")
+        if not reply_author_val and m.get("reply_data"):
+            reply_author_val = m["reply_data"].get("autor_citado")
+        if not reply_text_val and m.get("reply_data"):
+            reply_text_val = m["reply_data"].get("texto_citado")
+
         cur.execute(
             """
             INSERT INTO messages (
@@ -422,9 +439,9 @@ def save_messages(messages: list[dict], db_path: str | None = None) -> int:
                 remetente = excluded.remetente,
                 texto = excluded.texto,
                 texto_normalizado = excluded.texto_normalizado,
-                is_reply = excluded.is_reply,
-                reply_author = excluded.reply_author,
-                reply_text = excluded.reply_text,
+                is_reply = coalesce(excluded.is_reply, messages.is_reply),
+                reply_author = coalesce(excluded.reply_author, messages.reply_author),
+                reply_text = coalesce(excluded.reply_text, messages.reply_text),
                 has_attachments = excluded.has_attachments,
                 attachments_json = coalesce(excluded.attachments_json, messages.attachments_json),
                 reactions_json = coalesce(excluded.reactions_json, messages.reactions_json),
@@ -445,9 +462,9 @@ def save_messages(messages: list[dict], db_path: str | None = None) -> int:
                 m.get("remetente"),
                 texto,
                 texto_norm,
-                1 if m.get("is_reply") else 0,
-                m.get("reply_author"),
-                m.get("reply_text"),
+                is_reply_val,
+                reply_author_val,
+                reply_text_val,
                 has_attachments,
                 att_json,
                 reactions_json,
@@ -515,7 +532,10 @@ def fetch_recent(
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
 
-    query = "SELECT id, data_hora, remetente, texto, has_attachments, grupo_id, grupo_nome FROM messages"
+    query = (
+        "SELECT id, data_hora, remetente, texto, has_attachments, grupo_id, grupo_nome, "
+        "is_reply, reply_author, reply_text FROM messages"
+    )
     params: list[Any] = []
 
     if grupo_id or grupo_nome:
@@ -543,6 +563,9 @@ def fetch_recent(
             "has_attachments": bool(r[4]),
             "grupo_id": r[5],
             "grupo_nome": r[6],
+            "is_reply": bool(r[7]),
+            "reply_author": r[8],
+            "reply_text": r[9],
         }
         for r in rows
     ]
@@ -721,6 +744,9 @@ def import_from_csv_data(
             grupo_identificado = grupo_nome
 
         has_att = 1 if str(row.get("has_attachments", "")).lower() in ("1", "true", "sim") else 0
+        is_rep = 1 if str(row.get("is_reply", "")).lower() in ("1", "true", "sim") else 0
+        r_author = (row.get("reply_author") or "").strip() or None
+        r_text = (row.get("reply_text") or "").strip() or None
 
         messages.append(
             {
@@ -730,6 +756,9 @@ def import_from_csv_data(
                 "texto": texto,
                 "data_hora": dh,
                 "has_attachments": has_att,
+                "is_reply": is_rep,
+                "reply_author": r_author,
+                "reply_text": r_text,
             }
         )
 
@@ -778,6 +807,9 @@ def import_from_json_data(
             grupo_identificado = grupo_nome
 
         has_att = 1 if item.get("has_attachments") else 0
+        is_rep = 1 if item.get("is_reply") else 0
+        r_author = item.get("reply_author") or (item.get("reply_data") or {}).get("autor_citado")
+        r_text = item.get("reply_text") or (item.get("reply_data") or {}).get("texto_citado")
 
         messages.append(
             {
@@ -787,6 +819,9 @@ def import_from_json_data(
                 "texto": texto,
                 "data_hora": dh,
                 "has_attachments": has_att,
+                "is_reply": is_rep,
+                "reply_author": r_author,
+                "reply_text": r_text,
             }
         )
 
