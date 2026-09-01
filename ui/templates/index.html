@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -178,11 +179,11 @@
       position: relative;
       overflow: hidden;
       transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-                  min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-                  margin-right 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-                  padding 0.25s ease,
-                  opacity 0.2s ease,
-                  border-color 0.2s ease;
+        min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        margin-right 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        padding 0.25s ease,
+        opacity 0.2s ease,
+        border-color 0.2s ease;
     }
 
     .sidebar.collapsed {
@@ -207,7 +208,8 @@
       z-index: 20;
     }
 
-    .sidebar-resizer:hover, .sidebar-resizer.resizing {
+    .sidebar-resizer:hover,
+    .sidebar-resizer.resizing {
       background: rgba(59, 130, 246, 0.35);
       border-radius: 4px;
     }
@@ -456,7 +458,9 @@
       font-weight: 500;
     }
 
-    input, select, textarea {
+    input,
+    select,
+    textarea {
       background: #0b1120;
       border: 1px solid var(--border-color-light);
       border-radius: 8px;
@@ -468,12 +472,15 @@
       transition: all 0.2s ease;
     }
 
-    input:focus, select:focus, textarea:focus {
+    input:focus,
+    select:focus,
+    textarea:focus {
       border-color: #3b82f6;
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
     }
 
-    input:disabled, textarea:disabled {
+    input:disabled,
+    textarea:disabled {
       background: #1e293b;
       color: #64748b;
       cursor: not-allowed;
@@ -488,7 +495,8 @@
       align-items: center;
     }
 
-    button, .btn {
+    button,
+    .btn {
       background: var(--primary);
       color: white;
       border: none;
@@ -506,44 +514,52 @@
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
 
-    button:hover:not(:disabled), .btn:hover:not(:disabled) {
+    button:hover:not(:disabled),
+    .btn:hover:not(:disabled) {
       background: var(--primary-hover);
       transform: translateY(-1px);
     }
 
-    button.secondary, .btn.secondary {
+    button.secondary,
+    .btn.secondary {
       background: #1f2937;
       border: 1px solid var(--border-color-light);
       color: #e2e8f0;
       box-shadow: none;
     }
 
-    button.secondary:hover:not(:disabled), .btn.secondary:hover:not(:disabled) {
+    button.secondary:hover:not(:disabled),
+    .btn.secondary:hover:not(:disabled) {
       background: #374151;
       color: #ffffff;
     }
 
-    button.danger, .btn.danger {
+    button.danger,
+    .btn.danger {
       background: #991b1b;
       color: #fee2e2;
       border: 1px solid #dc2626;
     }
 
-    button.danger:hover:not(:disabled), .btn.danger:hover:not(:disabled) {
+    button.danger:hover:not(:disabled),
+    .btn.danger:hover:not(:disabled) {
       background: #b91c1c;
       color: #ffffff;
     }
 
-    button.success, .btn.success {
+    button.success,
+    .btn.success {
       background: #059669;
       color: #ffffff;
     }
 
-    button.success:hover:not(:disabled), .btn.success:hover:not(:disabled) {
+    button.success:hover:not(:disabled),
+    .btn.success:hover:not(:disabled) {
       background: #047857;
     }
 
-    button:disabled, .btn:disabled {
+    button:disabled,
+    .btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
       transform: none;
@@ -611,7 +627,8 @@
       transition: background 0.2s ease;
     }
 
-    .console-resizer:hover, .console-resizer.resizing {
+    .console-resizer:hover,
+    .console-resizer.resizing {
       background: rgba(59, 130, 246, 0.45);
     }
 
@@ -817,8 +834,15 @@
     }
 
     @keyframes modalFadeIn {
-      from { opacity: 0; transform: scale(0.98); }
-      to { opacity: 1; transform: scale(1); }
+      from {
+        opacity: 0;
+        transform: scale(0.98);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
 
     /* Toast */
@@ -839,8 +863,15 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     /* -------------------------------------------------------------
@@ -979,10 +1010,12 @@
         flex-direction: column;
         align-items: flex-start;
       }
+
       .btn-mudar-grupo {
         width: 100%;
         justify-content: center;
       }
+
       .active-group-bottom-row {
         flex-direction: column;
         align-items: flex-start;
@@ -1183,9 +1216,16 @@
       background: linear-gradient(135deg, rgba(30, 27, 75, 0.45), rgba(15, 23, 42, 0.95));
       border: 1px solid rgba(139, 92, 246, 0.35);
       border-radius: 12px;
-      padding: 22px;
+      padding: 20px 22px;
       position: relative;
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      transition: all 0.25s ease;
+    }
+
+    .byok-config-card.collapsed {
+      padding: 14px 20px;
+      background: linear-gradient(135deg, rgba(30, 27, 75, 0.3), rgba(15, 23, 42, 0.85));
+      border-color: rgba(139, 92, 246, 0.25);
     }
 
     .byok-header-row {
@@ -1195,6 +1235,18 @@
       flex-wrap: wrap;
       gap: 12px;
       margin-bottom: 12px;
+      cursor: pointer;
+      user-select: none;
+      border-radius: 8px;
+      transition: opacity 0.2s ease;
+    }
+
+    .byok-header-row:hover {
+      opacity: 0.92;
+    }
+
+    .byok-config-card.collapsed .byok-header-row {
+      margin-bottom: 0;
     }
 
     .byok-title {
@@ -1204,6 +1256,45 @@
       display: flex;
       align-items: center;
       gap: 10px;
+    }
+
+    .byok-collapse-btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      box-shadow: none;
+      transition: all 0.2s ease;
+    }
+
+    .byok-collapse-btn:hover {
+      background: #334155;
+      color: #ffffff;
+    }
+
+    .byok-collapse-btn .chevron {
+      display: inline-block;
+      transition: transform 0.25s ease;
+    }
+
+    .byok-config-card.collapsed .byok-collapse-btn .chevron {
+      transform: rotate(180deg);
+    }
+
+    .byok-card-content {
+      transition: all 0.25s ease;
+    }
+
+    .byok-config-card.collapsed .byok-card-content {
+      display: none;
     }
 
     .byok-badge {
@@ -1320,6 +1411,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <!-- =============================================================
@@ -1329,7 +1421,8 @@
     <div class="appbar-left">
       <!-- Botão de Menu Sanduíche -->
       <button id="btn-toggle-sidebar" class="appbar-menu-btn" title="Alternar menu lateral" onclick="toggleSidebar()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
           <line x1="3" y1="12" x2="21" y2="12"></line>
           <line x1="3" y1="6" x2="21" y2="6"></line>
           <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -1366,7 +1459,7 @@
         <span>Navegação</span>
         <span style="font-size: 10px; color: #64748b; font-weight: 500;">5 etapas</span>
       </div>
-      
+
       <!-- 1. Resumo -->
       <div class="sidebar-item active" data-page="page-resumo">
         <div class="sidebar-item-label">
@@ -1426,7 +1519,8 @@
             <span id="sidebar-messages-count" style="font-weight: 700; color: #38bdf8;">0</span>
           </div>
         </div>
-        <button id="btn-desconectar-sidebar" class="btn danger btn-sm" onclick="desconectarWhatsApp()" style="width: 100%; display: none;">
+        <button id="btn-desconectar-sidebar" class="btn danger btn-sm" onclick="desconectarWhatsApp()"
+          style="width: 100%; display: none;">
           🚪 Desconectar e limpar sessão
         </button>
       </div>
@@ -1447,52 +1541,75 @@
             <p class="page-subtitle">Entenda como a ferramenta funciona e o que esperar de cada etapa do fluxo.</p>
           </div>
 
-          <div class="card" style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(15, 23, 42, 0.6)); border-color: rgba(59, 130, 246, 0.3);">
+          <div class="card"
+            style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(15, 23, 42, 0.6)); border-color: rgba(59, 130, 246, 0.3);">
             <h2 style="font-size: 16px; color: #93c5fd; margin-bottom: 8px;">Bem-vindo ao ZapInsights Hub!</h2>
             <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6;">
-              Esta aplicação foi desenvolvida para coletar, armazenar incrementalmente e extrair inteligência qualitativa de grupos de estudo e comunidades do WhatsApp. Todo o processamento respeita a privacidade local-first, mantendo os dados salvos com segurança no seu próprio computador.
+              Esta aplicação foi desenvolvida para coletar, armazenar incrementalmente e extrair inteligência
+              qualitativa de grupos de estudo e comunidades do WhatsApp. Todo o processamento respeita a privacidade
+              local-first, mantendo os dados salvos com segurança no seu próprio computador.
             </p>
           </div>
 
           <div class="grid-2">
             <div class="card">
               <div class="card-title">🚀 Como a aplicação funciona</div>
-              <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
-                <div><b>1. Conexão segura:</b> Você conecta sua sessão pelo QR Code do WhatsApp Web em um navegador local isolado.</div>
-                <div><b>2. Extração flexível:</b> Colete mensagens de grupos definindo filtros de tempo (dias ou meses) ou importe dados prévios via CSV/JSON.</div>
-                <div><b>3. Armazenamento persistente:</b> As mensagens são salvas e deduplicadas em um banco local SQLite, permitindo coletas cumulativas.</div>
-                <div><b>4. Visualização e auditoria:</b> Consulte as mensagens em tabela com pesquisa dinâmica e modal de detalhes.</div>
-                <div><b>5. Insights via IA (BYOK):</b> Analise conversas com o <b>Google Gemini</b> utilizando sua própria chave de API (Bring Your Own Key), sem intermediários.</div>
+              <div
+                style="display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
+                <div><b>1. Conexão segura:</b> Você conecta sua sessão pelo QR Code do WhatsApp Web em um navegador
+                  local isolado.</div>
+                <div><b>2. Extração flexível:</b> Colete mensagens de grupos definindo filtros de tempo (dias ou meses)
+                  ou importe dados prévios via CSV/JSON.</div>
+                <div><b>3. Armazenamento persistente:</b> As mensagens são salvas e deduplicadas em um banco local
+                  SQLite, permitindo coletas cumulativas.</div>
+                <div><b>4. Visualização e auditoria:</b> Consulte as mensagens em tabela com pesquisa dinâmica e modal
+                  de detalhes.</div>
+                <div><b>5. Insights via IA (BYOK):</b> Analise conversas com o <b>Google Gemini</b> utilizando sua
+                  própria chave de API (Bring Your Own Key), sem intermediários.</div>
               </div>
             </div>
 
             <div class="card">
               <div class="card-title">✨ O que esperar da ferramenta</div>
-              <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
-                <div>🔒 <b>Privacidade total:</b> Seus dados e mensagens ficam restritos ao banco local, sem envio a servidores de terceiros.</div>
-                <div>⚡ <b>Sem perda de histórico:</b> A persistência incremental garante que coletas futuras apenas complementem as existentes.</div>
-                <div>🔑 <b>Filosofia BYOK:</b> Sua chave de API do Gemini fica gravada apenas no seu navegador, dando a você controle direto de custos e cotas.</div>
-                <div>📊 <b>Exportação imediata:</b> Faça o download integral do banco de dados nos formatos CSV e JSON com um clique.</div>
+              <div
+                style="display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
+                <div>🔒 <b>Privacidade total:</b> Seus dados e mensagens ficam restritos ao banco local, sem envio a
+                  servidores de terceiros.</div>
+                <div>⚡ <b>Sem perda de histórico:</b> A persistência incremental garante que coletas futuras apenas
+                  complementem as existentes.</div>
+                <div>🔑 <b>Filosofia BYOK:</b> Sua chave de API do Gemini fica gravada apenas no seu navegador, dando a
+                  você controle direto de custos e cotas.</div>
+                <div>📊 <b>Exportação imediata:</b> Faça o download integral do banco de dados nos formatos CSV e JSON
+                  com um clique.</div>
               </div>
             </div>
           </div>
 
           <!-- Card de Destaque: BYOK e Google Gemini -->
-          <div class="card" style="background: linear-gradient(135deg, rgba(30, 27, 75, 0.5), rgba(15, 23, 42, 0.8)); border-color: rgba(139, 92, 246, 0.35);">
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+          <div class="card"
+            style="background: linear-gradient(135deg, rgba(30, 27, 75, 0.5), rgba(15, 23, 42, 0.8)); border-color: rgba(139, 92, 246, 0.35);">
+            <div
+              style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
               <h3 style="font-size: 14.5px; color: #c084fc; display: flex; align-items: center; gap: 8px;">
                 <span>🧠</span> Inteligência Artificial Soberana: Google Gemini & BYOK
               </h3>
-              <span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(139, 92, 246, 0.2); color: #d8b4fe; border: 1px solid rgba(139, 92, 246, 0.4); font-weight: 600;">Bring Your Own Key</span>
+              <span
+                style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(139, 92, 246, 0.2); color: #d8b4fe; border: 1px solid rgba(139, 92, 246, 0.4); font-weight: 600;">Bring
+                Your Own Key</span>
             </div>
             <p style="color: #cbd5e1; font-size: 13px; line-height: 1.6; margin-bottom: 10px;">
-              O ZapInsights adota a abordagem <b>BYOK (Bring Your Own Key)</b>. Isso significa que a aplicação se conecta diretamente à API do <b>Google Gemini</b> através da sua chave pessoal gerada no Google AI Studio. Você tem total controle sobre seus limites de uso, privacidade de prompts e liberdade para escolher entre modelos rápidos (como o <i>Gemini 2.5 Flash</i>) ou avançados (como o <i>Gemini 2.5 Pro</i>).
+              O ZapInsights adota a abordagem <b>BYOK (Bring Your Own Key)</b>. Isso significa que a aplicação se
+              conecta diretamente à API do <b>Google Gemini</b> através da sua chave pessoal gerada no Google AI Studio.
+              Você tem total controle sobre seus limites de uso, privacidade de prompts e liberdade para escolher entre
+              modelos rápidos (como o <i>Gemini 2.5 Flash</i>) ou avançados (como o <i>Gemini 2.5 Pro</i>).
             </p>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="byok-doc-link">
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer"
+                class="byok-doc-link">
                 <span>🔑 Obter chave no Google AI Studio</span>
               </a>
-              <a href="https://ai.google.dev/gemini-api/docs/models/gemini" target="_blank" rel="noopener noreferrer" class="byok-doc-link">
+              <a href="https://ai.google.dev/gemini-api/docs/models/gemini" target="_blank" rel="noopener noreferrer"
+                class="byok-doc-link">
                 <span>📖 Documentação de Modelos Gemini</span>
               </a>
             </div>
@@ -1514,18 +1631,24 @@
             <p class="page-subtitle">Gerencie sua sessão e autenticação no WhatsApp Web de forma segura.</p>
           </div>
 
-          <div class="card" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 24px 20px; gap: 14px;">
+          <div class="card"
+            style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 24px 20px; gap: 14px;">
             <!-- Ícone do WhatsApp -->
-            <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(37, 211, 102, 0.15); border: 2px solid rgba(37, 211, 102, 0.4); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 16px rgba(37, 211, 102, 0.2);">
-              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            <div
+              style="width: 64px; height: 64px; border-radius: 50%; background: rgba(37, 211, 102, 0.15); border: 2px solid rgba(37, 211, 102, 0.4); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 16px rgba(37, 211, 102, 0.2);">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+                </path>
               </svg>
             </div>
 
             <div style="max-width: 520px;">
               <h2 style="font-size: 16px; color: #f8fafc; margin-bottom: 6px;">Autenticação no WhatsApp Web</h2>
               <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
-                Ao clicar no botão abaixo, o navegador será iniciado. Aponte a câmera do seu celular para escanear o <b>QR Code</b> na tela. Sua sessão será mantida ativa para coletas futuras.
+                Ao clicar no botão abaixo, o navegador será iniciado. Aponte a câmera do seu celular para escanear o
+                <b>QR Code</b> na tela. Sua sessão será mantida ativa para coletas futuras.
               </p>
             </div>
 
@@ -1559,12 +1682,13 @@
         <div id="page-extracao" class="page">
           <div class="page-header">
             <h1 class="page-title">⚡ Extração e carregamento de dados</h1>
-            <p class="page-subtitle">Alimente a base de dados coletando conversas ao vivo ou importando arquivos prévios.</p>
+            <p class="page-subtitle">Alimente a base de dados coletando conversas ao vivo ou importando arquivos
+              prévios.</p>
           </div>
 
           <!-- Banner / Card de Grupo Ativo na Sessão Local -->
           <div id="active-group-banner" class="active-group-card" style="display: none;">
-            
+
             <!-- Linha Superior: Título/Grupo à esquerda e botão Mudar de Grupo com destaque à direita -->
             <div class="active-group-top-row">
               <div class="active-group-title-col">
@@ -1576,7 +1700,8 @@
               </div>
 
               <div>
-                <button type="button" id="btn-mudar-grupo" class="btn-mudar-grupo" onclick="abrirModalTrocaGrupo()" title="Limpar base de mensagens da sessão local e escolher ou coletar outro grupo">
+                <button type="button" id="btn-mudar-grupo" class="btn-mudar-grupo" onclick="abrirModalTrocaGrupo()"
+                  title="Limpar base de mensagens da sessão local e escolher ou coletar outro grupo">
                   <span>🔄 Mudar de grupo</span>
                 </button>
               </div>
@@ -1595,9 +1720,12 @@
 
               <div class="active-group-db-tools">
                 <span class="active-group-db-label">Banco local (SQLite):</span>
-                <button type="button" class="secondary btn-sm db-tool-btn" onclick="abrirBanco()" title="Abrir banco messages.db no visualizador do sistema">🗄️ Abrir SQLite</button>
-                <button type="button" class="secondary btn-sm db-tool-btn" onclick="abrirPastaDB()" title="Abrir pasta onde o arquivo messages.db está salvo">📂 Abrir pasta</button>
-                <button type="button" class="secondary btn-sm db-tool-btn" onclick="copiarCaminhoDB()" title="Copiar caminho completo do arquivo messages.db">📋 Copiar caminho</button>
+                <button type="button" class="secondary btn-sm db-tool-btn" onclick="abrirBanco()"
+                  title="Abrir banco messages.db no visualizador do sistema">🗄️ Abrir SQLite</button>
+                <button type="button" class="secondary btn-sm db-tool-btn" onclick="abrirPastaDB()"
+                  title="Abrir pasta onde o arquivo messages.db está salvo">📂 Abrir pasta</button>
+                <button type="button" class="secondary btn-sm db-tool-btn" onclick="copiarCaminhoDB()"
+                  title="Copiar caminho completo do arquivo messages.db">📋 Copiar caminho</button>
               </div>
             </div>
 
@@ -1605,7 +1733,10 @@
 
           <!-- Banner Explicativo sobre os Dois Caminhos Equivalentes -->
           <div id="extraction-intro-banner" class="extraction-intro-banner">
-            💡 <b>Ambas as opções abaixo satisfazem a extração:</b> Você pode tanto <b>coletar ao vivo</b> do WhatsApp Web via automação quanto <b>importar um arquivo</b> (CSV ou JSON). Qualquer um dos caminhos carrega as mensagens para o banco SQLite local (<code>messages.db</code>), liberando imediatamente a visualização e os módulos de inteligência artificial.
+            💡 <b>Ambas as opções abaixo satisfazem a extração:</b> Você pode tanto <b>coletar ao vivo</b> do WhatsApp
+            Web via automação quanto <b>importar um arquivo</b> (CSV ou JSON). Qualquer um dos caminhos carrega as
+            mensagens para o banco SQLite local (<code>messages.db</code>), liberando imediatamente a visualização e os
+            módulos de inteligência artificial.
           </div>
 
           <!-- Dois Caminhos Lado a Lado com Divisor Vertical "OU" -->
@@ -1632,18 +1763,22 @@
                     </div>
 
                     <div id="container-grupo-manual" style="display: none; margin-top: 8px;">
-                      <input type="text" id="input-grupo-manual" placeholder="Digite o nome exato do grupo no WhatsApp...">
+                      <input type="text" id="input-grupo-manual"
+                        placeholder="Digite o nome exato do grupo no WhatsApp...">
                     </div>
 
                     <div class="group-helper-bar">
-                      <span id="status-grupos-count" style="color: var(--text-dim); font-size: 11.5px;">Aguardando catálogo...</span>
-                      <button type="button" id="btn-sync-grupos" class="group-sync-link" onclick="sincronizarGruposWeb()" title="Escanear grupos do WhatsApp Web">
+                      <span id="status-grupos-count" style="color: var(--text-dim); font-size: 11.5px;">Aguardando
+                        catálogo...</span>
+                      <button type="button" id="btn-sync-grupos" class="group-sync-link"
+                        onclick="sincronizarGruposWeb()" title="Escanear grupos do WhatsApp Web">
                         <span>🔄 Atualizar grupos</span>
                       </button>
                     </div>
 
                     <div class="info-callout">
-                      ⓘ <b>Nota sobre Comunidades:</b> O WhatsApp organiza conversas em grupos e canais individuais. Para comunidades, escolha o canal/grupo específico desejado.
+                      ⓘ <b>Nota sobre Comunidades:</b> O WhatsApp organiza conversas em grupos e canais individuais.
+                      Para comunidades, escolha o canal/grupo específico desejado.
                     </div>
                   </div>
 
@@ -1668,7 +1803,8 @@
               </div>
 
               <div style="margin-top: 16px;">
-                <button id="btn-coletar" style="width: 100%;" onclick="iniciarColeta()"><span>⚡ Iniciar coleta de mensagens</span></button>
+                <button id="btn-coletar" style="width: 100%;" onclick="iniciarColeta()"><span>⚡ Iniciar coleta de
+                    mensagens</span></button>
               </div>
             </div>
 
@@ -1685,18 +1821,22 @@
                   <h3 class="pathway-title">📥 Importação de arquivo</h3>
                 </div>
                 <p class="pathway-desc">
-                  Carrega mensagens instantaneamente a partir de um arquivo <b>CSV</b> ou <b>JSON</b> exportado previamente, sem necessidade de abrir o navegador.
+                  Carrega mensagens instantaneamente a partir de um arquivo <b>CSV</b> ou <b>JSON</b> exportado
+                  previamente, sem necessidade de abrir o navegador.
                 </p>
 
                 <div style="margin-bottom: 16px;">
-                  <label style="display: block; font-size: 13px; font-weight: 600; color: #cbd5e1; margin-bottom: 8px;">Selecione o arquivo local:</label>
+                  <label
+                    style="display: block; font-size: 13px; font-weight: 600; color: #cbd5e1; margin-bottom: 8px;">Selecione
+                    o arquivo local:</label>
                   <input type="file" id="file-import-input" accept=".csv,.json" style="width: 100%;">
                   <small style="color: #64748b; font-size: 11px; display: block; margin-top: 4px;">
                     Suporta arquivos .csv (separador ';') ou .json com registros de conversas.
                   </small>
                 </div>
 
-                <button id="btn-importar" class="secondary" style="width: 100%;" onclick="importarArquivo()">📥 Carregar e importar arquivo</button>
+                <button id="btn-importar" class="secondary" style="width: 100%;" onclick="importarArquivo()">📥 Carregar
+                  e importar arquivo</button>
               </div>
             </div>
 
@@ -1708,22 +1848,28 @@
              ========================================================= -->
         <div id="page-visualizacao" class="page">
           <div class="page-header">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
               <div>
                 <h1 class="page-title">📋 Visualização de mensagens</h1>
                 <p class="page-subtitle">Consulte, filtre e audite as mensagens armazenadas no banco local.</p>
               </div>
               <div class="btn-group">
-                <a href="/api/exportar/download" class="btn secondary" download title="Baixar histórico de mensagens em formato CSV">📥 Baixar CSV</a>
-                <a href="/api/exportar/json" class="btn secondary" download title="Baixar histórico de mensagens em formato JSON">📥 Baixar JSON</a>
-                <button class="secondary" id="btn-atualizar-visualizacao" onclick="atualizarColetaIncremental()" title="Atalho para coleta incremental no WhatsApp Web para buscar novas mensagens deste grupo">🔄 Atualizar</button>
+                <a href="/api/exportar/download" class="btn secondary" download
+                  title="Baixar histórico de mensagens em formato CSV">📥 Baixar CSV</a>
+                <a href="/api/exportar/json" class="btn secondary" download
+                  title="Baixar histórico de mensagens em formato JSON">📥 Baixar JSON</a>
+                <button class="secondary" id="btn-atualizar-visualizacao" onclick="atualizarColetaIncremental()"
+                  title="Atalho para coleta incremental no WhatsApp Web para buscar novas mensagens deste grupo">🔄
+                  Atualizar</button>
               </div>
             </div>
           </div>
 
           <!-- Barra de Busca Rápida -->
           <div style="display: flex; gap: 12px; align-items: center;">
-            <input type="text" id="table-search-input" placeholder="🔍 Pesquisar por remetente ou texto da mensagem..." oninput="filtrarTabelaMensagens()">
+            <input type="text" id="table-search-input" placeholder="🔍 Pesquisar por remetente ou texto da mensagem..."
+              oninput="filtrarTabelaMensagens()">
             <div style="white-space: nowrap; font-size: 13px; color: #94a3b8;">
               Total: <b id="table-total-count" style="color: #38bdf8;">0</b> mensagens
             </div>
@@ -1743,7 +1889,8 @@
               </thead>
               <tbody id="messages-tbody">
                 <tr>
-                  <td colspan="5" style="text-align: center; padding: 24px; color: #64748b;">Carregando mensagens...</td>
+                  <td colspan="5" style="text-align: center; padding: 24px; color: #64748b;">Carregando mensagens...
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -1756,102 +1903,127 @@
         <div id="page-insights" class="page">
           <div class="page-header">
             <h1 class="page-title">🧠 Geração de insights com IA (LLM)</h1>
-            <p class="page-subtitle">Transforme as conversas coletadas em relatórios analíticos, tópicos e tendências com o Google Gemini.</p>
+            <p class="page-subtitle">Transforme as conversas coletadas em relatórios analíticos, tópicos e tendências
+              com o Google Gemini.</p>
           </div>
 
           <!-- =========================================================
                CARD DE CONFIGURAÇÃO DO GOOGLE GEMINI (FILOSOFIA BYOK)
                ========================================================= -->
-          <div class="byok-config-card">
-            <div class="byok-header-row">
+          <div id="byok-card" class="byok-config-card">
+            <div class="byok-header-row" onclick="toggleByokConfig()"
+              title="Clique para recolher ou expandir a configuração da API">
               <div class="byok-title">
                 <span style="font-size: 20px;">🔑</span>
-                <span>Configuração do Provedor de IA — Google Gemini</span>
+                <span>Configuração da API</span>
               </div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 12px; color: #94a3b8;">Status da Chave:</span>
+              <div style="display: flex; align-items: center; gap: 10px;">
                 <span id="byok-status-badge" class="byok-badge pending">⚠️ Chave não testada</span>
-              </div>
-            </div>
-
-            <p style="color: #cbd5e1; font-size: 13.5px; line-height: 1.6;">
-              O módulo de inteligência opera sob o modelo <b>BYOK (Bring Your Own Key)</b>. Sua chave pessoal do <b>Google AI Studio</b> é utilizada diretamente para inferência, garantindo soberania dos dados, controle total sobre o consumo de tokens e privacidade absoluta.
-            </p>
-
-            <!-- Formulário de API Key e Seleção de Modelo -->
-            <div class="byok-form-grid">
-              
-              <!-- Campo 1: API Key com botão de revelar / ocultar e colar -->
-              <div>
-                <label for="input-gemini-api-key" style="display: block; font-size: 12.5px; font-weight: 600; color: #d8b4fe; margin-bottom: 6px;">
-                  Chave de API (Gemini API Key):
-                </label>
-                <div class="input-action-group">
-                  <input type="password" id="input-gemini-api-key" placeholder="Cole sua chave AIzaSy... aqui" oninput="aoAlterarCredenciaisLLM()">
-                  <div class="inline-buttons">
-                    <button type="button" class="btn-input-action" id="btn-toggle-key-visibility" onclick="alternarVisibilidadeApiKey()" title="Revelar ou ocultar chave de API">
-                      👁️ Revelar
-                    </button>
-                    <button type="button" class="btn-input-action" onclick="colarApiKeyClipboard()" title="Colar chave da área de transferência">
-                      📋 Colar
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Campo 2: Dropdown de Seleção de Modelo -->
-              <div>
-                <label for="select-gemini-model" style="display: block; font-size: 12.5px; font-weight: 600; color: #d8b4fe; margin-bottom: 6px;">
-                  Modelo do Gemini:
-                </label>
-                <div class="select-wrapper">
-                  <select id="select-gemini-model" class="custom-select" onchange="aoAlterarCredenciaisLLM()">
-                    <option value="gemini-2.5-flash" selected>⚡ Gemini 2.5 Flash (Recomendado / Rápido)</option>
-                    <option value="gemini-2.5-pro">🧠 Gemini 2.5 Pro (Raciocínio Avançado)</option>
-                    <option value="gemini-3.7-flash">🚀 Gemini 3.7 Flash (Alta Performance)</option>
-                    <option value="gemini-3.5-flash-lite">💨 Gemini 3.5 Flash Lite (Ultra Rápido / Leve)</option>
-                  </select>
-                </div>
-              </div>
-
-              <!-- Botão 3: Testar / Validar Conexão -->
-              <div>
-                <button type="button" id="btn-validar-chave" class="secondary" onclick="testarChaveGemini()" style="width: 100%; white-space: nowrap;">
-                  <span>🧪 Testar Chave</span>
+                <button type="button" id="btn-toggle-byok-card" class="byok-collapse-btn"
+                  title="Recolher ou expandir configuração da API"
+                  onclick="event.stopPropagation(); toggleByokConfig();">
+                  <span class="chevron">▲</span>
                 </button>
               </div>
-
             </div>
 
-            <!-- Banner de Informação e Segurança -->
-            <div class="byok-info-banner">
-              🔒 <b>Segurança e Privacidade:</b> Sua chave de API é mantida com segurança no armazenamento local do seu navegador (<code>localStorage</code>) e é utilizada exclusivamente pelo servidor local durante as requisições de geração de relatórios.
-            </div>
+            <div id="byok-card-content" class="byok-card-content">
+              <p style="color: #cbd5e1; font-size: 13.5px; line-height: 1.6;">
+                O módulo de inteligência opera sob o modelo <b>BYOK (Bring Your Own Key)</b>. Sua chave pessoal do
+                <b>Google AI Studio</b> é utilizada diretamente para inferência, garantindo soberania dos dados,
+                controle
+                total sobre o consumo de tokens e privacidade absoluta.
+              </p>
 
-            <!-- Links de Documentação e Recursos -->
-            <div class="byok-docs-row">
-              <span style="font-size: 12px; color: #94a3b8; font-weight: 600;">Documentações & Recursos:</span>
-              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="byok-doc-link" title="Gere sua chave gratuita ou gerencie cotas no Google AI Studio">
-                <span>🔑 Obter API Key no Google AI Studio</span> ↗
-              </a>
-              <a href="https://ai.google.dev/gemini-api/docs/models/gemini" target="_blank" rel="noopener noreferrer" class="byok-doc-link" title="Veja os limites de contexto, benchmarks e custos dos modelos Gemini">
-                <span>📖 Comparativo de Modelos Gemini</span> ↗
-              </a>
-              <a href="https://pt.wikipedia.org/wiki/BYOK" target="_blank" rel="noopener noreferrer" class="byok-doc-link" title="Entenda o modelo de Bring Your Own Key em aplicações modernas">
-                <span>💡 O que é a Filosofia BYOK?</span> ↗
-              </a>
-            </div>
+              <!-- Formulário de API Key e Seleção de Modelo -->
+              <div class="byok-form-grid">
 
+                <!-- Campo 1: API Key com botão de revelar / ocultar e colar -->
+                <div>
+                  <label for="input-gemini-api-key"
+                    style="display: block; font-size: 12.5px; font-weight: 600; color: #d8b4fe; margin-bottom: 6px;">
+                    Chave de API (Gemini API Key):
+                  </label>
+                  <div class="input-action-group">
+                    <input type="password" id="input-gemini-api-key" placeholder="Cole sua chave AIzaSy... aqui"
+                      oninput="aoAlterarCredenciaisLLM()">
+                    <div class="inline-buttons">
+                      <button type="button" class="btn-input-action" id="btn-toggle-key-visibility"
+                        onclick="alternarVisibilidadeApiKey()" title="Revelar ou ocultar chave de API">
+                        👁️ Revelar
+                      </button>
+                      <button type="button" class="btn-input-action" onclick="colarApiKeyClipboard()"
+                        title="Colar chave da área de transferência">
+                        📋 Colar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Campo 2: Dropdown de Seleção de Modelo -->
+                <div>
+                  <label for="select-gemini-model"
+                    style="display: block; font-size: 12.5px; font-weight: 600; color: #d8b4fe; margin-bottom: 6px;">
+                    Modelo do Gemini:
+                  </label>
+                  <div class="select-wrapper">
+                    <select id="select-gemini-model" class="custom-select" onchange="aoAlterarCredenciaisLLM()">
+                      <option value="gemini-2.5-flash" selected>⚡ Gemini 2.5 Flash (Recomendado / Rápido)</option>
+                      <option value="gemini-2.5-pro">🧠 Gemini 2.5 Pro (Raciocínio Avançado)</option>
+                      <option value="gemini-3.7-flash">🚀 Gemini 3.7 Flash (Alta Performance)</option>
+                      <option value="gemini-3.5-flash-lite">💨 Gemini 3.5 Flash Lite (Ultra Rápido / Leve)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Botão 3: Testar / Validar Conexão -->
+                <div>
+                  <button type="button" id="btn-validar-chave" class="secondary" onclick="testarChaveGemini()"
+                    style="width: 100%; white-space: nowrap;">
+                    <span>🧪 Testar Chave</span>
+                  </button>
+                </div>
+
+              </div>
+
+              <!-- Banner de Informação e Segurança -->
+              <div class="byok-info-banner">
+                🔒 <b>Segurança e Privacidade:</b> Sua chave de API é mantida com segurança no armazenamento local do
+                seu
+                navegador (<code>localStorage</code>) e é utilizada exclusivamente pelo servidor local durante as
+                requisições de geração de relatórios.
+              </div>
+
+              <!-- Links de Documentação e Recursos -->
+              <div class="byok-docs-row">
+                <span style="font-size: 12px; color: #94a3b8; font-weight: 600;">Documentações & Recursos:</span>
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer"
+                  class="byok-doc-link" title="Gere sua chave gratuita ou gerencie cotas no Google AI Studio">
+                  <span>🔑 Obter API Key no Google AI Studio</span> ↗
+                </a>
+                <a href="https://ai.google.dev/gemini-api/docs/models/gemini" target="_blank" rel="noopener noreferrer"
+                  class="byok-doc-link" title="Veja os limites de contexto, benchmarks e custos dos modelos Gemini">
+                  <span>📖 Comparativo de Modelos Gemini</span> ↗
+                </a>
+                <a href="https://pt.wikipedia.org/wiki/BYOK" target="_blank" rel="noopener noreferrer"
+                  class="byok-doc-link" title="Entenda o modelo de Bring Your Own Key em aplicações modernas">
+                  <span>💡 O que é BYOK?</span> ↗
+                </a>
+              </div>
+
+            </div>
           </div>
 
           <!-- Destaque de Preparação dos Módulos Analíticos -->
-          <div class="card" style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.12), rgba(37, 99, 235, 0.12)); border-color: rgba(168, 85, 247, 0.25);">
+          <div class="card"
+            style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.12), rgba(37, 99, 235, 0.12)); border-color: rgba(168, 85, 247, 0.25);">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
               <span style="font-size: 20px;">🚀</span>
               <h2 style="font-size: 15px; color: #c084fc;">Módulos analíticos prontos para orquestração</h2>
             </div>
             <p style="color: #cbd5e1; font-size: 13px; line-height: 1.6;">
-              Com sua chave de API configurada acima, os relatórios abaixo serão gerados sob demanda processando as mensagens do grupo ativo armazenadas no banco local SQLite.
+              Com sua chave de API configurada acima, os relatórios abaixo serão gerados sob demanda processando as
+              mensagens do grupo ativo armazenadas no banco local SQLite.
             </p>
           </div>
 
@@ -1859,7 +2031,8 @@
             <div class="card">
               <div class="card-title">📊 Resumo executivo e destaques</div>
               <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
-                Síntese automática dos assuntos mais debatidos no período, identificando os tópicos mais relevantes levantados pelos participantes.
+                Síntese automática dos assuntos mais debatidos no período, identificando os tópicos mais relevantes
+                levantados pelos participantes.
               </p>
               <button class="secondary btn-sm" disabled style="opacity: 0.5;">Em breve</button>
             </div>
@@ -1867,7 +2040,8 @@
             <div class="card">
               <div class="card-title">💡 Mapeamento de dúvidas recorrentes</div>
               <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
-                Identificação e agrupamento temático das principais dificuldades técnicas e pedagógicas trazidas pelos alunos nos grupos.
+                Identificação e agrupamento temático das principais dificuldades técnicas e pedagógicas trazidas pelos
+                alunos nos grupos.
               </p>
               <button class="secondary btn-sm" disabled style="opacity: 0.5;">Em breve</button>
             </div>
@@ -1875,7 +2049,8 @@
             <div class="card">
               <div class="card-title">📈 Análise de sentimento e clima</div>
               <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
-                Termômetro de engajamento e satisfação da comunidade, destacando membros participativos e potenciais pontos de atrito.
+                Termômetro de engajamento e satisfação da comunidade, destacando membros participativos e potenciais
+                pontos de atrito.
               </p>
               <button class="secondary btn-sm" disabled style="opacity: 0.5;">Em breve</button>
             </div>
@@ -1883,7 +2058,8 @@
             <div class="card">
               <div class="card-title">🎯 Recomendações e planos de ação</div>
               <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
-                Sugestões automáticas de novos conteúdos, lives, artigos e intervenções dos instrutores baseadas nas conversas reais.
+                Sugestões automáticas de novos conteúdos, lives, artigos e intervenções dos instrutores baseadas nas
+                conversas reais.
               </p>
               <button class="secondary btn-sm" disabled style="opacity: 0.5;">Em breve</button>
             </div>
@@ -1896,15 +2072,17 @@
            PAINEL FIXO DO CONSOLE (SEMPRE VISÍVEL & REDIMENSIONÁVEL)
            ========================================================= -->
       <div id="console-resizer" class="console-resizer" title="Arraste para redimensionar a altura do console"></div>
-      
+
       <div id="console-panel" class="console-panel">
         <div class="console-header">
           <div class="console-title">
             <span>📟 Console de execução em tempo real</span>
           </div>
           <div class="console-actions">
-            <button class="btn-sm secondary" onclick="limparConsole()" title="Limpar mensagens do console">🧹 Limpar</button>
-            <button class="btn-sm secondary" id="btn-toggle-console" onclick="toggleConsole()" title="Minimizar/Expandir console">🔽</button>
+            <button class="btn-sm secondary" onclick="limparConsole()" title="Limpar mensagens do console">🧹
+              Limpar</button>
+            <button class="btn-sm secondary" id="btn-toggle-console" onclick="toggleConsole()"
+              title="Minimizar/Expandir console">🔽</button>
           </div>
         </div>
         <div id="log-output" class="log-container">
@@ -1923,7 +2101,8 @@
       <div class="modal-header">
         <div class="modal-title">
           <span>🔍 Detalhes da mensagem</span>
-          <span id="modal-msg-id" style="font-size: 11.5px; color: #94a3b8; font-family: monospace; background: #1e293b; padding: 2px 6px; border-radius: 4px;">-</span>
+          <span id="modal-msg-id"
+            style="font-size: 11.5px; color: #94a3b8; font-family: monospace; background: #1e293b; padding: 2px 6px; border-radius: 4px;">-</span>
         </div>
         <button class="modal-close" onclick="fecharModalDetalhes()">✕</button>
       </div>
@@ -1944,7 +2123,9 @@
             <div id="modal-msg-anexos" style="color: #cbd5e1;">-</div>
 
             <label id="label-modal-reply" style="display: none;">Citação:</label>
-            <div id="modal-msg-reply" style="display: none; background: #1e293b; padding: 8px; border-radius: 6px; font-size: 12.5px; border-left: 3px solid #3b82f6;">-</div>
+            <div id="modal-msg-reply"
+              style="display: none; background: #1e293b; padding: 8px; border-radius: 6px; font-size: 12.5px; border-left: 3px solid #3b82f6;">
+              -</div>
           </div>
         </div>
 
@@ -1953,12 +2134,14 @@
             <label style="font-weight: 600; color: #93c5fd;">Texto completo da mensagem:</label>
             <button class="secondary btn-sm" onclick="copiarTextoMensagem()">📋 Copiar texto</button>
           </div>
-          <textarea id="modal-msg-texto" style="height: 120px; resize: vertical; background: #0b1120;" readonly></textarea>
+          <textarea id="modal-msg-texto" style="height: 120px; resize: vertical; background: #0b1120;"
+            readonly></textarea>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 6px;">
           <label style="font-weight: 600; color: #93c5fd;">Metadados adicionais (JSON):</label>
-          <textarea id="modal-msg-metadata" style="height: 110px; font-family: monospace; font-size: 12px; background: #0b1120;" readonly></textarea>
+          <textarea id="modal-msg-metadata"
+            style="height: 110px; font-family: monospace; font-size: 12px; background: #0b1120;" readonly></textarea>
         </div>
       </div>
 
@@ -1981,13 +2164,17 @@
       </div>
 
       <div class="modal-body" style="gap: 14px;">
-        <div class="card" style="padding: 14px; background: rgba(127, 29, 29, 0.25); border: 1px solid rgba(239, 68, 68, 0.45);">
+        <div class="card"
+          style="padding: 14px; background: rgba(127, 29, 29, 0.25); border: 1px solid rgba(239, 68, 68, 0.45);">
           <div style="font-size: 13.5px; color: #fee2e2; line-height: 1.5; font-weight: 500;">
-            Ao mudar de grupo, a base atual de mensagens locais (<code style="color: #fca5a5; background: rgba(0,0,0,0.3); padding: 2px 4px; border-radius: 4px;">messages.db</code>) será limpa para dar lugar à nova coleta ou importação.
+            Ao mudar de grupo, a base atual de mensagens locais (<code
+              style="color: #fca5a5; background: rgba(0,0,0,0.3); padding: 2px 4px; border-radius: 4px;">messages.db</code>)
+            será limpa para dar lugar à nova coleta ou importação.
           </div>
         </div>
 
-        <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 14px; font-size: 13px; color: #cbd5e1; line-height: 1.6;">
+        <div
+          style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 14px; font-size: 13px; color: #cbd5e1; line-height: 1.6;">
           <div style="margin-bottom: 6px;">
             <b>Grupo atual:</b> <span id="modal-troca-grupo-nome" style="color: #38bdf8; font-weight: 600;">-</span>
           </div>
@@ -1996,8 +2183,10 @@
           </div>
         </div>
 
-        <div style="background: rgba(37, 99, 235, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 12px 14px; font-size: 12.5px; color: #bae6fd; line-height: 1.55;">
-          💡 <b>Recomendação importante:</b> Se você deseja guardar o histórico atual, faça a exportação em <b>CSV</b> ou <b>JSON</b> na aba <b>"Visualização"</b> antes de confirmar a troca.
+        <div
+          style="background: rgba(37, 99, 235, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 12px 14px; font-size: 12.5px; color: #bae6fd; line-height: 1.55;">
+          💡 <b>Recomendação importante:</b> Se você deseja guardar o histórico atual, faça a exportação em <b>CSV</b>
+          ou <b>JSON</b> na aba <b>"Visualização"</b> antes de confirmar a troca.
         </div>
       </div>
 
@@ -2415,10 +2604,10 @@
       const modal = document.getElementById('modal-troca-grupo');
       const nomeDisplay = document.getElementById('modal-troca-grupo-nome');
       const msgsDisplay = document.getElementById('modal-troca-grupo-msgs');
-      
+
       const nomeAtivo = (grupoAtivoGlobal && (grupoAtivoGlobal.nome || grupoAtivoGlobal.id)) || document.getElementById('active-group-name-display').innerText;
       const msgsAtivo = `${grupoAtivoMensagensGlobal.toLocaleString('pt-BR')} mensagem(ns)`;
-      
+
       if (nomeDisplay) nomeDisplay.innerText = nomeAtivo || '-';
       if (msgsDisplay) msgsDisplay.innerText = msgsAtivo || '0 mensagens';
       if (modal) modal.classList.add('active');
@@ -2494,7 +2683,7 @@
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
           const grupos = json.data;
-          
+
           let html = '';
           if (grupos.length === 0 && !defaultGrupo) {
             html += '<option value="" disabled selected>Nenhum grupo catalogado (clique em Atualizar grupos)</option>';
@@ -2668,7 +2857,7 @@
       appendLog(`[Importação] Lendo arquivo '${filename}'...`);
 
       const reader = new FileReader();
-      reader.onload = async function(e) {
+      reader.onload = async function (e) {
         const content = e.target.result;
         try {
           const res = await fetch('/api/importar', {
@@ -2697,7 +2886,7 @@
         }
       };
 
-      reader.onerror = function() {
+      reader.onerror = function () {
         showToast("Erro ao ler arquivo local.");
         setBusy(false);
       };
@@ -2939,11 +3128,38 @@
     const STORAGE_KEY_API = 'zap_gemini_api_key';
     const STORAGE_KEY_MODEL = 'zap_gemini_model';
     const STORAGE_KEY_VALIDATED = 'zap_gemini_validated';
+    const STORAGE_KEY_COLLAPSED = 'zap_gemini_config_collapsed';
+
+    function toggleByokConfig(forcarEstado) {
+      const card = document.getElementById('byok-card');
+      const btn = document.getElementById('btn-toggle-byok-card');
+      if (!card) return;
+
+      let isCollapsed;
+      if (typeof forcarEstado === 'boolean') {
+        isCollapsed = forcarEstado;
+        if (isCollapsed) {
+          card.classList.add('collapsed');
+        } else {
+          card.classList.remove('collapsed');
+        }
+      } else {
+        isCollapsed = card.classList.toggle('collapsed');
+      }
+
+      if (btn) {
+        btn.innerHTML = `<span class="chevron">${isCollapsed ? '▼' : '▲'}</span>`;
+        btn.title = isCollapsed ? "Expandir configuração da API" : "Recolher configuração da API";
+      }
+
+      localStorage.setItem(STORAGE_KEY_COLLAPSED, isCollapsed ? 'true' : 'false');
+    }
 
     function carregarConfiguracaoLLM() {
       const savedKey = localStorage.getItem(STORAGE_KEY_API) || '';
       const savedModel = localStorage.getItem(STORAGE_KEY_MODEL) || 'gemini-2.5-flash';
       const isValidated = localStorage.getItem(STORAGE_KEY_VALIDATED) === 'true';
+      const isCollapsed = localStorage.getItem(STORAGE_KEY_COLLAPSED) === 'true';
 
       const inputKey = document.getElementById('input-gemini-api-key');
       const selectModel = document.getElementById('select-gemini-model');
@@ -2964,6 +3180,8 @@
           badge.innerText = '⚠️ Chave não configurada';
         }
       }
+
+      toggleByokConfig(isCollapsed);
     }
 
     function aoAlterarCredenciaisLLM() {
@@ -3101,4 +3319,5 @@
     });
   </script>
 </body>
+
 </html>
