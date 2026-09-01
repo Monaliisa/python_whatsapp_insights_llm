@@ -332,7 +332,7 @@
     }
 
     .sidebar-footer {
-      margin-top: auto;
+      margin-top: 0;
       padding-top: 12px;
       border-top: 1px solid var(--border-color);
       display: flex;
@@ -1583,6 +1583,7 @@
         grid-template-columns: 1fr;
         height: auto;
       }
+
       .insights-workspace.sidebar-collapsed {
         grid-template-columns: 1fr;
       }
@@ -1680,38 +1681,51 @@
     }
 
     /* Markdown styling inside chat */
-    .chat-bubble-content h2, .chat-bubble-content h3, .chat-bubble-content h4 {
+    .chat-bubble-content h2,
+    .chat-bubble-content h3,
+    .chat-bubble-content h4 {
       color: #93c5fd;
       margin: 12px 0 6px 0;
       font-size: 15px;
     }
-    .chat-bubble-content h2:first-child, .chat-bubble-content h3:first-child {
+
+    .chat-bubble-content h2:first-child,
+    .chat-bubble-content h3:first-child {
       margin-top: 0;
     }
+
     .chat-bubble-content p {
       margin-bottom: 8px;
     }
-    .chat-bubble-content ul, .chat-bubble-content ol {
+
+    .chat-bubble-content ul,
+    .chat-bubble-content ol {
       margin: 8px 0 8px 20px;
     }
+
     .chat-bubble-content li {
       margin-bottom: 4px;
     }
+
     .chat-bubble-content table {
       width: 100%;
       border-collapse: collapse;
       margin: 12px 0;
       font-size: 12.5px;
     }
-    .chat-bubble-content th, .chat-bubble-content td {
+
+    .chat-bubble-content th,
+    .chat-bubble-content td {
       border: 1px solid #334155;
       padding: 6px 10px;
       text-align: left;
     }
+
     .chat-bubble-content th {
       background: #1e293b;
       color: #93c5fd;
     }
+
     .chat-bubble-content blockquote {
       border-left: 3px solid #8b5cf6;
       padding-left: 10px;
@@ -1722,6 +1736,7 @@
       padding: 6px 10px;
       border-radius: 0 6px 6px 0;
     }
+
     .chat-bubble-content code {
       background: rgba(0, 0, 0, 0.3);
       padding: 2px 4px;
@@ -1922,6 +1937,14 @@
         <span id="drawer-insights-lock" class="sidebar-lock-badge">🔒 Bloqueado</span>
       </div>
 
+      <!-- Configurações (na parte de baixo, mas acima do divider) -->
+      <div id="drawer-item-configuracoes" class="sidebar-item" data-page="page-configuracoes" style="margin-top: auto;">
+        <div class="sidebar-item-label">
+          <span class="sidebar-item-icon">⚙️</span>
+          <span>Configurações</span>
+        </div>
+      </div>
+
       <!-- FOOTER DA SIDEBAR -->
       <div class="sidebar-footer">
         <div class="sidebar-status-box">
@@ -1995,7 +2018,7 @@
                   servidores de terceiros.</div>
                 <div>⚡ <b>Sem perda de histórico:</b> A persistência incremental garante que coletas futuras apenas
                   complementem as existentes.</div>
-                <div>🔑 <b>Filosofia BYOK:</b> Sua chave de API do Gemini fica gravada apenas no seu navegador, dando a
+                <div>🔑 <b>BYOK:</b> Sua chave de API do Gemini fica gravada apenas no seu navegador, dando a
                   você controle direto de custos e cotas.</div>
                 <div>📊 <b>Exportação imediata:</b> Faça o download integral do banco de dados nos formatos CSV e JSON
                   com um clique.</div>
@@ -2320,24 +2343,29 @@
              ========================================================= -->
         <div id="page-insights" class="page">
           <div class="page-header">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
               <div>
                 <h1 class="page-title">🧠 Chat & Geração de Insights com IA</h1>
-                <p class="page-subtitle">Converse diretamente com o histórico de mensagens do grupo e gere análises profundas com o Google Gemini.</p>
+                <p class="page-subtitle">Converse diretamente com o histórico de mensagens do grupo e gere análises
+                  profundas com o Google Gemini.</p>
               </div>
             </div>
           </div>
 
-          <!-- 1. CARD DE CONFIGURAÇÃO DO GOOGLE GEMINI (FILOSOFIA BYOK) -->
+          <!-- 1. CARD DE CONFIGURAÇÃO DO GOOGLE GEMINI (BYOK) -->
           <div id="byok-card" class="byok-config-card">
-            <div class="byok-header-row" onclick="toggleByokConfig()" title="Clique para recolher ou expandir a configuração da API">
+            <div class="byok-header-row" onclick="toggleByokConfig()"
+              title="Clique para recolher ou expandir a configuração da API">
               <div class="byok-title">
                 <span style="font-size: 20px;">🔑</span>
                 <span>Configuração da API</span>
               </div>
               <div style="display: flex; align-items: center; gap: 10px;">
                 <span id="byok-status-badge" class="byok-badge pending">⚠️ Chave não testada</span>
-                <button type="button" id="btn-toggle-byok-card" class="byok-collapse-btn" title="Recolher ou expandir configuração da API" onclick="event.stopPropagation(); toggleByokConfig();">
+                <button type="button" id="btn-toggle-byok-card" class="byok-collapse-btn"
+                  title="Recolher ou expandir configuração da API"
+                  onclick="event.stopPropagation(); toggleByokConfig();">
                   <span class="chevron">▲</span>
                 </button>
               </div>
@@ -2346,7 +2374,8 @@
             <div id="byok-card-content" class="byok-card-content">
               <p style="color: #cbd5e1; font-size: 13.5px; line-height: 1.6;">
                 O módulo de inteligência opera sob o modelo <b>BYOK (Bring Your Own Key)</b>. Sua chave pessoal do
-                <b>Google AI Studio</b> é utilizada diretamente para inferência, garantindo soberania dos dados, controle
+                <b>Google AI Studio</b> é utilizada diretamente para inferência, garantindo soberania dos dados,
+                controle
                 total sobre o consumo de tokens e privacidade absoluta.
               </p>
 
@@ -2355,16 +2384,20 @@
 
                 <!-- Campo 1: API Key com botão de revelar / ocultar e colar -->
                 <div>
-                  <label for="input-gemini-api-key" style="display: block; font-size: 12.5px; font-weight: 600; color: #d8b4fe; margin-bottom: 6px;">
+                  <label for="input-gemini-api-key"
+                    style="display: block; font-size: 12.5px; font-weight: 600; color: #d8b4fe; margin-bottom: 6px;">
                     Chave de API (Gemini API Key):
                   </label>
                   <div class="input-action-group">
-                    <input type="password" id="input-gemini-api-key" placeholder="Cole sua chave AIzaSy... aqui" oninput="aoAlterarCredenciaisLLM()">
+                    <input type="password" id="input-gemini-api-key" placeholder="Cole sua chave AIzaSy... aqui"
+                      oninput="aoAlterarCredenciaisLLM()">
                     <div class="inline-buttons">
-                      <button type="button" class="btn-input-action" id="btn-toggle-key-visibility" onclick="alternarVisibilidadeApiKey()" title="Revelar ou ocultar chave de API">
+                      <button type="button" class="btn-input-action" id="btn-toggle-key-visibility"
+                        onclick="alternarVisibilidadeApiKey()" title="Revelar ou ocultar chave de API">
                         👁️ Revelar
                       </button>
-                      <button type="button" class="btn-input-action" onclick="colarApiKeyClipboard()" title="Colar chave da área de transferência">
+                      <button type="button" class="btn-input-action" onclick="colarApiKeyClipboard()"
+                        title="Colar chave da área de transferência">
                         📋 Colar
                       </button>
                     </div>
@@ -2373,7 +2406,8 @@
 
                 <!-- Campo 2: Dropdown de Seleção de Modelo -->
                 <div>
-                  <label for="select-gemini-model" style="display: block; font-size: 12.5px; font-weight: 600; color: #d8b4fe; margin-bottom: 6px;">
+                  <label for="select-gemini-model"
+                    style="display: block; font-size: 12.5px; font-weight: 600; color: #d8b4fe; margin-bottom: 6px;">
                     Modelo do Gemini:
                   </label>
                   <div class="select-wrapper">
@@ -2388,7 +2422,8 @@
 
                 <!-- Botão 3: Testar / Validar Conexão -->
                 <div>
-                  <button type="button" id="btn-validar-chave" class="secondary" onclick="testarChaveGemini()" style="width: 100%; white-space: nowrap;">
+                  <button type="button" id="btn-validar-chave" class="secondary" onclick="testarChaveGemini()"
+                    style="width: 100%; white-space: nowrap;">
                     <span>🧪 Testar Chave</span>
                   </button>
                 </div>
@@ -2397,20 +2432,25 @@
 
               <!-- Banner de Informação e Segurança -->
               <div class="byok-info-banner">
-                🔒 <b>Segurança e Privacidade:</b> Sua chave de API é mantida com segurança no armazenamento local do seu navegador (<code>localStorage</code>) e é utilizada exclusivamente pelo servidor local durante as requisições de geração de relatórios.
+                🔒 <b>Segurança e Privacidade:</b> Sua chave de API é mantida com segurança no armazenamento local do
+                seu navegador (<code>localStorage</code>) e é utilizada exclusivamente pelo servidor local durante as
+                requisições de geração de relatórios.
               </div>
 
               <!-- Links de Documentação e Recursos -->
               <div class="byok-docs-row">
                 <span style="font-size: 12px; color: #94a3b8; font-weight: 600;">Documentações & Recursos:</span>
-                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="byok-doc-link" title="Gere sua chave gratuita ou gerencie cotas no Google AI Studio">
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer"
+                  class="byok-doc-link" title="Gere sua chave gratuita ou gerencie cotas no Google AI Studio">
                   <span>🔑 Obter API Key no Google AI Studio</span> ↗
                 </a>
-                <a href="https://ai.google.dev/gemini-api/docs/models/gemini" target="_blank" rel="noopener noreferrer" class="byok-doc-link" title="Veja os limites de contexto, benchmarks e custos dos modelos Gemini">
+                <a href="https://ai.google.dev/gemini-api/docs/models/gemini" target="_blank" rel="noopener noreferrer"
+                  class="byok-doc-link" title="Veja os limites de contexto, benchmarks e custos dos modelos Gemini">
                   <span>📖 Comparativo de Modelos Gemini</span> ↗
                 </a>
-                <a href="https://pt.wikipedia.org/wiki/BYOK" target="_blank" rel="noopener noreferrer" class="byok-doc-link" title="Entenda o modelo de Bring Your Own Key em aplicações modernas">
-                  <span>💡 O que é a Filosofia BYOK?</span> ↗
+                <a href="https://pt.wikipedia.org/wiki/BYOK" target="_blank" rel="noopener noreferrer"
+                  class="byok-doc-link" title="Entenda o modelo de Bring Your Own Key em aplicações modernas">
+                  <span>💡 O que é a BYOK?</span> ↗
                 </a>
               </div>
 
@@ -2422,7 +2462,8 @@
             <div class="range-header-row">
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 16px;">📅</span>
-                <span style="font-weight: 700; font-size: 13.5px; color: #93c5fd;">Janela Temporal das Mensagens para Análise</span>
+                <span style="font-weight: 700; font-size: 13.5px; color: #93c5fd;">Janela Temporal das Mensagens para
+                  Análise</span>
               </div>
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span id="range-selected-count-badge" class="byok-badge active">Carregando período...</span>
@@ -2433,8 +2474,10 @@
             <div class="range-slider-wrapper">
               <div class="range-slider-track"></div>
               <div id="range-slider-highlight" class="range-slider-highlight" style="left: 0%; width: 100%;"></div>
-              <input type="range" id="slider-range-min" class="range-slider-input" min="0" max="1000" value="0" oninput="aoMoverSliderRange('min')">
-              <input type="range" id="slider-range-max" class="range-slider-input" min="0" max="1000" value="1000" oninput="aoMoverSliderRange('max')">
+              <input type="range" id="slider-range-min" class="range-slider-input" min="0" max="1000" value="0"
+                oninput="aoMoverSliderRange('min')">
+              <input type="range" id="slider-range-max" class="range-slider-input" min="0" max="1000" value="1000"
+                oninput="aoMoverSliderRange('max')">
             </div>
 
             <!-- Indicadores de Datas e Atalhos de Período -->
@@ -2444,27 +2487,35 @@
                 <span>Fim: <b id="display-date-max" class="range-date-pill">-</b></span>
               </div>
               <div class="range-presets-group">
-                <button type="button" class="btn-input-action" onclick="aplicarPresetRange('24h')" title="Filtrar últimas 24 horas">24h</button>
-                <button type="button" class="btn-input-action" onclick="aplicarPresetRange('7d')" title="Filtrar últimos 7 dias">7 Dias</button>
-                <button type="button" class="btn-input-action" onclick="aplicarPresetRange('15d')" title="Filtrar últimos 15 dias">15 Dias</button>
-                <button type="button" class="btn-input-action" onclick="aplicarPresetRange('30d')" title="Filtrar últimos 30 dias">30 Dias</button>
-                <button type="button" class="btn-input-action" onclick="aplicarPresetRange('all')" title="Filtrar todo o histórico">Todo o Histórico</button>
+                <button type="button" class="btn-input-action" onclick="aplicarPresetRange('24h')"
+                  title="Filtrar últimas 24 horas">24h</button>
+                <button type="button" class="btn-input-action" onclick="aplicarPresetRange('7d')"
+                  title="Filtrar últimos 7 dias">7 Dias</button>
+                <button type="button" class="btn-input-action" onclick="aplicarPresetRange('15d')"
+                  title="Filtrar últimos 15 dias">15 Dias</button>
+                <button type="button" class="btn-input-action" onclick="aplicarPresetRange('30d')"
+                  title="Filtrar últimos 30 dias">30 Dias</button>
+                <button type="button" class="btn-input-action" onclick="aplicarPresetRange('all')"
+                  title="Filtrar todo o histórico">Todo o Histórico</button>
               </div>
             </div>
           </div>
 
           <!-- 3. WORKSPACE: CHAT CONVERSACIONAL (ESQUERDA) + ANÁLISES ÚTEIS (DIREITA) -->
           <div id="insights-workspace" class="insights-workspace">
-            
+
             <!-- ÁREA DO CHAT -->
             <div class="chat-card">
               <div class="chat-header">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span style="font-size: 16px;">💬</span>
                   <span style="font-weight: 700; font-size: 13.5px; color: #f1f5f9;">Chat com a Base do Grupo</span>
-                  <span id="chat-group-tag" style="font-size: 11px; color: #38bdf8; background: rgba(56, 189, 248, 0.12); padding: 2px 6px; border-radius: 4px;">Grupo Ativo</span>
+                  <span id="chat-group-tag"
+                    style="font-size: 11px; color: #38bdf8; background: rgba(56, 189, 248, 0.12); padding: 2px 6px; border-radius: 4px;">Grupo
+                    Ativo</span>
                 </div>
-                <button type="button" class="btn-input-action" onclick="limparHistoricoChat()" title="Limpar conversa atual e começar de novo">
+                <button type="button" class="btn-input-action" onclick="limparHistoricoChat()"
+                  title="Limpar conversa atual e começar de novo">
                   <span>🗑️ Limpar conversa</span>
                 </button>
               </div>
@@ -2476,15 +2527,21 @@
                   <div class="chat-avatar">✨</div>
                   <div class="chat-bubble-content">
                     <p><b>Olá! Eu sou o ZapInsights AI.</b></p>
-                    <p>Estou conectado às mensagens do grupo no período selecionado no slider acima. Você pode me fazer qualquer pergunta sobre as conversas (ex.: <i>"Quais tópicos geraram mais debate?"</i>, <i>"Quais alunos mais ajudaram?"</i>) ou clicar em uma das <b>Análises Rápidas</b> ao lado para gerar relatórios aprofundados.</p>
+                    <p>Estou conectado às mensagens do grupo no período selecionado no slider acima. Você pode me fazer
+                      qualquer pergunta sobre as conversas (ex.: <i>"Quais tópicos geraram mais debate?"</i>, <i>"Quais
+                        alunos mais ajudaram?"</i>) ou clicar em uma das <b>Análises Rápidas</b> ao lado para gerar
+                      relatórios aprofundados.</p>
                   </div>
                 </div>
               </div>
 
               <!-- Barra de Envio de Mensagem -->
               <div class="chat-input-bar">
-                <textarea id="chat-input-textarea" class="chat-textarea" placeholder="Pergunte qualquer coisa sobre as conversas... (Enter para enviar, Shift+Enter para quebra de linha)" rows="1" oninput="autoResizeChatTextarea(this)" onkeydown="aoDigitarNoChat(event)"></textarea>
-                <button type="button" id="btn-chat-send" class="btn" onclick="enviarMensagemChat()" title="Enviar pergunta para o Google Gemini">
+                <textarea id="chat-input-textarea" class="chat-textarea"
+                  placeholder="Pergunte qualquer coisa sobre as conversas... (Enter para enviar, Shift+Enter para quebra de linha)"
+                  rows="1" oninput="autoResizeChatTextarea(this)" onkeydown="aoDigitarNoChat(event)"></textarea>
+                <button type="button" id="btn-chat-send" class="btn" onclick="enviarMensagemChat()"
+                  title="Enviar pergunta para o Google Gemini">
                   <span>Enviar 🚀</span>
                 </button>
               </div>
@@ -2495,55 +2552,244 @@
               <div class="analyses-sidebar-header">
                 <div style="display: flex; align-items: center; gap: 6px;">
                   <span style="font-size: 14px;">⚡</span>
-                  <span class="analyses-sidebar-title-text" style="font-weight: 700; font-size: 13px; color: #c084fc;">Análises Prontas</span>
+                  <span class="analyses-sidebar-title-text"
+                    style="font-weight: 700; font-size: 13px; color: #c084fc;">Análises Prontas</span>
                 </div>
-                <button type="button" id="btn-toggle-analyses-col" class="byok-collapse-btn" onclick="toggleColunaAnalises()" title="Recolher ou expandir coluna de análises">
+                <button type="button" id="btn-toggle-analyses-col" class="byok-collapse-btn"
+                  onclick="toggleColunaAnalises()" title="Recolher ou expandir coluna de análises">
                   <span id="analyses-col-chevron" class="chevron">►</span>
                 </button>
               </div>
 
               <div class="analyses-sidebar-content">
-                
+
                 <!-- 1. Resumo e Destaques -->
-                <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('resumo_destaques')" title="Clique para gerar resumo executivo no chat">
+                <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('resumo_destaques')"
+                  title="Clique para gerar resumo executivo no chat">
                   <div class="analysis-item-top">
                     <div class="analysis-item-title"><span>📊</span> Resumo & Destaques</div>
-                    <span class="byok-badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;">Síntese</span>
+                    <span class="byok-badge"
+                      style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;">Síntese</span>
                   </div>
-                  <p class="analysis-item-desc">Panorama geral dos tópicos centrais, conclusões e materiais compartilhados no período.</p>
+                  <p class="analysis-item-desc">Panorama geral dos tópicos centrais, conclusões e materiais
+                    compartilhados no período.</p>
                 </div>
 
                 <!-- 2. Dúvidas Recorrentes -->
-                <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('duvidas_recorrentes')" title="Clique para mapear dúvidas no chat">
+                <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('duvidas_recorrentes')"
+                  title="Clique para mapear dúvidas no chat">
                   <div class="analysis-item-top">
                     <div class="analysis-item-title"><span>💡</span> Dúvidas Recorrentes</div>
-                    <span class="byok-badge" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24;">Gargalos</span>
+                    <span class="byok-badge"
+                      style="background: rgba(251, 191, 36, 0.15); color: #fbbf24;">Gargalos</span>
                   </div>
-                  <p class="analysis-item-desc">Mapeamento temático e categorização das principais dores e perguntas dos participantes.</p>
+                  <p class="analysis-item-desc">Mapeamento temático e categorização das principais dores e perguntas dos
+                    participantes.</p>
                 </div>
 
                 <!-- 3. Sentimento e Clima -->
-                <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('analise_sentimento')" title="Clique para avaliar engajamento e clima no chat">
+                <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('analise_sentimento')"
+                  title="Clique para avaliar engajamento e clima no chat">
                   <div class="analysis-item-top">
                     <div class="analysis-item-title"><span>📈</span> Sentimento & Clima</div>
-                    <span class="byok-badge" style="background: rgba(52, 211, 153, 0.15); color: #34d399;">Engajamento</span>
+                    <span class="byok-badge"
+                      style="background: rgba(52, 211, 153, 0.15); color: #34d399;">Engajamento</span>
                   </div>
-                  <p class="analysis-item-desc">Termômetro emocional da comunidade, relatos de conquistas e pontos de atrito.</p>
+                  <p class="analysis-item-desc">Termômetro emocional da comunidade, relatos de conquistas e pontos de
+                    atrito.</p>
                 </div>
 
                 <!-- 4. Recomendações e Ação -->
-                <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('plano_de_acao')" title="Clique para gerar plano de ação no chat">
+                <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('plano_de_acao')"
+                  title="Clique para gerar plano de ação no chat">
                   <div class="analysis-item-top">
                     <div class="analysis-item-title"><span>🎯</span> Plano de Ação</div>
                     <span class="byok-badge" style="background: rgba(168, 85, 247, 0.15); color: #c084fc;">Ação</span>
                   </div>
-                  <p class="analysis-item-desc">Recomendações práticas de novas lives, FAQs e intervenções imediatas para moderação.</p>
+                  <p class="analysis-item-desc">Recomendações práticas de novas lives, FAQs e intervenções imediatas
+                    para moderação.</p>
                 </div>
 
               </div>
             </div>
 
           </div>
+        </div>
+
+        <!-- =========================================================
+             TELA 6: CONFIGURAÇÕES
+             ========================================================= -->
+        <div id="page-configuracoes" class="page">
+          <div class="page-header">
+            <h1 class="page-title">⚙️ Configurações do Sistema</h1>
+            <p class="page-subtitle">Gerencie suas chaves de IA (BYOK), status da sessão do WhatsApp e restauração total
+              do sistema.</p>
+          </div>
+
+          <!-- CARD 1: GERENCIAR API KEY DO GOOGLE GEMINI (BYOK) -->
+          <div class="card">
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+              <div class="card-title" style="margin-bottom: 0;">
+                <span>🔑</span>
+                <span>Google Gemini & BYOK (Bring Your Own Key)</span>
+              </div>
+              <span id="config-byok-status-badge" class="byok-badge pending">⚠️ Chave não configurada</span>
+            </div>
+
+            <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 16px;">
+              Defina e valide sua chave de API para habilitar análises qualitativas, sumarização de conversas e o chat
+              inteligente.
+              Seguindo a filosofia <b>BYOK</b>, suas credenciais ficam salvas unicamente no armazenamento local do seu
+              navegador (<code>localStorage</code>) e são transmitidas somente para suas inferências locais.
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <!-- Input da API Key -->
+              <div>
+                <label for="config-gemini-api-key"
+                  style="display: block; font-size: 13px; font-weight: 600; color: #93c5fd; margin-bottom: 6px;">
+                  Chave de API do Google Gemini:
+                </label>
+                <div class="input-action-group">
+                  <input type="password" id="config-gemini-api-key" placeholder="Cole sua chave AIzaSy... aqui"
+                    oninput="aoAlterarCredenciaisConfig()">
+                  <div class="inline-buttons">
+                    <button type="button" class="btn-input-action" id="btn-toggle-config-key-visibility"
+                      onclick="alternarVisibilidadeConfigKey()" title="Revelar ou ocultar chave de API">
+                      👁️ Revelar
+                    </button>
+                    <button type="button" class="btn-input-action" onclick="colarConfigApiKeyClipboard()"
+                      title="Colar chave da área de transferência">
+                      📋 Colar
+                    </button>
+                    <button type="button" class="btn-input-action" onclick="limparApiKeyConfig()"
+                      title="Limpar chave salva" style="color: #fca5a5;">
+                      🗑️ Limpar
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Seletor do Modelo Padrão e Ações -->
+              <div class="grid-2" style="align-items: flex-end;">
+                <div>
+                  <label for="config-gemini-model"
+                    style="display: block; font-size: 13px; font-weight: 600; color: #93c5fd; margin-bottom: 6px;">
+                    Modelo do Google Gemini Padrão:
+                  </label>
+                  <select id="config-gemini-model" class="custom-select" onchange="aoAlterarCredenciaisConfig()">
+                    <option value="gemini-2.5-flash" selected>⚡ Gemini 2.5 Flash (Recomendado / Rápido)</option>
+                    <option value="gemini-2.5-pro">🧠 Gemini 2.5 Pro (Raciocínio Analítico Avançado)</option>
+                    <option value="gemini-3.7-flash">🚀 Gemini 3.7 Flash (Alta Performance)</option>
+                    <option value="gemini-3.5-flash-lite">💨 Gemini 3.5 Flash Lite (Ultra Rápido / Leve)</option>
+                  </select>
+                </div>
+
+                <div class="btn-group" style="width: 100%;">
+                  <button type="button" id="btn-testar-chave-config" class="secondary"
+                    onclick="testarChaveGeminiConfig()" style="flex: 1;">
+                    <span>🧪 Testar Conexão</span>
+                  </button>
+                  <button type="button" class="btn" onclick="salvarCredenciaisConfig()" style="flex: 1;">
+                    <span>💾 Salvar Chave</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Links & Recursos Úteis -->
+              <div class="byok-docs-row" style="margin-top: 4px;">
+                <span style="font-size: 12px; color: #94a3b8; font-weight: 600;">Recursos & Chaves Gratuitas:</span>
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer"
+                  class="byok-doc-link" title="Obtenha sua chave gratuita no Google AI Studio">
+                  <span>🔑 Criar API Key no Google AI Studio</span> ↗
+                </a>
+                <a href="https://ai.google.dev/gemini-api/docs/models/gemini" target="_blank" rel="noopener noreferrer"
+                  class="byok-doc-link" title="Consulte documentação oficial dos modelos Gemini">
+                  <span>📖 Documentação de Modelos Gemini</span> ↗
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 2: CONEXÃO E SESSÃO DO WHATSAPP -->
+          <div class="card">
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+              <div class="card-title" style="margin-bottom: 0;">
+                <span>💬</span>
+                <span>Conexão e Sessão do WhatsApp Web</span>
+              </div>
+              <div id="config-session-status-badge" class="status-badge disconnected">
+                <span class="dot"></span>
+                <span id="config-session-status-text">Desconectado</span>
+              </div>
+            </div>
+
+            <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 16px;">
+              A sessão do WhatsApp Web é persistida localmente no diretório <code
+                style="background: rgba(0,0,0,0.3); padding: 2px 4px; border-radius: 4px;">sessao_whatsapp/</code>.
+              Desconectar fechará a autenticação ativa neste dispositivo, exigindo uma nova leitura de QR Code para
+              reconectar.
+            </p>
+
+            <div class="btn-group">
+              <button id="btn-config-desconectar" class="danger" onclick="desconectarWhatsApp()" style="display: none;">
+                <span>🚪 Desconectar do WhatsApp</span>
+              </button>
+              <button id="btn-config-conectar" class="success" onclick="conectarWhatsApp()">
+                <span>📱 Conectar / Abrir WhatsApp Web</span>
+              </button>
+              <button class="secondary" onclick="navegarPara('page-conectar')">
+                <span>🔍 Ver painel de conexão QR Code</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- CARD 3: ZONA DE RISCO / LIMPAR TUDO (COMEÇAR DO ZERO) -->
+          <div class="card" style="border-color: var(--danger-border); background: rgba(127, 29, 29, 0.15);">
+            <div class="card-title" style="color: #fca5a5; margin-bottom: 8px;">
+              <span>⚠️</span>
+              <span>Zona de Risco — Limpeza Completa (Começar do Zero)</span>
+            </div>
+
+            <p style="font-size: 13.5px; color: #fee2e2; line-height: 1.5; margin-bottom: 14px;">
+              Utilize esta opção se desejar apagar todos os dados extraídos, catálogos e a sessão do WhatsApp para
+              começar do zero absoluto.
+            </p>
+
+            <div
+              style="background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+              <div
+                style="font-size: 12.5px; font-weight: 700; color: #fca5a5; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+                O que será excluído permanentemente:
+              </div>
+              <ul
+                style="font-size: 13px; color: #cbd5e1; line-height: 1.6; padding-left: 20px; display: flex; flex-direction: column; gap: 4px;">
+                <li>🗑️ <b>Base de Mensagens:</b> todas as mensagens salvas no SQLite (<code>data/messages.db</code>).
+                </li>
+                <li>📇 <b>Catálogo de Grupos:</b> lista de grupos catalogados (<code>data/groups_catalog.json</code>).
+                </li>
+                <li>⚙️ <b>Estado da Aplicação:</b> configurações de grupo ativo (<code>data/app_state.json</code>).</li>
+                <li>📄 <b>Arquivos Exportados:</b> relatórios e exports em CSV e JSON na pasta <code>data/</code>.</li>
+                <li>🚪 <b>Sessão do WhatsApp:</b> perfil de autenticação e cookies na pasta
+                  <code>sessao_whatsapp/</code>.</li>
+                <li>💬 <b>Histórico do Chat da IA:</b> conversas e insights gerados em memória local do navegador.</li>
+              </ul>
+            </div>
+
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <span style="font-size: 12.5px; color: #fca5a5;">
+                💡 Recomendação: Faça o download dos dados em CSV/JSON na aba "Visualização" antes de limpar se desejar
+                preservá-los.
+              </span>
+              <button type="button" class="btn danger" onclick="abrirModalLimparTudo()">
+                <span>💣 Limpar tudo e começar do zero</span>
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -2679,6 +2925,44 @@
             <span>🗑️ Limpar e mudar de grupo</span>
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============================================================
+       MODAL DIALOG: CONFIRMAR LIMPEZA TOTAL (COMEÇAR DO ZERO)
+       ============================================================= -->
+  <div id="modal-confirmar-limpar-tudo" class="modal-backdrop" onclick="fecharModalLimparTudo(event)">
+    <div class="modal-dialog" style="max-width: 520px;" onclick="event.stopPropagation()">
+      <div class="modal-header" style="border-bottom-color: rgba(239, 68, 68, 0.4);">
+        <div class="modal-title" style="color: #fca5a5;">
+          <span>💣 Confirmar Limpeza Total do Sistema</span>
+        </div>
+        <button class="modal-close" onclick="fecharModalLimparTudo()">✕</button>
+      </div>
+
+      <div class="modal-body" style="gap: 14px;">
+        <div class="card"
+          style="padding: 14px; background: rgba(127, 29, 29, 0.35); border: 1px solid rgba(239, 68, 68, 0.6);">
+          <div style="font-size: 14px; color: #fee2e2; line-height: 1.5; font-weight: 600;">
+            ⚠️ Atenção: Esta ação é irreversível!
+          </div>
+          <div style="font-size: 13px; color: #fca5a5; margin-top: 6px; line-height: 1.5;">
+            Todos os arquivos da pasta <code>data/</code> e da pasta <code>sessao_whatsapp/</code> serão permanentemente
+            excluídos. O histórico de mensagens salvas, catálogos e a sessão do WhatsApp serão apagados.
+          </div>
+        </div>
+
+        <p style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">
+          Deseja realmente continuar e restaurar a aplicação para o estado inicial?
+        </p>
+      </div>
+
+      <div class="modal-footer" style="justify-content: flex-end; gap: 10px;">
+        <button type="button" class="secondary" onclick="fecharModalLimparTudo()">Cancelar</button>
+        <button type="button" id="btn-confirmar-limpeza-total" class="danger" onclick="executarLimpezaTotal()">
+          <span>🗑️ Sim, apagar tudo e recomeçar</span>
+        </button>
       </div>
     </div>
   </div>
@@ -2828,6 +3112,8 @@
       } else if (pageId === 'page-insights') {
         carregarLimitesDatasLLM();
         carregarHistoricoChat();
+      } else if (pageId === 'page-configuracoes') {
+        carregarConfiguracaoLLM();
       }
     }
 
@@ -2917,8 +3203,7 @@
         conectarStatusBadge.className = 'status-badge connected';
         conectarStatusText.innerText = 'Conectado (sessão ativa)';
         btnConectarMain.innerHTML = '<span>🔄 Reabrir / testar WhatsApp</span>';
-        if (btnIrExtracao) btnIrExtracao.style.display = 'inline-flex';
-        btnDesconectarMain.style.display = 'inline-flex';
+        if (btnDesconectarMain) btnDesconectarMain.style.display = 'inline-flex';
         if (btnDesconectarSidebar) btnDesconectarSidebar.style.display = 'inline-flex';
       } else {
         drawerConectar.classList.add('alert-danger');
@@ -2933,8 +3218,28 @@
         conectarStatusText.innerText = 'Desconectado';
         btnConectarMain.innerHTML = '<span>📱 Conectar ao WhatsApp</span>';
         if (btnIrExtracao) btnIrExtracao.style.display = 'none';
-        btnDesconectarMain.style.display = 'none';
+        if (btnDesconectarMain) btnDesconectarMain.style.display = 'none';
         if (btnDesconectarSidebar) btnDesconectarSidebar.style.display = 'none';
+      }
+
+      // Atualização dos controles da página de Configurações
+      const configSessionStatusBadge = document.getElementById('config-session-status-badge');
+      const configSessionStatusText = document.getElementById('config-session-status-text');
+      const btnConfigDesconectar = document.getElementById('btn-config-desconectar');
+      const btnConfigConectar = document.getElementById('btn-config-conectar');
+
+      if (configSessionStatusBadge && configSessionStatusText) {
+        if (hasSession) {
+          configSessionStatusBadge.className = 'status-badge connected';
+          configSessionStatusText.innerText = 'Conectado (sessão ativa)';
+          if (btnConfigDesconectar) btnConfigDesconectar.style.display = 'inline-flex';
+          if (btnConfigConectar) btnConfigConectar.style.display = 'none';
+        } else {
+          configSessionStatusBadge.className = 'status-badge disconnected';
+          configSessionStatusText.innerText = 'Desconectado';
+          if (btnConfigDesconectar) btnConfigDesconectar.style.display = 'none';
+          if (btnConfigConectar) btnConfigConectar.style.display = 'inline-flex';
+        }
       }
 
       // 2. Banner de Grupo Ativo na Memória / Sessão Local
@@ -3605,7 +3910,7 @@
     }
 
     // -------------------------------------------------------------
-    // Gerenciamento de Provedor LLM & Filosofia BYOK (Google Gemini)
+    // Gerenciamento de Provedor LLM & BYOK (Google Gemini)
     // -------------------------------------------------------------
     const STORAGE_KEY_API = 'zap_gemini_api_key';
     const STORAGE_KEY_MODEL = 'zap_gemini_model';
@@ -3637,42 +3942,53 @@
       localStorage.setItem(STORAGE_KEY_COLLAPSED, isCollapsed ? 'true' : 'false');
     }
 
+    function atualizarBadgesBYOK(key, isValidated, model) {
+      const badgeInsights = document.getElementById('byok-status-badge');
+      const badgeConfig = document.getElementById('config-byok-status-badge');
+
+      [badgeInsights, badgeConfig].forEach(b => {
+        if (!b) return;
+        if (key && isValidated) {
+          b.className = 'byok-badge active';
+          b.innerText = `✅ Conectada e validada (${model})`;
+        } else if (key) {
+          b.className = 'byok-badge pending';
+          b.innerText = '⚠️ Chave configurada (não testada)';
+        } else {
+          b.className = 'byok-badge pending';
+          b.innerText = '⚠️ Chave não configurada';
+        }
+      });
+    }
+
     function carregarConfiguracaoLLM() {
       const savedKey = localStorage.getItem(STORAGE_KEY_API) || '';
       const savedModel = localStorage.getItem(STORAGE_KEY_MODEL) || 'gemini-2.5-flash';
       const isValidated = localStorage.getItem(STORAGE_KEY_VALIDATED) === 'true';
       const savedCollapsedPref = localStorage.getItem(STORAGE_KEY_COLLAPSED);
-      
+
       // Se houver preferência salva, usa ela. Se a chave estiver validada, colapsa por padrão
       const isCollapsed = savedCollapsedPref !== null ? (savedCollapsedPref === 'true') : (savedKey && isValidated);
 
       const inputKey = document.getElementById('input-gemini-api-key');
       const selectModel = document.getElementById('select-gemini-model');
-      const badge = document.getElementById('byok-status-badge');
+      const configKey = document.getElementById('config-gemini-api-key');
+      const configModel = document.getElementById('config-gemini-model');
 
       if (inputKey) inputKey.value = savedKey;
       if (selectModel) selectModel.value = savedModel;
+      if (configKey) configKey.value = savedKey;
+      if (configModel) configModel.value = savedModel;
 
-      if (badge) {
-        if (savedKey && isValidated) {
-          badge.className = 'byok-badge active';
-          badge.innerText = '✅ Conectada e validada';
-        } else if (savedKey) {
-          badge.className = 'byok-badge pending';
-          badge.innerText = '⚠️ Chave configurada (não testada)';
-        } else {
-          badge.className = 'byok-badge pending';
-          badge.innerText = '⚠️ Chave não configurada';
-        }
-      }
-
+      atualizarBadgesBYOK(savedKey, isValidated, savedModel);
       toggleByokConfig(isCollapsed);
     }
 
     function aoAlterarCredenciaisLLM() {
       const inputKey = document.getElementById('input-gemini-api-key');
       const selectModel = document.getElementById('select-gemini-model');
-      const badge = document.getElementById('byok-status-badge');
+      const configKey = document.getElementById('config-gemini-api-key');
+      const configModel = document.getElementById('config-gemini-model');
 
       const key = inputKey ? inputKey.value.trim() : '';
       const model = selectModel ? selectModel.value : 'gemini-2.5-flash';
@@ -3681,15 +3997,29 @@
       localStorage.setItem(STORAGE_KEY_MODEL, model);
       localStorage.setItem(STORAGE_KEY_VALIDATED, 'false');
 
-      if (badge) {
-        if (key) {
-          badge.className = 'byok-badge pending';
-          badge.innerText = '⚠️ Chave pendente de teste';
-        } else {
-          badge.className = 'byok-badge pending';
-          badge.innerText = '⚠️ Chave não configurada';
-        }
-      }
+      if (configKey) configKey.value = key;
+      if (configModel) configModel.value = model;
+
+      atualizarBadgesBYOK(key, false, model);
+    }
+
+    function aoAlterarCredenciaisConfig() {
+      const inputKey = document.getElementById('input-gemini-api-key');
+      const selectModel = document.getElementById('select-gemini-model');
+      const configKey = document.getElementById('config-gemini-api-key');
+      const configModel = document.getElementById('config-gemini-model');
+
+      const key = configKey ? configKey.value.trim() : '';
+      const model = configModel ? configModel.value : 'gemini-2.5-flash';
+
+      localStorage.setItem(STORAGE_KEY_API, key);
+      localStorage.setItem(STORAGE_KEY_MODEL, model);
+      localStorage.setItem(STORAGE_KEY_VALIDATED, 'false');
+
+      if (inputKey) inputKey.value = key;
+      if (selectModel) selectModel.value = model;
+
+      atualizarBadgesBYOK(key, false, model);
     }
 
     function alternarVisibilidadeApiKey() {
@@ -3703,6 +4033,22 @@
         btnToggle.title = 'Ocultar chave de API';
       } else {
         inputKey.type = 'password';
+        btnToggle.innerText = '👁️ Revelar';
+        btnToggle.title = 'Revelar chave de API';
+      }
+    }
+
+    function alternarVisibilidadeConfigKey() {
+      const configKey = document.getElementById('config-gemini-api-key');
+      const btnToggle = document.getElementById('btn-toggle-config-key-visibility');
+      if (!configKey || !btnToggle) return;
+
+      if (configKey.type === 'password') {
+        configKey.type = 'text';
+        btnToggle.innerText = '🙈 Ocultar';
+        btnToggle.title = 'Ocultar chave de API';
+      } else {
+        configKey.type = 'password';
         btnToggle.innerText = '👁️ Revelar';
         btnToggle.title = 'Revelar chave de API';
       }
@@ -3730,11 +4076,56 @@
       }
     }
 
+    async function colarConfigApiKeyClipboard() {
+      try {
+        if (!navigator.clipboard || !navigator.clipboard.readText) {
+          showToast("Acesso à área de transferência não suportado ou bloqueado pelo navegador.");
+          return;
+        }
+        const text = await navigator.clipboard.readText();
+        if (!text) {
+          showToast("Área de transferência vazia.");
+          return;
+        }
+        const configKey = document.getElementById('config-gemini-api-key');
+        if (configKey) {
+          configKey.value = text.trim();
+          aoAlterarCredenciaisConfig();
+          showToast("Chave colada com sucesso!");
+        }
+      } catch (err) {
+        showToast("Não foi possível ler da área de transferência.");
+      }
+    }
+
+    function limparApiKeyConfig() {
+      if (!confirm("Deseja realmente remover a chave de API do Google Gemini salva neste navegador?")) {
+        return;
+      }
+      localStorage.removeItem(STORAGE_KEY_API);
+      localStorage.setItem(STORAGE_KEY_VALIDATED, 'false');
+
+      const inputKey = document.getElementById('input-gemini-api-key');
+      const configKey = document.getElementById('config-gemini-api-key');
+      if (inputKey) inputKey.value = '';
+      if (configKey) configKey.value = '';
+
+      const model = localStorage.getItem(STORAGE_KEY_MODEL) || 'gemini-2.5-flash';
+      atualizarBadgesBYOK('', false, model);
+
+      showToast("Chave de API do Gemini removida com sucesso.");
+      appendLog("[BYOK / Gemini] Chave de API desconfigurada pelo usuário.");
+    }
+
+    function salvarCredenciaisConfig() {
+      aoAlterarCredenciaisConfig();
+      showToast("Preferências de API salvas com sucesso no navegador!");
+    }
+
     async function testarChaveGemini() {
       const inputKey = document.getElementById('input-gemini-api-key');
       const selectModel = document.getElementById('select-gemini-model');
       const btnValidar = document.getElementById('btn-validar-chave');
-      const badge = document.getElementById('byok-status-badge');
 
       const apiKey = inputKey ? inputKey.value.trim() : '';
       const model = selectModel ? selectModel.value : 'gemini-2.5-flash';
@@ -3762,10 +4153,7 @@
 
         if (json.success) {
           localStorage.setItem(STORAGE_KEY_VALIDATED, 'true');
-          if (badge) {
-            badge.className = 'byok-badge active';
-            badge.innerText = `✅ Conectada (${model})`;
-          }
+          atualizarBadgesBYOK(apiKey, true, model);
           showToast("API Key do Google Gemini validada com sucesso!");
           appendLog(`[BYOK / Gemini] ${json.message}`);
 
@@ -3775,19 +4163,13 @@
           }, 400);
         } else {
           localStorage.setItem(STORAGE_KEY_VALIDATED, 'false');
-          if (badge) {
-            badge.className = 'byok-badge pending';
-            badge.innerText = '❌ Falha na autenticação';
-          }
+          atualizarBadgesBYOK(apiKey, false, model);
           showToast(json.message || "Falha ao validar API Key.");
           appendLog(`[BYOK / Gemini - Erro] ${json.message}`);
         }
       } catch (err) {
         localStorage.setItem(STORAGE_KEY_VALIDATED, 'false');
-        if (badge) {
-          badge.className = 'byok-badge pending';
-          badge.innerText = '❌ Erro de rede';
-        }
+        atualizarBadgesBYOK(apiKey, false, model);
         showToast("Erro ao conectar com o servidor para validar a chave.");
         appendLog(`[BYOK / Gemini - Erro] Falha na requisição de validação: ${err}`);
       } finally {
@@ -3795,6 +4177,110 @@
           btnValidar.disabled = false;
           btnValidar.innerHTML = '<span>🧪 Testar Chave</span>';
         }
+      }
+    }
+
+    async function testarChaveGeminiConfig() {
+      const configKey = document.getElementById('config-gemini-api-key');
+      const configModel = document.getElementById('config-gemini-model');
+      const btnValidar = document.getElementById('btn-testar-chave-config');
+
+      const apiKey = configKey ? configKey.value.trim() : '';
+      const model = configModel ? configModel.value : 'gemini-2.5-flash';
+
+      if (!apiKey) {
+        showToast("Por favor, digite ou cole sua API Key do Google Gemini antes de testar.");
+        if (configKey) configKey.focus();
+        return;
+      }
+
+      if (btnValidar) {
+        btnValidar.disabled = true;
+        btnValidar.innerHTML = '<span>⏳ Testando conexão...</span>';
+      }
+
+      appendLog(`[BYOK / Gemini] Iniciando teste de autenticação com o modelo '${model}'...`);
+
+      try {
+        const res = await fetch('/api/llm/validar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ api_key: apiKey, model: model })
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          localStorage.setItem(STORAGE_KEY_VALIDATED, 'true');
+          atualizarBadgesBYOK(apiKey, true, model);
+          showToast("API Key do Google Gemini validada com sucesso!");
+          appendLog(`[BYOK / Gemini] ${json.message}`);
+        } else {
+          localStorage.setItem(STORAGE_KEY_VALIDATED, 'false');
+          atualizarBadgesBYOK(apiKey, false, model);
+          showToast(json.message || "Falha ao validar API Key.");
+          appendLog(`[BYOK / Gemini - Erro] ${json.message}`);
+        }
+      } catch (err) {
+        localStorage.setItem(STORAGE_KEY_VALIDATED, 'false');
+        atualizarBadgesBYOK(apiKey, false, model);
+        showToast("Erro ao conectar com o servidor para validar a chave.");
+        appendLog(`[BYOK / Gemini - Erro] Falha na requisição de validação: ${err}`);
+      } finally {
+        if (btnValidar) {
+          btnValidar.disabled = false;
+          btnValidar.innerHTML = '<span>🧪 Testar Conexão</span>';
+        }
+      }
+    }
+
+    // -------------------------------------------------------------
+    // Modal de Confirmação de Limpeza Total (Começar do Zero)
+    // -------------------------------------------------------------
+    function abrirModalLimparTudo() {
+      const modal = document.getElementById('modal-confirmar-limpar-tudo');
+      if (modal) modal.classList.add('active');
+    }
+
+    function fecharModalLimparTudo(event) {
+      if (event && event.target !== document.getElementById('modal-confirmar-limpar-tudo') && !event.target.classList.contains('modal-close') && event.target.tagName !== 'BUTTON') {
+        return;
+      }
+      const modal = document.getElementById('modal-confirmar-limpar-tudo');
+      if (modal) modal.classList.remove('active');
+    }
+
+    async function executarLimpezaTotal() {
+      fecharModalLimparTudo();
+      setBusy(true);
+      appendLog("[Sistema] Iniciando processo de limpeza total e restauração do sistema...");
+
+      try {
+        const res = await fetch('/api/sistema/limpar-tudo', { method: 'POST' });
+        const json = await res.json();
+
+        if (json.success) {
+          // Limpa histórico de chat do Gemini salvo no localStorage
+          try {
+            localStorage.removeItem(getStorageChatKey());
+            chatHistoryGlobal = [];
+            renderizarMensagensChat();
+          } catch (e) { }
+
+          showToast("Aplicação resetada com sucesso! Todos os dados locais foram excluídos.");
+          appendLog(`[Sistema] ${json.message}`);
+
+          await carregarStatus();
+          await carregarMensagens();
+          navegarPara('page-resumo');
+        } else {
+          showToast(json.error || json.message || "Erro ao executar limpeza total.");
+          appendLog(`[Sistema - Erro] ${json.error || json.message}`);
+        }
+      } catch (err) {
+        showToast("Erro de comunicação ao solicitar limpeza total.");
+        appendLog(`[Sistema - Erro] Falha ao comunicar com o servidor: ${err}`);
+      } finally {
+        setBusy(false);
       }
     }
 

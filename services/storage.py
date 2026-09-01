@@ -4,6 +4,7 @@ import csv
 import io
 import json
 import re
+import shutil
 import sqlite3
 import unicodedata
 from datetime import datetime
@@ -11,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from services.paths import (
+    get_data_dir,
     get_db_path,
     get_groups_catalog_path,
     get_state_file_path,
@@ -908,4 +910,37 @@ def fetch_messages_for_llm_range(
     conn.close()
 
     return [dict(r) for r in rows]
+
+
+def wipe_all_data() -> tuple[bool, str]:
+    """
+    Limpa completamente todos os dados persistidos na pasta data/ (banco SQLite messages.db,
+    catálogo de grupos, estado da aplicação, exports CSV e JSON).
+    Em seguida, recria a pasta data/ e inicializa um novo banco de mensagens vazio.
+    """
+    data_dir = get_data_dir()
+    if not data_dir.exists():
+        data_dir.mkdir(parents=True, exist_ok=True)
+        init_db(get_db_path())
+        clear_active_group()
+        return True, "Diretório de dados preparado com sucesso."
+
+    try:
+        # Remove todos os arquivos e subdiretórios da pasta data
+        for item in data_dir.iterdir():
+            try:
+                if item.is_dir():
+                    shutil.rmtree(item, ignore_errors=True)
+                else:
+                    item.unlink(missing_ok=True)
+            except Exception:
+                pass
+
+        # Recria a estrutura e inicializa um banco limpo
+        data_dir.mkdir(parents=True, exist_ok=True)
+        init_db(get_db_path())
+        clear_active_group()
+        return True, "Todos os dados locais foram excluídos e a base foi reinicializada com sucesso."
+    except Exception as e:
+        return False, f"Erro ao limpar dados locais: {e}"
 

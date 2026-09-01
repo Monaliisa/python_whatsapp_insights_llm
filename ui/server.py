@@ -46,6 +46,7 @@ from services.storage import (
     reset_messages_db,
     save_catalog_groups,
     set_active_group,
+    wipe_all_data,
 )
 from services.llm import GeminiService, MODELOS_DISPONIVEIS, ANALISES_PRE_PROGRAMADAS
 from services.paths import get_base_dir, get_data_dir, get_db_path, get_templates_dir
@@ -329,6 +330,39 @@ async def trigger_desconectar_sessao():
     else:
         state.add_log(f"[Sessão - Erro] {msg}")
         return {"success": False, "error": msg}
+
+
+@app.post("/api/sistema/limpar-tudo")
+async def trigger_limpar_tudo():
+    """
+    Limpa completamente os dados da aplicação (pasta data/ e pasta sessao_whatsapp/)
+    para permitir ao usuário recomeçar do zero absoluto.
+    """
+    if state.is_busy:
+        return {"success": False, "message": "Não é possível limpar os dados durante uma coleta ou operação em andamento."}
+
+    # 1. Desconecta e limpa o perfil de sessão do WhatsApp
+    sucesso_sessao, msg_sessao = desconectar_sessao()
+
+    # 2. Limpa todos os arquivos da pasta data/ e recria o banco vazio
+    sucesso_data, msg_data = wipe_all_data()
+
+    if sucesso_data and sucesso_sessao:
+        state.add_log("[Sistema] Limpeza total concluída: mensagens, catálogos e sessão foram redefinidos.")
+        return {
+            "success": True,
+            "message": "Todos os dados locais e a sessão do WhatsApp foram removidos com sucesso. A aplicação foi resetada para o estado inicial.",
+            "status": {
+                "has_session": False,
+                "message_count": 0,
+                "active_group": None,
+                "app_state": get_app_state(),
+            },
+        }
+    else:
+        err = f"Falhas durante a limpeza: {msg_sessao} | {msg_data}"
+        state.add_log(f"[Sistema - Erro] {err}")
+        return {"success": False, "error": err}
 
 
 @app.get("/api/grupos")

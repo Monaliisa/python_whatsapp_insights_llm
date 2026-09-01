@@ -168,7 +168,7 @@ def formatar_contexto_mensagens(mensagens: list[dict], max_chars: int = 400000) 
 class GeminiService:
     """
     Serviço responsável pela conexão e inferência via Google Gemini API.
-    Segue a filosofia BYOK (Bring Your Own Key), onde a chave é fornecida sob demanda.
+    Segue a BYOK (Bring Your Own Key), onde a chave é fornecida sob demanda.
     """
 
     def __init__(self, api_key: str | None = None, model: str = "gemini-2.5-flash"):
