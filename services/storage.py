@@ -4,13 +4,23 @@ import csv
 import io
 import json
 import re
+import shutil
 import sqlite3
+import sys
 import unicodedata
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+# Permite leitura de CSV com campos grandes (ex: anexos base64)
+try:
+    csv.field_size_limit(sys.maxsize)
+except OverflowError:
+    csv.field_size_limit(2147483647)
+
+
 from services.paths import (
+    get_data_dir,
     get_db_path,
     get_groups_catalog_path,
     get_state_file_path,
@@ -398,6 +408,15 @@ def save_messages(messages: list[dict], db_path: str | None = None) -> int:
             grupo_detectado_nome = nome_grp
             grupo_detectado_id = id_grp
 
+        # Suporte defensivo a campos de citação (direto ou aninhado em reply_data)
+        is_reply_val = 1 if m.get("is_reply") else 0
+        reply_author_val = m.get("reply_author")
+        reply_text_val = m.get("reply_text")
+        if not reply_author_val and m.get("reply_data"):
+            reply_author_val = m["reply_data"].get("autor_citado")
+        if not reply_text_val and m.get("reply_data"):
+            reply_text_val = m["reply_data"].get("texto_citado")
+
         cur.execute(
             """
             INSERT INTO messages (
@@ -420,9 +439,9 @@ def save_messages(messages: list[dict], db_path: str | None = None) -> int:
                 remetente = excluded.remetente,
                 texto = excluded.texto,
                 texto_normalizado = excluded.texto_normalizado,
-                is_reply = excluded.is_reply,
-                reply_author = excluded.reply_author,
-                reply_text = excluded.reply_text,
+                is_reply = coalesce(excluded.is_reply, messages.is_reply),
+                reply_author = coalesce(excluded.reply_author, messages.reply_author),
+                reply_text = coalesce(excluded.reply_text, messages.reply_text),
                 has_attachments = excluded.has_attachments,
                 attachments_json = coalesce(excluded.attachments_json, messages.attachments_json),
                 reactions_json = coalesce(excluded.reactions_json, messages.reactions_json),
@@ -443,9 +462,9 @@ def save_messages(messages: list[dict], db_path: str | None = None) -> int:
                 m.get("remetente"),
                 texto,
                 texto_norm,
-                1 if m.get("is_reply") else 0,
-                m.get("reply_author"),
-                m.get("reply_text"),
+                is_reply_val,
+                reply_author_val,
+                reply_text_val,
                 has_attachments,
                 att_json,
                 reactions_json,
@@ -513,7 +532,10 @@ def fetch_recent(
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
 
-    query = "SELECT id, data_hora, remetente, texto, has_attachments, grupo_id, grupo_nome FROM messages"
+    query = (
+        "SELECT id, data_hora, remetente, texto, has_attachments, grupo_id, grupo_nome, "
+        "is_reply, reply_author, reply_text FROM messages"
+    )
     params: list[Any] = []
 
     if grupo_id or grupo_nome:
@@ -541,6 +563,9 @@ def fetch_recent(
             "has_attachments": bool(r[4]),
             "grupo_id": r[5],
             "grupo_nome": r[6],
+            "is_reply": bool(r[7]),
+            "reply_author": r[8],
+            "reply_text": r[9],
         }
         for r in rows
     ]
@@ -719,6 +744,9 @@ def import_from_csv_data(
             grupo_identificado = grupo_nome
 
         has_att = 1 if str(row.get("has_attachments", "")).lower() in ("1", "true", "sim") else 0
+        is_rep = 1 if str(row.get("is_reply", "")).lower() in ("1", "true", "sim") else 0
+        r_author = (row.get("reply_author") or "").strip() or None
+        r_text = (row.get("reply_text") or "").strip() or None
 
         messages.append(
             {
@@ -728,6 +756,9 @@ def import_from_csv_data(
                 "texto": texto,
                 "data_hora": dh,
                 "has_attachments": has_att,
+                "is_reply": is_rep,
+                "reply_author": r_author,
+                "reply_text": r_text,
             }
         )
 
@@ -776,6 +807,9 @@ def import_from_json_data(
             grupo_identificado = grupo_nome
 
         has_att = 1 if item.get("has_attachments") else 0
+        is_rep = 1 if item.get("is_reply") else 0
+        r_author = item.get("reply_author") or (item.get("reply_data") or {}).get("autor_citado")
+        r_text = item.get("reply_text") or (item.get("reply_data") or {}).get("texto_citado")
 
         messages.append(
             {
@@ -785,6 +819,9 @@ def import_from_json_data(
                 "texto": texto,
                 "data_hora": dh,
                 "has_attachments": has_att,
+                "is_reply": is_rep,
+                "reply_author": r_author,
+                "reply_text": r_text,
             }
         )
 
@@ -796,3 +833,149 @@ def import_from_json_data(
     save_messages(messages, db_path=db_path)
 
     return (len(messages), grupo_identificado)
+
+
+def get_message_date_bounds(db_path: str | None = None) -> dict:
+    """
+    Retorna os limites de datas (mínima e máxima) e timestamps das mensagens no banco local.
+    Útil para configurar sliders de range temporal e estatísticas para a LLM.
+    """
+    if db_path is None:
+        db_path = get_db_path()
+
+    if not Path(db_path).exists():
+        return {
+            "has_data": False,
+            "total_messages": 0,
+            "min_ts": 0.0,
+            "max_ts": 0.0,
+            "min_date": "",
+            "max_date": "",
+            "grupo_nome": "",
+        }
+
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT 
+            COUNT(*),
+            MIN(data_hora_ts),
+            MAX(data_hora_ts),
+            (SELECT data_hora FROM messages WHERE data_hora_ts = (SELECT MIN(data_hora_ts) FROM messages WHERE data_hora_ts > 0) LIMIT 1),
+            (SELECT data_hora FROM messages WHERE data_hora_ts = (SELECT MAX(data_hora_ts) FROM messages WHERE data_hora_ts > 0) LIMIT 1),
+            (SELECT grupo_nome FROM messages WHERE grupo_nome IS NOT NULL AND grupo_nome != '' LIMIT 1)
+        FROM messages
+        WHERE data_hora_ts IS NOT NULL AND data_hora_ts > 0
+        """
+    )
+    row = cur.fetchone()
+    conn.close()
+
+    total = row[0] if row and row[0] else 0
+    if total == 0:
+        return {
+            "has_data": False,
+            "total_messages": 0,
+            "min_ts": 0.0,
+            "max_ts": 0.0,
+            "min_date": "",
+            "max_date": "",
+            "grupo_nome": "",
+        }
+
+    min_ts = float(row[1]) if row[1] is not None else 0.0
+    max_ts = float(row[2]) if row[2] is not None else 0.0
+    min_date = str(row[3]) if row[3] else ""
+    max_date = str(row[4]) if row[4] else ""
+    grupo_nome = str(row[5]) if row[5] else ""
+
+    return {
+        "has_data": True,
+        "total_messages": total,
+        "min_ts": min_ts,
+        "max_ts": max_ts,
+        "min_date": min_date,
+        "max_date": max_date,
+        "grupo_nome": grupo_nome,
+    }
+
+
+def fetch_messages_for_llm_range(
+    start_ts: float | None = None,
+    end_ts: float | None = None,
+    limit: int = 1500,
+    db_path: str | None = None,
+) -> list[dict]:
+    """
+    Recupera mensagens dentro de um range temporal [start_ts, end_ts] ordenadas cronologicamente
+    para alimentação do contexto da LLM.
+    """
+    if db_path is None:
+        db_path = get_db_path()
+
+    if not Path(db_path).exists():
+        return []
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    query = """
+        SELECT id, data_hora, data_hora_ts, remetente, texto, is_reply, reply_author, reply_text, has_attachments
+        FROM messages
+        WHERE 1=1
+    """
+    params: list[Any] = []
+
+    if start_ts is not None and start_ts > 0:
+        query += " AND data_hora_ts >= ?"
+        params.append(start_ts)
+
+    if end_ts is not None and end_ts > 0:
+        query += " AND data_hora_ts <= ?"
+        params.append(end_ts)
+
+    query += " ORDER BY data_hora_ts ASC LIMIT ?"
+    params.append(limit)
+
+    cur.execute(query, params)
+    rows = cur.fetchall()
+    conn.close()
+
+    return [dict(r) for r in rows]
+
+
+def wipe_all_data() -> tuple[bool, str]:
+    """
+    Limpa completamente todos os dados persistidos na pasta data/ (banco SQLite messages.db,
+    catálogo de grupos, estado da aplicação, exports CSV e JSON).
+    Em seguida, recria a pasta data/ e inicializa um novo banco de mensagens vazio.
+    """
+    data_dir = get_data_dir()
+    if not data_dir.exists():
+        data_dir.mkdir(parents=True, exist_ok=True)
+        init_db(get_db_path())
+        clear_active_group()
+        return True, "Diretório de dados preparado com sucesso."
+
+    try:
+        # Remove todos os arquivos e subdiretórios da pasta data
+        for item in data_dir.iterdir():
+            try:
+                if item.is_dir():
+                    shutil.rmtree(item, ignore_errors=True)
+                else:
+                    item.unlink(missing_ok=True)
+            except Exception:
+                pass
+
+        # Recria a estrutura e inicializa um banco limpo
+        data_dir.mkdir(parents=True, exist_ok=True)
+        init_db(get_db_path())
+        clear_active_group()
+        return True, "Todos os dados locais foram excluídos e a base foi reinicializada com sucesso."
+    except Exception as e:
+        return False, f"Erro ao limpar dados locais: {e}"
+

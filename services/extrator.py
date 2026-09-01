@@ -15,7 +15,7 @@ from services.storage import (
 )
 
 NOME_DA_COMUNIDADE = ""
-NOME_DO_GRUPO = "Ciência de Dados | Comunidade Alura"
+NOME_DO_GRUPO = ""
 
 
 def normalizar_texto_busca(texto: str) -> str:
@@ -306,10 +306,14 @@ def extrair_dados_balao(balao):
     quoted_author = None
     quoted_text = None
     
-    # Seletores resilientes para o container de citação dentro do balão
+    # Seletores resilientes para o container de citação dentro do balão (com flag case-insensitive)
     reply_selectors = [
-        'div[role="button"][aria-label*="quoted"]',
-        'div[role="button"][aria-label*="citad"]',
+        'div[role="button"][aria-label*="quoted" i]',
+        'div[role="button"][aria-label*="citad" i]',
+        'div[aria-label*="quoted" i]',
+        'div[aria-label*="citad" i]',
+        'div[data-testid="quoted-message"]',
+        'div[data-testid*="quoted" i]',
         'div[data-js-quoted-mention="true"]',
         'div._ak8j'
     ]
@@ -323,12 +327,32 @@ def extrair_dados_balao(balao):
             
     if is_reply and reply_container:
         try:
-            linhas_quote = [l.strip() for l in reply_container.inner_text().split("\n") if l.strip()]
-            if len(linhas_quote) >= 2:
-                quoted_author = linhas_quote[0]
-                quoted_text = "\n".join(linhas_quote[1:])
-            elif len(linhas_quote) == 1:
-                quoted_text = linhas_quote[0]
+            # 1. Tenta extrair via aria-label acessível do container
+            aria_label = reply_container.get_attribute("aria-label") or ""
+            if aria_label:
+                m_aria = re.search(
+                    r"(?:Mensagem citada|Quoted message)(?:\s+de|\s+from)?\s*(.*?):\s*(.*)",
+                    aria_label,
+                    re.IGNORECASE,
+                )
+                if m_aria:
+                    quoted_author = m_aria.group(1).strip()
+                    quoted_text = m_aria.group(2).strip()
+
+            # 2. Se não extraiu via aria-label, decompõe o inner_text do container de citação
+            if not quoted_author or not quoted_text:
+                linhas_quote = [l.strip() for l in reply_container.inner_text().split("\n") if l.strip()]
+                if len(linhas_quote) >= 2:
+                    if not quoted_author:
+                        quoted_author = linhas_quote[0]
+                    if not quoted_text:
+                        quoted_text = "\n".join(linhas_quote[1:])
+                elif len(linhas_quote) == 1:
+                    # Em citações de mídia/sem texto, a única linha é o autor citado
+                    if not quoted_author:
+                        quoted_author = linhas_quote[0]
+                    if not quoted_text:
+                        quoted_text = ""
         except Exception:
             pass
 
@@ -386,6 +410,8 @@ def extrair_dados_balao(balao):
         "remetente": remetente,
         "texto": texto_principal,
         "is_reply": is_reply,
+        "reply_author": quoted_author if is_reply else None,
+        "reply_text": quoted_text if is_reply else None,
         "reply_data": {
             "autor_citado": quoted_author,
             "texto_citado": quoted_text

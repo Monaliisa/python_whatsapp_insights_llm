@@ -34,9 +34,11 @@ from services.storage import (
     export_to_csv,
     export_to_json,
     fetch_message_by_id,
+    fetch_messages_for_llm_range,
     fetch_recent,
     get_app_state,
     get_catalog_group_names,
+    get_message_date_bounds,
     import_from_csv_data,
     import_from_json_data,
     init_db,
@@ -44,7 +46,9 @@ from services.storage import (
     reset_messages_db,
     save_catalog_groups,
     set_active_group,
+    wipe_all_data,
 )
+from services.llm import GeminiService, MODELOS_DISPONIVEIS, ANALISES_PRE_PROGRAMADAS
 from services.paths import get_base_dir, get_data_dir, get_db_path, get_templates_dir
 
 BASE_DIR = get_base_dir()
@@ -141,6 +145,21 @@ class ImportRequest(BaseModel):
     content: str
     format: str = "csv"  # 'csv' ou 'json'
     filename: str | None = None
+
+
+class ValidateLLMKeyRequest(BaseModel):
+    api_key: str
+    model: str = "gemini-2.5-flash"
+
+
+class ChatLLMRequest(BaseModel):
+    api_key: str
+    model: str = "gemini-2.5-flash"
+    prompt: str = ""
+    start_ts: float | None = None
+    end_ts: float | None = None
+    tipo_analise: str | None = None
+    historico: list[dict] | None = None
 
 
 @app.on_event("startup")
@@ -311,6 +330,39 @@ async def trigger_desconectar_sessao():
     else:
         state.add_log(f"[Sessão - Erro] {msg}")
         return {"success": False, "error": msg}
+
+
+@app.post("/api/sistema/limpar-tudo")
+async def trigger_limpar_tudo():
+    """
+    Limpa completamente os dados da aplicação (pasta data/ e pasta sessao_whatsapp/)
+    para permitir ao usuário recomeçar do zero absoluto.
+    """
+    if state.is_busy:
+        return {"success": False, "message": "Não é possível limpar os dados durante uma coleta ou operação em andamento."}
+
+    # 1. Desconecta e limpa o perfil de sessão do WhatsApp
+    sucesso_sessao, msg_sessao = desconectar_sessao()
+
+    # 2. Limpa todos os arquivos da pasta data/ e recria o banco vazio
+    sucesso_data, msg_data = wipe_all_data()
+
+    if sucesso_data and sucesso_sessao:
+        state.add_log("[Sistema] Limpeza total concluída: mensagens, catálogos e sessão foram redefinidos.")
+        return {
+            "success": True,
+            "message": "Todos os dados locais e a sessão do WhatsApp foram removidos com sucesso. A aplicação foi resetada para o estado inicial.",
+            "status": {
+                "has_session": False,
+                "message_count": 0,
+                "active_group": None,
+                "app_state": get_app_state(),
+            },
+        }
+    else:
+        err = f"Falhas durante a limpeza: {msg_sessao} | {msg_data}"
+        state.add_log(f"[Sistema - Erro] {err}")
+        return {"success": False, "error": err}
 
 
 @app.get("/api/grupos")
@@ -579,6 +631,121 @@ async def abrir_banco():
     except Exception as exc:
         state.add_log(f"Erro ao abrir banco: {exc}")
         return {"success": False, "error": str(exc)}
+
+
+@app.get("/api/llm/modelos")
+async def get_llm_modelos():
+    """Retorna os modelos de LLM suportados (Google Gemini)."""
+    return {
+        "success": True,
+        "provedor": "Google Gemini",
+        "filosofia": "BYOK (Bring Your Own Key)",
+        "modelos": GeminiService.listar_modelos(),
+    }
+
+
+@app.post("/api/llm/validar")
+async def validar_chave_llm(req: ValidateLLMKeyRequest):
+    """Valida a API Key informada pelo usuário executando um teste contra o Google Gemini."""
+    api_key = req.api_key.strip()
+    if not api_key:
+        return {"success": False, "message": "Nenhuma API Key informada. Digite sua chave do Google Gemini."}
+
+    modelo = req.model.strip() or "gemini-2.5-flash"
+    service = GeminiService(api_key=api_key, model=modelo)
+
+    state.add_log(f"[BYOK / Gemini] Validando API Key informada para o modelo '{modelo}'...")
+    valida, msg = service.validar_api_key(api_key=api_key, model=modelo)
+
+    if valida:
+        state.add_log(f"[BYOK / Gemini] ✅ {msg}")
+        return {"success": True, "message": msg, "model": modelo}
+    else:
+        state.add_log(f"[BYOK / Gemini] ⚠️ {msg}")
+        return {"success": False, "message": msg, "model": modelo}
+
+
+@app.get("/api/llm/range-datas")
+async def get_llm_date_range():
+    """Retorna os limites cronológicos das mensagens do banco local para alimentar o slider duplo."""
+    db_path = get_db_path()
+    bounds = get_message_date_bounds(db_path)
+    active_grp = detect_active_group_from_db(db_path)
+    if active_grp:
+        bounds["grupo_nome"] = active_grp.get("nome") or active_grp.get("id") or bounds.get("grupo_nome")
+    return {"success": True, "data": bounds}
+
+
+@app.get("/api/llm/analises-uteis")
+async def get_llm_analises_uteis():
+    """Retorna a lista estruturada de análises úteis pré-programadas."""
+    return {
+        "success": True,
+        "data": GeminiService.listar_analises_uteis(),
+    }
+
+
+@app.post("/api/llm/chat")
+async def processar_chat_llm(req: ChatLLMRequest):
+    """
+    Executa a inferência de inteligência artificial via Google Gemini unindo a solicitação
+    do usuário às mensagens do banco SQLite dentro do intervalo de tempo selecionado.
+    """
+    api_key = req.api_key.strip()
+    if not api_key:
+        return {"success": False, "message": "API Key do Google Gemini não fornecida. Configure sua chave no card superior."}
+
+    modelo = req.model.strip() or "gemini-2.5-flash"
+    db_path = get_db_path()
+
+    # Busca o grupo ativo
+    active_grp = detect_active_group_from_db(db_path)
+    grupo_nome = (active_grp.get("nome") or active_grp.get("id")) if active_grp else "Comunidade WhatsApp"
+
+    # Recupera as mensagens do período no SQLite
+    mensagens = fetch_messages_for_llm_range(
+        start_ts=req.start_ts,
+        end_ts=req.end_ts,
+        limit=1500,
+        db_path=db_path,
+    )
+
+    if not mensagens:
+        return {
+            "success": False,
+            "message": "Nenhuma mensagem encontrada no período selecionado. Ajuste os limites do slider de datas para incluir mensagens.",
+        }
+
+    desc_analise = f" ({req.tipo_analise})" if req.tipo_analise else ""
+    state.add_log(f"[Gemini / Chat] Processando consulta{desc_analise} com {len(mensagens)} mensagens do grupo '{grupo_nome}' via modelo '{modelo}'...")
+
+    service = GeminiService(api_key=api_key, model=modelo)
+    sucesso, resposta = service.gerar_insights_chat(
+        prompt_usuario=req.prompt,
+        mensagens=mensagens,
+        historico=req.historico,
+        tipo_analise=req.tipo_analise,
+        grupo_nome=grupo_nome,
+    )
+
+    if sucesso:
+        state.add_log(f"[Gemini / Chat] ✅ Resposta gerada com sucesso ({len(resposta)} caracteres).")
+        return {
+            "success": True,
+            "response": resposta,
+            "total_messages": len(mensagens),
+            "grupo": grupo_nome,
+            "model": modelo,
+        }
+    else:
+        state.add_log(f"[Gemini / Chat] ⚠️ Falha na geração: {resposta}")
+        return {
+            "success": False,
+            "message": resposta,
+            "total_messages": len(mensagens),
+            "grupo": grupo_nome,
+            "model": modelo,
+        }
 
 
 def start_server(host: str = "127.0.0.1", port: int = 8000):
