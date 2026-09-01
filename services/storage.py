@@ -796,3 +796,116 @@ def import_from_json_data(
     save_messages(messages, db_path=db_path)
 
     return (len(messages), grupo_identificado)
+
+
+def get_message_date_bounds(db_path: str | None = None) -> dict:
+    """
+    Retorna os limites de datas (mínima e máxima) e timestamps das mensagens no banco local.
+    Útil para configurar sliders de range temporal e estatísticas para a LLM.
+    """
+    if db_path is None:
+        db_path = get_db_path()
+
+    if not Path(db_path).exists():
+        return {
+            "has_data": False,
+            "total_messages": 0,
+            "min_ts": 0.0,
+            "max_ts": 0.0,
+            "min_date": "",
+            "max_date": "",
+            "grupo_nome": "",
+        }
+
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT 
+            COUNT(*),
+            MIN(data_hora_ts),
+            MAX(data_hora_ts),
+            (SELECT data_hora FROM messages WHERE data_hora_ts = (SELECT MIN(data_hora_ts) FROM messages WHERE data_hora_ts > 0) LIMIT 1),
+            (SELECT data_hora FROM messages WHERE data_hora_ts = (SELECT MAX(data_hora_ts) FROM messages WHERE data_hora_ts > 0) LIMIT 1),
+            (SELECT grupo_nome FROM messages WHERE grupo_nome IS NOT NULL AND grupo_nome != '' LIMIT 1)
+        FROM messages
+        WHERE data_hora_ts IS NOT NULL AND data_hora_ts > 0
+        """
+    )
+    row = cur.fetchone()
+    conn.close()
+
+    total = row[0] if row and row[0] else 0
+    if total == 0:
+        return {
+            "has_data": False,
+            "total_messages": 0,
+            "min_ts": 0.0,
+            "max_ts": 0.0,
+            "min_date": "",
+            "max_date": "",
+            "grupo_nome": "",
+        }
+
+    min_ts = float(row[1]) if row[1] is not None else 0.0
+    max_ts = float(row[2]) if row[2] is not None else 0.0
+    min_date = str(row[3]) if row[3] else ""
+    max_date = str(row[4]) if row[4] else ""
+    grupo_nome = str(row[5]) if row[5] else ""
+
+    return {
+        "has_data": True,
+        "total_messages": total,
+        "min_ts": min_ts,
+        "max_ts": max_ts,
+        "min_date": min_date,
+        "max_date": max_date,
+        "grupo_nome": grupo_nome,
+    }
+
+
+def fetch_messages_for_llm_range(
+    start_ts: float | None = None,
+    end_ts: float | None = None,
+    limit: int = 1500,
+    db_path: str | None = None,
+) -> list[dict]:
+    """
+    Recupera mensagens dentro de um range temporal [start_ts, end_ts] ordenadas cronologicamente
+    para alimentação do contexto da LLM.
+    """
+    if db_path is None:
+        db_path = get_db_path()
+
+    if not Path(db_path).exists():
+        return []
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    query = """
+        SELECT id, data_hora, data_hora_ts, remetente, texto, is_reply, reply_author, reply_text, has_attachments
+        FROM messages
+        WHERE 1=1
+    """
+    params: list[Any] = []
+
+    if start_ts is not None and start_ts > 0:
+        query += " AND data_hora_ts >= ?"
+        params.append(start_ts)
+
+    if end_ts is not None and end_ts > 0:
+        query += " AND data_hora_ts <= ?"
+        params.append(end_ts)
+
+    query += " ORDER BY data_hora_ts ASC LIMIT ?"
+    params.append(limit)
+
+    cur.execute(query, params)
+    rows = cur.fetchall()
+    conn.close()
+
+    return [dict(r) for r in rows]
+

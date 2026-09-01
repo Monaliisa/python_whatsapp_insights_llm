@@ -1409,6 +1409,397 @@
       line-height: 1.5;
       margin-top: 12px;
     }
+
+    /* -------------------------------------------------------------
+       ESTILOS DO DUAL RANGE SLIDER & TIMELINE
+       ------------------------------------------------------------- */
+    .range-filter-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color-light);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .range-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .range-slider-wrapper {
+      position: relative;
+      width: 100%;
+      height: 36px;
+      display: flex;
+      align-items: center;
+    }
+
+    .range-slider-track {
+      position: absolute;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #1e293b;
+      border: 1px solid #334155;
+    }
+
+    .range-slider-highlight {
+      position: absolute;
+      height: 6px;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #3b82f6, #a855f7);
+      box-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+    }
+
+    .range-slider-input {
+      position: absolute;
+      width: 100%;
+      background: none;
+      pointer-events: none;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      margin: 0;
+      border: none;
+      outline: none;
+      padding: 0;
+    }
+
+    .range-slider-input::-webkit-slider-thumb {
+      pointer-events: auto;
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 3px solid #8b5cf6;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 6px rgba(139, 92, 246, 0.6);
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .range-slider-input::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      background: #f8fafc;
+      border-color: #a855f7;
+    }
+
+    .range-slider-input::-moz-range-thumb {
+      pointer-events: auto;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 3px solid #8b5cf6;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+    }
+
+    .range-footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 12.5px;
+    }
+
+    .range-dates-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #cbd5e1;
+      flex-wrap: wrap;
+    }
+
+    .range-date-pill {
+      background: #0b1120;
+      border: 1px solid #334155;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-family: monospace;
+      color: #38bdf8;
+      font-size: 12px;
+    }
+
+    .range-presets-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    /* -------------------------------------------------------------
+       ESTILOS DO WORKSPACE DE CHAT & ANÁLISES
+       ------------------------------------------------------------- */
+    .insights-workspace {
+      display: grid;
+      grid-template-columns: 1fr 330px;
+      gap: 16px;
+      flex: 1;
+      min-height: 480px;
+      height: calc(100vh - 380px);
+      transition: grid-template-columns 0.25s ease;
+    }
+
+    .insights-workspace.sidebar-collapsed {
+      grid-template-columns: 1fr 48px;
+    }
+
+    @media (max-width: 980px) {
+      .insights-workspace {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      .insights-workspace.sidebar-collapsed {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Área do Chat */
+    .chat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color-light);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      height: 100%;
+    }
+
+    .chat-header {
+      padding: 12px 18px;
+      background: #0f172a;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chat-messages-container {
+      flex: 1;
+      padding: 18px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: #090e1a;
+    }
+
+    .chat-bubble {
+      display: flex;
+      gap: 12px;
+      max-width: 90%;
+    }
+
+    .chat-bubble.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    .chat-bubble.assistant {
+      align-self: flex-start;
+      max-width: 95%;
+    }
+
+    .chat-avatar {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .chat-bubble.user .chat-avatar {
+      background: #2563eb;
+      color: #ffffff;
+    }
+
+    .chat-bubble.assistant .chat-avatar {
+      background: linear-gradient(135deg, #7c3aed, #2563eb);
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(124, 58, 237, 0.4);
+    }
+
+    .chat-bubble-content {
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 13.5px;
+      line-height: 1.6;
+    }
+
+    .chat-bubble.user .chat-bubble-content {
+      background: #1e3a8a;
+      color: #f8fafc;
+      border-bottom-right-radius: 2px;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .chat-bubble.assistant .chat-bubble-content {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-bottom-left-radius: 2px;
+      border: 1px solid var(--border-color-light);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Markdown styling inside chat */
+    .chat-bubble-content h2, .chat-bubble-content h3, .chat-bubble-content h4 {
+      color: #93c5fd;
+      margin: 12px 0 6px 0;
+      font-size: 15px;
+    }
+    .chat-bubble-content h2:first-child, .chat-bubble-content h3:first-child {
+      margin-top: 0;
+    }
+    .chat-bubble-content p {
+      margin-bottom: 8px;
+    }
+    .chat-bubble-content ul, .chat-bubble-content ol {
+      margin: 8px 0 8px 20px;
+    }
+    .chat-bubble-content li {
+      margin-bottom: 4px;
+    }
+    .chat-bubble-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 12.5px;
+    }
+    .chat-bubble-content th, .chat-bubble-content td {
+      border: 1px solid #334155;
+      padding: 6px 10px;
+      text-align: left;
+    }
+    .chat-bubble-content th {
+      background: #1e293b;
+      color: #93c5fd;
+    }
+    .chat-bubble-content blockquote {
+      border-left: 3px solid #8b5cf6;
+      padding-left: 10px;
+      margin: 8px 0;
+      color: #cbd5e1;
+      font-style: italic;
+      background: rgba(139, 92, 246, 0.08);
+      padding: 6px 10px;
+      border-radius: 0 6px 6px 0;
+    }
+    .chat-bubble-content code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #38bdf8;
+    }
+
+    /* Chat Input Bar */
+    .chat-input-bar {
+      padding: 12px 16px;
+      background: #0f172a;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .chat-textarea {
+      flex: 1;
+      resize: none;
+      min-height: 44px;
+      max-height: 140px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      line-height: 1.4;
+      background: #0b1120;
+    }
+
+    /* Coluna Lateral de Análises Úteis */
+    .analyses-sidebar {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color-light);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: all 0.25s ease;
+      height: 100%;
+    }
+
+    .analyses-sidebar-header {
+      padding: 12px 14px;
+      background: #0f172a;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+
+    .analyses-sidebar-content {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .insights-workspace.sidebar-collapsed .analyses-sidebar-content,
+    .insights-workspace.sidebar-collapsed .analyses-sidebar-title-text {
+      display: none;
+    }
+
+    .analysis-item-card {
+      background: #0b1120;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .analysis-item-card:hover {
+      background: #1e293b;
+      border-color: #3b82f6;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
+
+    .analysis-item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .analysis-item-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #93c5fd;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .analysis-item-desc {
+      font-size: 11.5px;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
   </style>
 </head>
 
@@ -1898,30 +2289,28 @@
         </div>
 
         <!-- =========================================================
-             TELA 5: GERAR INSIGHTS (MOCKUP IA / LLM)
+             TELA 5: GERAR INSIGHTS COM GOOGLE GEMINI (CHAT & ANÁLISES)
              ========================================================= -->
         <div id="page-insights" class="page">
           <div class="page-header">
-            <h1 class="page-title">🧠 Geração de insights com IA (LLM)</h1>
-            <p class="page-subtitle">Transforme as conversas coletadas em relatórios analíticos, tópicos e tendências
-              com o Google Gemini.</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <div>
+                <h1 class="page-title">🧠 Chat & Geração de Insights com IA</h1>
+                <p class="page-subtitle">Converse diretamente com o histórico de mensagens do grupo e gere análises profundas com o Google Gemini.</p>
+              </div>
+            </div>
           </div>
 
-          <!-- =========================================================
-               CARD DE CONFIGURAÇÃO DO GOOGLE GEMINI (FILOSOFIA BYOK)
-               ========================================================= -->
+          <!-- 1. CARD DE CONFIGURAÇÃO DO GOOGLE GEMINI (FILOSOFIA BYOK) -->
           <div id="byok-card" class="byok-config-card">
-            <div class="byok-header-row" onclick="toggleByokConfig()"
-              title="Clique para recolher ou expandir a configuração da API">
+            <div class="byok-header-row" onclick="toggleByokConfig()" title="Clique para recolher ou expandir a configuração da API">
               <div class="byok-title">
                 <span style="font-size: 20px;">🔑</span>
                 <span>Configuração da API</span>
               </div>
               <div style="display: flex; align-items: center; gap: 10px;">
                 <span id="byok-status-badge" class="byok-badge pending">⚠️ Chave não testada</span>
-                <button type="button" id="btn-toggle-byok-card" class="byok-collapse-btn"
-                  title="Recolher ou expandir configuração da API"
-                  onclick="event.stopPropagation(); toggleByokConfig();">
+                <button type="button" id="btn-toggle-byok-card" class="byok-collapse-btn" title="Recolher ou expandir configuração da API" onclick="event.stopPropagation(); toggleByokConfig();">
                   <span class="chevron">▲</span>
                 </button>
               </div>
@@ -1930,8 +2319,7 @@
             <div id="byok-card-content" class="byok-card-content">
               <p style="color: #cbd5e1; font-size: 13.5px; line-height: 1.6;">
                 O módulo de inteligência opera sob o modelo <b>BYOK (Bring Your Own Key)</b>. Sua chave pessoal do
-                <b>Google AI Studio</b> é utilizada diretamente para inferência, garantindo soberania dos dados,
-                controle
+                <b>Google AI Studio</b> é utilizada diretamente para inferência, garantindo soberania dos dados, controle
                 total sobre o consumo de tokens e privacidade absoluta.
               </p>
 
@@ -1940,20 +2328,16 @@
 
                 <!-- Campo 1: API Key com botão de revelar / ocultar e colar -->
                 <div>
-                  <label for="input-gemini-api-key"
-                    style="display: block; font-size: 12.5px; font-weight: 600; color: #d8b4fe; margin-bottom: 6px;">
+                  <label for="input-gemini-api-key" style="display: block; font-size: 12.5px; font-weight: 600; color: #d8b4fe; margin-bottom: 6px;">
                     Chave de API (Gemini API Key):
                   </label>
                   <div class="input-action-group">
-                    <input type="password" id="input-gemini-api-key" placeholder="Cole sua chave AIzaSy... aqui"
-                      oninput="aoAlterarCredenciaisLLM()">
+                    <input type="password" id="input-gemini-api-key" placeholder="Cole sua chave AIzaSy... aqui" oninput="aoAlterarCredenciaisLLM()">
                     <div class="inline-buttons">
-                      <button type="button" class="btn-input-action" id="btn-toggle-key-visibility"
-                        onclick="alternarVisibilidadeApiKey()" title="Revelar ou ocultar chave de API">
+                      <button type="button" class="btn-input-action" id="btn-toggle-key-visibility" onclick="alternarVisibilidadeApiKey()" title="Revelar ou ocultar chave de API">
                         👁️ Revelar
                       </button>
-                      <button type="button" class="btn-input-action" onclick="colarApiKeyClipboard()"
-                        title="Colar chave da área de transferência">
+                      <button type="button" class="btn-input-action" onclick="colarApiKeyClipboard()" title="Colar chave da área de transferência">
                         📋 Colar
                       </button>
                     </div>
@@ -1962,8 +2346,7 @@
 
                 <!-- Campo 2: Dropdown de Seleção de Modelo -->
                 <div>
-                  <label for="select-gemini-model"
-                    style="display: block; font-size: 12.5px; font-weight: 600; color: #d8b4fe; margin-bottom: 6px;">
+                  <label for="select-gemini-model" style="display: block; font-size: 12.5px; font-weight: 600; color: #d8b4fe; margin-bottom: 6px;">
                     Modelo do Gemini:
                   </label>
                   <div class="select-wrapper">
@@ -1978,8 +2361,7 @@
 
                 <!-- Botão 3: Testar / Validar Conexão -->
                 <div>
-                  <button type="button" id="btn-validar-chave" class="secondary" onclick="testarChaveGemini()"
-                    style="width: 100%; white-space: nowrap;">
+                  <button type="button" id="btn-validar-chave" class="secondary" onclick="testarChaveGemini()" style="width: 100%; white-space: nowrap;">
                     <span>🧪 Testar Chave</span>
                   </button>
                 </div>
@@ -1988,85 +2370,154 @@
 
               <!-- Banner de Informação e Segurança -->
               <div class="byok-info-banner">
-                🔒 <b>Segurança e Privacidade:</b> Sua chave de API é mantida com segurança no armazenamento local do
-                seu
-                navegador (<code>localStorage</code>) e é utilizada exclusivamente pelo servidor local durante as
-                requisições de geração de relatórios.
+                🔒 <b>Segurança e Privacidade:</b> Sua chave de API é mantida com segurança no armazenamento local do seu navegador (<code>localStorage</code>) e é utilizada exclusivamente pelo servidor local durante as requisições de geração de relatórios.
               </div>
 
               <!-- Links de Documentação e Recursos -->
               <div class="byok-docs-row">
                 <span style="font-size: 12px; color: #94a3b8; font-weight: 600;">Documentações & Recursos:</span>
-                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer"
-                  class="byok-doc-link" title="Gere sua chave gratuita ou gerencie cotas no Google AI Studio">
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="byok-doc-link" title="Gere sua chave gratuita ou gerencie cotas no Google AI Studio">
                   <span>🔑 Obter API Key no Google AI Studio</span> ↗
                 </a>
-                <a href="https://ai.google.dev/gemini-api/docs/models/gemini" target="_blank" rel="noopener noreferrer"
-                  class="byok-doc-link" title="Veja os limites de contexto, benchmarks e custos dos modelos Gemini">
+                <a href="https://ai.google.dev/gemini-api/docs/models/gemini" target="_blank" rel="noopener noreferrer" class="byok-doc-link" title="Veja os limites de contexto, benchmarks e custos dos modelos Gemini">
                   <span>📖 Comparativo de Modelos Gemini</span> ↗
                 </a>
-                <a href="https://pt.wikipedia.org/wiki/BYOK" target="_blank" rel="noopener noreferrer"
-                  class="byok-doc-link" title="Entenda o modelo de Bring Your Own Key em aplicações modernas">
-                  <span>💡 O que é BYOK?</span> ↗
+                <a href="https://pt.wikipedia.org/wiki/BYOK" target="_blank" rel="noopener noreferrer" class="byok-doc-link" title="Entenda o modelo de Bring Your Own Key em aplicações modernas">
+                  <span>💡 O que é a Filosofia BYOK?</span> ↗
                 </a>
               </div>
 
             </div>
           </div>
 
-          <!-- Destaque de Preparação dos Módulos Analíticos -->
-          <div class="card"
-            style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.12), rgba(37, 99, 235, 0.12)); border-color: rgba(168, 85, 247, 0.25);">
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
-              <span style="font-size: 20px;">🚀</span>
-              <h2 style="font-size: 15px; color: #c084fc;">Módulos analíticos prontos para orquestração</h2>
+          <!-- 2. CARD DO DUAL RANGE SLIDER: RECORTE TEMPORAL DAS MENSAGENS -->
+          <div class="range-filter-card">
+            <div class="range-header-row">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 16px;">📅</span>
+                <span style="font-weight: 700; font-size: 13.5px; color: #93c5fd;">Janela Temporal das Mensagens para Análise</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span id="range-selected-count-badge" class="byok-badge active">Carregando período...</span>
+              </div>
             </div>
-            <p style="color: #cbd5e1; font-size: 13px; line-height: 1.6;">
-              Com sua chave de API configurada acima, os relatórios abaixo serão gerados sob demanda processando as
-              mensagens do grupo ativo armazenadas no banco local SQLite.
-            </p>
+
+            <!-- Dual Range Slider Interativo -->
+            <div class="range-slider-wrapper">
+              <div class="range-slider-track"></div>
+              <div id="range-slider-highlight" class="range-slider-highlight" style="left: 0%; width: 100%;"></div>
+              <input type="range" id="slider-range-min" class="range-slider-input" min="0" max="1000" value="0" oninput="aoMoverSliderRange('min')">
+              <input type="range" id="slider-range-max" class="range-slider-input" min="0" max="1000" value="1000" oninput="aoMoverSliderRange('max')">
+            </div>
+
+            <!-- Indicadores de Datas e Atalhos de Período -->
+            <div class="range-footer-row">
+              <div class="range-dates-info">
+                <span>Início: <b id="display-date-min" class="range-date-pill">-</b></span>
+                <span>Fim: <b id="display-date-max" class="range-date-pill">-</b></span>
+              </div>
+              <div class="range-presets-group">
+                <button type="button" class="btn-input-action" onclick="aplicarPresetRange('24h')" title="Filtrar últimas 24 horas">24h</button>
+                <button type="button" class="btn-input-action" onclick="aplicarPresetRange('7d')" title="Filtrar últimos 7 dias">7 Dias</button>
+                <button type="button" class="btn-input-action" onclick="aplicarPresetRange('15d')" title="Filtrar últimos 15 dias">15 Dias</button>
+                <button type="button" class="btn-input-action" onclick="aplicarPresetRange('30d')" title="Filtrar últimos 30 dias">30 Dias</button>
+                <button type="button" class="btn-input-action" onclick="aplicarPresetRange('all')" title="Filtrar todo o histórico">Todo o Histórico</button>
+              </div>
+            </div>
           </div>
 
-          <div class="grid-2">
-            <div class="card">
-              <div class="card-title">📊 Resumo executivo e destaques</div>
-              <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
-                Síntese automática dos assuntos mais debatidos no período, identificando os tópicos mais relevantes
-                levantados pelos participantes.
-              </p>
-              <button class="secondary btn-sm" disabled style="opacity: 0.5;">Em breve</button>
+          <!-- 3. WORKSPACE: CHAT CONVERSACIONAL (ESQUERDA) + ANÁLISES ÚTEIS (DIREITA) -->
+          <div id="insights-workspace" class="insights-workspace">
+            
+            <!-- ÁREA DO CHAT -->
+            <div class="chat-card">
+              <div class="chat-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 16px;">💬</span>
+                  <span style="font-weight: 700; font-size: 13.5px; color: #f1f5f9;">Chat com a Base do Grupo</span>
+                  <span id="chat-group-tag" style="font-size: 11px; color: #38bdf8; background: rgba(56, 189, 248, 0.12); padding: 2px 6px; border-radius: 4px;">Grupo Ativo</span>
+                </div>
+                <button type="button" class="btn-input-action" onclick="limparHistoricoChat()" title="Limpar conversa atual e começar de novo">
+                  <span>🗑️ Limpar conversa</span>
+                </button>
+              </div>
+
+              <!-- Histórico de Mensagens do Chat -->
+              <div id="chat-messages-container" class="chat-messages-container">
+                <!-- Mensagem de boas-vindas inicial -->
+                <div class="chat-bubble assistant">
+                  <div class="chat-avatar">✨</div>
+                  <div class="chat-bubble-content">
+                    <p><b>Olá! Eu sou o ZapInsights AI.</b></p>
+                    <p>Estou conectado às mensagens do grupo no período selecionado no slider acima. Você pode me fazer qualquer pergunta sobre as conversas (ex.: <i>"Quais tópicos geraram mais debate?"</i>, <i>"Quais alunos mais ajudaram?"</i>) ou clicar em uma das <b>Análises Rápidas</b> ao lado para gerar relatórios aprofundados.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Barra de Envio de Mensagem -->
+              <div class="chat-input-bar">
+                <textarea id="chat-input-textarea" class="chat-textarea" placeholder="Pergunte qualquer coisa sobre as conversas... (Enter para enviar, Shift+Enter para quebra de linha)" rows="1" oninput="autoResizeChatTextarea(this)" onkeydown="aoDigitarNoChat(event)"></textarea>
+                <button type="button" id="btn-chat-send" class="btn" onclick="enviarMensagemChat()" title="Enviar pergunta para o Google Gemini">
+                  <span>Enviar 🚀</span>
+                </button>
+              </div>
             </div>
 
-            <div class="card">
-              <div class="card-title">💡 Mapeamento de dúvidas recorrentes</div>
-              <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
-                Identificação e agrupamento temático das principais dificuldades técnicas e pedagógicas trazidas pelos
-                alunos nos grupos.
-              </p>
-              <button class="secondary btn-sm" disabled style="opacity: 0.5;">Em breve</button>
+            <!-- COLUNA DE ANÁLISES ÚTEIS (COLAPSÁVEL) -->
+            <div id="analyses-sidebar" class="analyses-sidebar">
+              <div class="analyses-sidebar-header">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="font-size: 14px;">⚡</span>
+                  <span class="analyses-sidebar-title-text" style="font-weight: 700; font-size: 13px; color: #c084fc;">Análises Prontas</span>
+                </div>
+                <button type="button" id="btn-toggle-analyses-col" class="byok-collapse-btn" onclick="toggleColunaAnalises()" title="Recolher ou expandir coluna de análises">
+                  <span id="analyses-col-chevron" class="chevron">►</span>
+                </button>
+              </div>
+
+              <div class="analyses-sidebar-content">
+                
+                <!-- 1. Resumo e Destaques -->
+                <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('resumo_destaques')" title="Clique para gerar resumo executivo no chat">
+                  <div class="analysis-item-top">
+                    <div class="analysis-item-title"><span>📊</span> Resumo & Destaques</div>
+                    <span class="byok-badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;">Síntese</span>
+                  </div>
+                  <p class="analysis-item-desc">Panorama geral dos tópicos centrais, conclusões e materiais compartilhados no período.</p>
+                </div>
+
+                <!-- 2. Dúvidas Recorrentes -->
+                <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('duvidas_recorrentes')" title="Clique para mapear dúvidas no chat">
+                  <div class="analysis-item-top">
+                    <div class="analysis-item-title"><span>💡</span> Dúvidas Recorrentes</div>
+                    <span class="byok-badge" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24;">Gargalos</span>
+                  </div>
+                  <p class="analysis-item-desc">Mapeamento temático e categorização das principais dores e perguntas dos participantes.</p>
+                </div>
+
+                <!-- 3. Sentimento e Clima -->
+                <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('analise_sentimento')" title="Clique para avaliar engajamento e clima no chat">
+                  <div class="analysis-item-top">
+                    <div class="analysis-item-title"><span>📈</span> Sentimento & Clima</div>
+                    <span class="byok-badge" style="background: rgba(52, 211, 153, 0.15); color: #34d399;">Engajamento</span>
+                  </div>
+                  <p class="analysis-item-desc">Termômetro emocional da comunidade, relatos de conquistas e pontos de atrito.</p>
+                </div>
+
+                <!-- 4. Recomendações e Ação -->
+                <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('plano_de_acao')" title="Clique para gerar plano de ação no chat">
+                  <div class="analysis-item-top">
+                    <div class="analysis-item-title"><span>🎯</span> Plano de Ação</div>
+                    <span class="byok-badge" style="background: rgba(168, 85, 247, 0.15); color: #c084fc;">Ação</span>
+                  </div>
+                  <p class="analysis-item-desc">Recomendações práticas de novas lives, FAQs e intervenções imediatas para moderação.</p>
+                </div>
+
+              </div>
             </div>
 
-            <div class="card">
-              <div class="card-title">📈 Análise de sentimento e clima</div>
-              <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
-                Termômetro de engajamento e satisfação da comunidade, destacando membros participativos e potenciais
-                pontos de atrito.
-              </p>
-              <button class="secondary btn-sm" disabled style="opacity: 0.5;">Em breve</button>
-            </div>
-
-            <div class="card">
-              <div class="card-title">🎯 Recomendações e planos de ação</div>
-              <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px;">
-                Sugestões automáticas de novos conteúdos, lives, artigos e intervenções dos instrutores baseadas nas
-                conversas reais.
-              </p>
-              <button class="secondary btn-sm" disabled style="opacity: 0.5;">Em breve</button>
-            </div>
           </div>
         </div>
-
-      </div>
 
       <!-- =========================================================
            PAINEL FIXO DO CONSOLE (SEMPRE VISÍVEL & REDIMENSIONÁVEL)
@@ -2346,6 +2797,9 @@
 
       if (pageId === 'page-visualizacao') {
         carregarMensagens();
+      } else if (pageId === 'page-insights') {
+        carregarLimitesDatasLLM();
+        carregarHistoricoChat();
       }
     }
 
@@ -3309,12 +3763,475 @@
     }
 
     // -------------------------------------------------------------
+    // GESTÃO DO DUAL RANGE SLIDER & TIMELINE (LLM)
+    // -------------------------------------------------------------
+    let llmMinTsGlobal = 0;
+    let llmMaxTsGlobal = 0;
+    let llmCurrentMinTs = 0;
+    let llmCurrentMaxTs = 0;
+    let llmTotalMessagesGlobal = 0;
+    let llmGrupoNomeGlobal = '';
+    const STORAGE_KEY_ANALYSES_COLLAPSED = 'zap_analyses_sidebar_collapsed';
+
+    function formatarTimestampBr(ts) {
+      if (!ts || ts <= 0) return '-';
+      const d = new Date(ts * 1000);
+      if (isNaN(d.getTime())) return '-';
+      const dia = String(d.getDate()).padStart(2, '0');
+      const mes = String(d.getMonth() + 1).padStart(2, '0');
+      const ano = d.getFullYear();
+      const hora = String(d.getHours()).padStart(2, '0');
+      const min = String(d.getMinutes()).padStart(2, '0');
+      return `${dia}/${mes}/${ano} ${hora}:${min}`;
+    }
+
+    async function carregarLimitesDatasLLM() {
+      const badgeCount = document.getElementById('range-selected-count-badge');
+      const displayMin = document.getElementById('display-date-min');
+      const displayMax = document.getElementById('display-date-max');
+      const groupTag = document.getElementById('chat-group-tag');
+
+      try {
+        const res = await fetch('/api/llm/range-datas');
+        const json = await res.json();
+
+        if (json.success && json.data && json.data.has_data) {
+          const data = json.data;
+          llmMinTsGlobal = data.min_ts;
+          llmMaxTsGlobal = data.max_ts;
+          llmTotalMessagesGlobal = data.total_messages;
+          llmGrupoNomeGlobal = data.grupo_nome || 'Grupo Ativo';
+
+          if (groupTag) groupTag.innerText = llmGrupoNomeGlobal;
+
+          // Inicializa o slider em todo o período caso ainda não tenha sido ajustado
+          if (llmCurrentMinTs === 0 || llmCurrentMinTs < llmMinTsGlobal) {
+            llmCurrentMinTs = llmMinTsGlobal;
+          }
+          if (llmCurrentMaxTs === 0 || llmCurrentMaxTs > llmMaxTsGlobal) {
+            llmCurrentMaxTs = llmMaxTsGlobal;
+          }
+
+          atualizarVisualSlider();
+          atualizarBadgeContador();
+        } else {
+          if (badgeCount) {
+            badgeCount.className = 'byok-badge pending';
+            badgeCount.innerText = '0 msgs no banco';
+          }
+          if (displayMin) displayMin.innerText = '-';
+          if (displayMax) displayMax.innerText = '-';
+        }
+      } catch (err) {
+        console.error("Erro ao carregar range de datas:", err);
+      }
+    }
+
+    function atualizarVisualSlider() {
+      const sliderMin = document.getElementById('slider-range-min');
+      const sliderMax = document.getElementById('slider-range-max');
+      const highlight = document.getElementById('range-slider-highlight');
+      const displayMin = document.getElementById('display-date-min');
+      const displayMax = document.getElementById('display-date-max');
+
+      if (!sliderMin || !sliderMax || llmMaxTsGlobal <= llmMinTsGlobal) return;
+
+      const spanTotal = llmMaxTsGlobal - llmMinTsGlobal;
+      const percentMin = Math.max(0, Math.min(100, ((llmCurrentMinTs - llmMinTsGlobal) / spanTotal) * 100));
+      const percentMax = Math.max(0, Math.min(100, ((llmCurrentMaxTs - llmMinTsGlobal) / spanTotal) * 100));
+
+      sliderMin.value = Math.round(percentMin * 10);
+      sliderMax.value = Math.round(percentMax * 10);
+
+      if (highlight) {
+        highlight.style.left = `${percentMin}%`;
+        highlight.style.width = `${percentMax - percentMin}%`;
+      }
+
+      if (displayMin) displayMin.innerText = formatarTimestampBr(llmCurrentMinTs);
+      if (displayMax) displayMax.innerText = formatarTimestampBr(llmCurrentMaxTs);
+    }
+
+    function aoMoverSliderRange(qual) {
+      const sliderMin = document.getElementById('slider-range-min');
+      const sliderMax = document.getElementById('slider-range-max');
+      if (!sliderMin || !sliderMax || llmMaxTsGlobal <= llmMinTsGlobal) return;
+
+      let valMin = parseInt(sliderMin.value, 10);
+      let valMax = parseInt(sliderMax.value, 10);
+
+      // Previne cruzamento das cabeças
+      if (qual === 'min' && valMin > valMax - 10) {
+        sliderMin.value = valMax - 10;
+        valMin = valMax - 10;
+      } else if (qual === 'max' && valMax < valMin + 10) {
+        sliderMax.value = valMin + 10;
+        valMax = valMin + 10;
+      }
+
+      const spanTotal = llmMaxTsGlobal - llmMinTsGlobal;
+      llmCurrentMinTs = llmMinTsGlobal + (valMin / 1000) * spanTotal;
+      llmCurrentMaxTs = llmMinTsGlobal + (valMax / 1000) * spanTotal;
+
+      const highlight = document.getElementById('range-slider-highlight');
+      const displayMin = document.getElementById('display-date-min');
+      const displayMax = document.getElementById('display-date-max');
+
+      if (highlight) {
+        const pMin = (valMin / 1000) * 100;
+        const pMax = (valMax / 1000) * 100;
+        highlight.style.left = `${pMin}%`;
+        highlight.style.width = `${pMax - pMin}%`;
+      }
+
+      if (displayMin) displayMin.innerText = formatarTimestampBr(llmCurrentMinTs);
+      if (displayMax) displayMax.innerText = formatarTimestampBr(llmCurrentMaxTs);
+
+      atualizarBadgeContador();
+    }
+
+    function aplicarPresetRange(preset) {
+      if (llmMaxTsGlobal <= 0) return;
+
+      if (preset === '24h') {
+        llmCurrentMaxTs = llmMaxTsGlobal;
+        llmCurrentMinTs = Math.max(llmMinTsGlobal, llmMaxTsGlobal - 86400);
+      } else if (preset === '7d') {
+        llmCurrentMaxTs = llmMaxTsGlobal;
+        llmCurrentMinTs = Math.max(llmMinTsGlobal, llmMaxTsGlobal - 7 * 86400);
+      } else if (preset === '15d') {
+        llmCurrentMaxTs = llmMaxTsGlobal;
+        llmCurrentMinTs = Math.max(llmMinTsGlobal, llmMaxTsGlobal - 15 * 86400);
+      } else if (preset === '30d') {
+        llmCurrentMaxTs = llmMaxTsGlobal;
+        llmCurrentMinTs = Math.max(llmMinTsGlobal, llmMaxTsGlobal - 30 * 86400);
+      } else if (preset === 'all') {
+        llmCurrentMaxTs = llmMaxTsGlobal;
+        llmCurrentMinTs = llmMinTsGlobal;
+      }
+
+      atualizarVisualSlider();
+      atualizarBadgeContador();
+      showToast(`Período ajustado para: ${preset.toUpperCase()}`);
+    }
+
+    function atualizarBadgeContador() {
+      const badge = document.getElementById('range-selected-count-badge');
+      if (!badge) return;
+
+      if (llmTotalMessagesGlobal === 0) {
+        badge.className = 'byok-badge pending';
+        badge.innerText = '0 msgs no banco';
+        return;
+      }
+
+      // Estimativa proporcional de mensagens selecionadas com base no range temporal
+      const spanTotal = llmMaxTsGlobal - llmMinTsGlobal;
+      let proporcao = 1.0;
+      if (spanTotal > 0) {
+        proporcao = Math.max(0.01, Math.min(1.0, (llmCurrentMaxTs - llmCurrentMinTs) / spanTotal));
+      }
+      const estimativa = Math.max(1, Math.round(llmTotalMessagesGlobal * proporcao));
+
+      badge.className = 'byok-badge active';
+      badge.innerText = `📊 ~${estimativa} de ${llmTotalMessagesGlobal} mensagens no range`;
+    }
+
+    // -------------------------------------------------------------
+    // GESTÃO DO CHAT CONVERSACIONAL COM GOOGLE GEMINI
+    // -------------------------------------------------------------
+    let chatHistoryGlobal = [];
+
+    function getStorageChatKey() {
+      const gId = grupoIdAtivoGlobal || 'default_group';
+      return `zap_chat_history_${gId}`;
+    }
+
+    function autoResizeChatTextarea(el) {
+      if (!el) return;
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+    }
+
+    function renderizarMarkdownSimples(texto) {
+      if (!texto) return '';
+
+      // Escape seguro de HTML
+      let html = texto
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+      // Blocos de código ```code```
+      html = html.replace(/```([\s\S]*?)```/g, (match, p1) => {
+        return `<pre style="background: #020617; padding: 10px; border-radius: 6px; overflow-x: auto; border: 1px solid #1e293b; margin: 8px 0;"><code>${p1.trim()}</code></pre>`;
+      });
+
+      // Código inline `code`
+      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+      // Títulos Markdown ###, ##, #
+      html = html.replace(/^### (.*$)/gim, '<h4>$1</h4>');
+      html = html.replace(/^## (.*$)/gim, '<h3>$1</h3>');
+      html = html.replace(/^# (.*$)/gim, '<h2>$1</h2>');
+
+      // Negrito e Itálico
+      html = html.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+      html = html.replace(/\*([^*]+)\*/g, '<i>$1</i>');
+
+      // Citações > texto
+      html = html.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
+
+      // Listas com marcadores (- item ou * item)
+      html = html.replace(/^\s*[-*]\s+(.*$)/gim, '<li>$1</li>');
+      html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+
+      // Quebras de linha normais
+      html = html.replace(/\n\n+/g, '<br><br>');
+      html = html.replace(/\n/g, '<br>');
+
+      return html;
+    }
+
+    function carregarHistoricoChat() {
+      const container = document.getElementById('chat-messages-container');
+      if (!container) return;
+
+      const saved = localStorage.getItem(getStorageChatKey());
+      if (saved) {
+        try {
+          chatHistoryGlobal = JSON.parse(saved);
+        } catch (e) {
+          chatHistoryGlobal = [];
+        }
+      } else {
+        chatHistoryGlobal = [];
+      }
+
+      container.innerHTML = '';
+
+      // Se vazio, adiciona a mensagem de boas-vindas
+      if (chatHistoryGlobal.length === 0) {
+        const welcomeHtml = `
+          <div class="chat-bubble assistant">
+            <div class="chat-avatar">✨</div>
+            <div class="chat-bubble-content">
+              <p><b>Olá! Eu sou o ZapInsights AI.</b></p>
+              <p>Estou conectado às mensagens do grupo no período selecionado no slider acima. Você pode me fazer qualquer pergunta sobre as conversas (ex.: <i>"Quais tópicos geraram mais debate?"</i>, <i>"Quais dúvidas mais apareceram?"</i>) ou clicar em uma das <b>Análises Rápidas</b> ao lado para gerar relatórios aprofundados.</p>
+            </div>
+          </div>
+        `;
+        container.innerHTML = welcomeHtml;
+        return;
+      }
+
+      chatHistoryGlobal.forEach(msg => {
+        adicionarMensagemAoDom(msg.role, msg.content, false);
+      });
+
+      scrollChatAoFinal();
+    }
+
+    function salvarHistoricoChat() {
+      try {
+        localStorage.setItem(getStorageChatKey(), JSON.stringify(chatHistoryGlobal));
+      } catch (e) {
+        console.error("Erro ao salvar histórico do chat:", e);
+      }
+    }
+
+    function adicionarMensagemAoDom(role, content, animar = true) {
+      const container = document.getElementById('chat-messages-container');
+      if (!container) return;
+
+      const bubble = document.createElement('div');
+      bubble.className = `chat-bubble ${role}`;
+
+      const avatar = document.createElement('div');
+      avatar.className = 'chat-avatar';
+      avatar.innerText = role === 'user' ? '👤' : '✨';
+
+      const bubbleContent = document.createElement('div');
+      bubbleContent.className = 'chat-bubble-content';
+      bubbleContent.innerHTML = renderizarMarkdownSimples(content);
+
+      bubble.appendChild(avatar);
+      bubble.appendChild(bubbleContent);
+      container.appendChild(bubble);
+
+      scrollChatAoFinal();
+    }
+
+    function scrollChatAoFinal() {
+      const container = document.getElementById('chat-messages-container');
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }
+
+    function exibirIndicadorDigitando() {
+      const container = document.getElementById('chat-messages-container');
+      if (!container) return;
+
+      removerIndicadorDigitando();
+
+      const bubble = document.createElement('div');
+      bubble.id = 'chat-typing-indicator';
+      bubble.className = 'chat-bubble assistant';
+      bubble.innerHTML = `
+        <div class="chat-avatar">✨</div>
+        <div class="chat-bubble-content" style="display: flex; align-items: center; gap: 8px; color: #93c5fd;">
+          <span style="font-size: 13px;">⏳ Analisando mensagens e gerando resposta com o Google Gemini...</span>
+        </div>
+      `;
+      container.appendChild(bubble);
+      scrollChatAoFinal();
+    }
+
+    function removerIndicadorDigitando() {
+      const ind = document.getElementById('chat-typing-indicator');
+      if (ind) ind.remove();
+    }
+
+    function aoDigitarNoChat(event) {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        enviarMensagemChat();
+      }
+    }
+
+    async function enviarMensagemChat(promptCustom = null, tipoAnalise = null) {
+      const input = document.getElementById('chat-input-textarea');
+      const btnSend = document.getElementById('btn-chat-send');
+      const apiKey = localStorage.getItem(STORAGE_KEY_API) || '';
+      const model = localStorage.getItem(STORAGE_KEY_MODEL) || 'gemini-2.5-flash';
+
+      if (!apiKey) {
+        showToast("⚠️ Configure sua API Key do Google Gemini no topo antes de enviar.");
+        toggleByokConfig(false); // expande o card de chave para o usuário preencher
+        const inputKey = document.getElementById('input-gemini-api-key');
+        if (inputKey) inputKey.focus();
+        return;
+      }
+
+      const promptTexto = promptCustom || (input ? input.value.trim() : '');
+      if (!promptTexto) return;
+
+      if (!promptCustom && input) {
+        input.value = '';
+        input.style.height = 'auto';
+      }
+
+      // Adiciona mensagem do usuário na tela e no histórico local
+      adicionarMensagemAoDom('user', promptTexto);
+      chatHistoryGlobal.push({ role: 'user', content: promptTexto });
+      salvarHistoricoChat();
+
+      // Bloqueia botão e exibe indicador de carregamento
+      if (btnSend) {
+        btnSend.disabled = true;
+        btnSend.innerHTML = '<span>⏳...</span>';
+      }
+      exibirIndicadorDigitando();
+
+      appendLog(`[Gemini / Chat] Enviando solicitação para o modelo '${model}'...`);
+
+      try {
+        const res = await fetch('/api/llm/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            api_key: apiKey,
+            model: model,
+            prompt: promptTexto,
+            start_ts: llmCurrentMinTs,
+            end_ts: llmCurrentMaxTs,
+            tipo_analise: tipoAnalise,
+            historico: chatHistoryGlobal.slice(-6)
+          })
+        });
+
+        const json = await res.json();
+        removerIndicadorDigitando();
+
+        if (json.success && json.response) {
+          adicionarMensagemAoDom('assistant', json.response);
+          chatHistoryGlobal.push({ role: 'assistant', content: json.response });
+          salvarHistoricoChat();
+          appendLog(`[Gemini / Chat] ✅ Resposta recebida (${json.total_messages} msgs analisadas).`);
+        } else {
+          const msgErro = json.message || "Não foi possível obter resposta da IA.";
+          adicionarMensagemAoDom('assistant', `⚠️ **Erro ao gerar resposta:** ${msgErro}`);
+          appendLog(`[Gemini / Chat - Erro] ${msgErro}`);
+          showToast(msgErro);
+        }
+      } catch (err) {
+        removerIndicadorDigitando();
+        adicionarMensagemAoDom('assistant', `❌ **Erro de conexão com o servidor local:** ${err}`);
+        appendLog(`[Gemini / Chat - Erro] Falha na requisição: ${err}`);
+        showToast("Erro ao conectar com o servidor local.");
+      } finally {
+        if (btnSend) {
+          btnSend.disabled = false;
+          btnSend.innerHTML = '<span>Enviar 🚀</span>';
+        }
+        if (input) input.focus();
+      }
+    }
+
+    function dispararAnalisePreProgramada(tipoAnalise) {
+      const frases = {
+        'resumo_destaques': 'Gere um resumo executivo com os principais destaques do período.',
+        'duvidas_recorrentes': 'Mapeie as dúvidas e dificuldades mais recorrentes levantadas pelos participantes.',
+        'analise_sentimento': 'Faça uma análise de sentimento, engajamento e clima da comunidade no período.',
+        'plano_de_acao': 'Proponha recomendações práticas e um plano de ação para a gestão da comunidade.'
+      };
+      const frase = frases[tipoAnalise] || 'Faça uma análise analítica do período.';
+      enviarMensagemChat(frase, tipoAnalise);
+    }
+
+    function limparHistoricoChat() {
+      if (chatHistoryGlobal.length === 0) {
+        showToast("O chat já está limpo.");
+        return;
+      }
+      chatHistoryGlobal = [];
+      localStorage.removeItem(getStorageChatKey());
+      carregarHistoricoChat();
+      showToast("Histórico do chat limpo com sucesso.");
+      appendLog("[Gemini / Chat] Histórico da conversa resetado pelo usuário.");
+    }
+
+    function toggleColunaAnalises() {
+      const ws = document.getElementById('insights-workspace');
+      const chevron = document.getElementById('analyses-col-chevron');
+      if (!ws) return;
+
+      const isCollapsed = ws.classList.toggle('sidebar-collapsed');
+      if (chevron) {
+        chevron.innerText = isCollapsed ? '◄' : '►';
+      }
+      localStorage.setItem(STORAGE_KEY_ANALYSES_COLLAPSED, isCollapsed ? 'true' : 'false');
+    }
+
+    // -------------------------------------------------------------
     // Inicialização ao Carregar a Página
     // -------------------------------------------------------------
     window.addEventListener('DOMContentLoaded', () => {
       carregarStatus();
       carregarMensagens();
       carregarConfiguracaoLLM();
+      carregarLimitesDatasLLM();
+      carregarHistoricoChat();
+
+      // Restaura preferência da coluna lateral de análises
+      if (localStorage.getItem(STORAGE_KEY_ANALYSES_COLLAPSED) === 'true') {
+        const ws = document.getElementById('insights-workspace');
+        const chevron = document.getElementById('analyses-col-chevron');
+        if (ws) ws.classList.add('sidebar-collapsed');
+        if (chevron) chevron.innerText = '◄';
+      }
+
       conectarSSE();
     });
   </script>
