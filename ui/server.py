@@ -49,6 +49,7 @@ from services.storage import (
     wipe_all_data,
 )
 from services.llm import GeminiService, MODELOS_DISPONIVEIS, ANALISES_PRE_PROGRAMADAS
+from services.reports import ReportService
 from services.paths import get_base_dir, get_data_dir, get_db_path, get_templates_dir
 
 BASE_DIR = get_base_dir()
@@ -160,6 +161,12 @@ class ChatLLMRequest(BaseModel):
     end_ts: float | None = None
     tipo_analise: str | None = None
     historico: list[dict] | None = None
+
+
+class ReportSummaryRequest(BaseModel):
+    api_key: str
+    model: str = "gemini-2.5-flash"
+    mes: str
 
 
 @app.on_event("startup")
@@ -746,6 +753,52 @@ async def processar_chat_llm(req: ChatLLMRequest):
             "grupo": grupo_nome,
             "model": modelo,
         }
+
+
+@app.get("/api/relatorios/meses")
+async def get_report_months():
+    """Retorna os meses disponíveis na base de dados para alimentar o seletor de relatórios."""
+    db_path = get_db_path()
+    meses = ReportService.listar_meses_disponiveis(db_path)
+    return {"success": True, "data": meses}
+
+
+@app.get("/api/relatorios/dados")
+async def get_report_data(mes: str | None = None):
+    """Retorna as métricas completas calculadas para o relatório mensal nas 4 seções."""
+    db_path = get_db_path()
+    dados = ReportService.calcular_metricas_mensais(mes=mes, db_path=db_path)
+    return {"success": True, "data": dados}
+
+
+@app.post("/api/relatorios/gerar-resumo")
+async def generate_report_summary(req: ReportSummaryRequest):
+    """Gera um Resumo Executivo inteligente e consolidado via Google Gemini BYOK."""
+    api_key = req.api_key.strip()
+    if not api_key:
+        return {"success": False, "message": "API Key do Google Gemini não fornecida. Configure sua chave no card BYOK."}
+
+    db_path = get_db_path()
+    metricas = ReportService.calcular_metricas_mensais(mes=req.mes, db_path=db_path)
+    if not metricas.get("tem_dados"):
+        return {"success": False, "message": "Não há mensagens suficientes no mês selecionado para gerar o resumo executivo."}
+
+    modelo = req.model.strip() or "gemini-2.5-flash"
+    state.add_log(f"[Relatórios / Gemini] Gerando Resumo Executivo Mensal ({req.mes}) via modelo '{modelo}'...")
+    sucesso, texto = ReportService.gerar_resumo_executivo_llm(
+        api_key=api_key,
+        model=modelo,
+        mes=req.mes,
+        metricas=metricas,
+        db_path=db_path,
+    )
+
+    if sucesso:
+        state.add_log(f"[Relatórios / Gemini] ✅ Resumo Executivo gerado com sucesso ({len(texto)} caracteres).")
+        return {"success": True, "resumo": texto}
+    else:
+        state.add_log(f"[Relatórios / Gemini] ⚠️ Falha na geração do resumo: {texto}")
+        return {"success": False, "message": texto}
 
 
 def start_server(host: str = "127.0.0.1", port: int = 8000):

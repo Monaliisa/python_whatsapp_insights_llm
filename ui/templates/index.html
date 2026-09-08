@@ -1836,6 +1836,282 @@
       color: #94a3b8;
       line-height: 1.4;
     }
+
+    /* =============================================================
+       ESTILOS DA ABA DE RELATÓRIOS MENSAIS
+       ============================================================= */
+    .report-header-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding: 14px 18px;
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+    }
+
+    .report-select-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .report-section-card {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .report-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #1e293b;
+      padding-bottom: 10px;
+    }
+
+    .report-section-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .report-section-subtitle {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    .report-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .report-kpi-card {
+      background: #0b1120;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .report-kpi-label {
+      font-size: 11.5px;
+      color: #94a3b8;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .report-kpi-value {
+      font-size: 22px;
+      font-weight: 800;
+      color: #38bdf8;
+    }
+
+    .report-kpi-sub {
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    .report-split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .report-split-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .report-mini-chart-card {
+      background: #0b1120;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .report-chart-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .report-chart-label {
+      width: 70px;
+      color: #cbd5e1;
+      font-weight: 500;
+    }
+
+    .report-chart-track {
+      flex: 1;
+      height: 8px;
+      background: #1e293b;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .report-chart-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #2563eb, #38bdf8);
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+
+    .report-chart-value {
+      width: 45px;
+      text-align: right;
+      color: #94a3b8;
+      font-size: 11px;
+    }
+
+    .report-attention-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .report-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .report-table-container {
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid #1e293b;
+    }
+
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      text-align: left;
+    }
+
+    .report-table th {
+      background: #090e1a;
+      padding: 10px 14px;
+      color: #94a3b8;
+      font-weight: 600;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .report-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #1e293b;
+      color: #f1f5f9;
+    }
+
+    .report-table tr:hover td {
+      background: #111e38;
+    }
+
+    .report-executive-card {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9));
+      border-color: rgba(99, 102, 241, 0.35);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .report-executive-content {
+      background: #0b1120;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 20px;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: #cbd5e1;
+    }
+
+    .report-executive-content h2,
+    .report-executive-content h3,
+    .report-executive-content h4 {
+      color: #93c5fd;
+      margin-top: 14px;
+      margin-bottom: 8px;
+    }
+
+    .report-executive-content p {
+      margin-bottom: 12px;
+    }
+
+    .report-executive-content ul,
+    .report-executive-content ol {
+      margin-left: 20px;
+      margin-bottom: 12px;
+    }
+
+    .report-executive-content li {
+      margin-bottom: 4px;
+    }
+
+    .report-executive-content blockquote {
+      border-left: 3px solid #38bdf8;
+      background: rgba(56, 189, 248, 0.08);
+      padding: 8px 12px;
+      border-radius: 4px;
+      margin: 10px 0;
+      color: #94a3b8;
+    }
+
+    @media print {
+      body {
+        overflow: visible !important;
+        height: auto !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+      .appbar, .sidebar, .report-header-controls, .appbar-menu-btn, button {
+        display: none !important;
+      }
+      .main-content, .page-container, .page.active {
+        overflow: visible !important;
+        height: auto !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .report-section-card, .report-executive-card, .report-kpi-card, .report-mini-chart-card, .report-executive-content {
+        background: #ffffff !important;
+        color: #000000 !important;
+        border: 1px solid #cccccc !important;
+        page-break-inside: avoid;
+        box-shadow: none !important;
+      }
+      .report-kpi-value, .report-section-title, h1, h2, h3, h4 {
+        color: #000000 !important;
+      }
+    }
   </style>
 </head>
 
@@ -1884,7 +2160,7 @@
 
       <div class="sidebar-header">
         <span>Navegação</span>
-        <span style="font-size: 10px; color: #64748b; font-weight: 500;">5 etapas</span>
+        <span style="font-size: 10px; color: #64748b; font-weight: 500;">6 etapas</span>
       </div>
 
       <!-- 1. Resumo -->
@@ -1929,6 +2205,15 @@
           <span>5. Gerar insights</span>
         </div>
         <span id="drawer-insights-lock" class="sidebar-lock-badge">🔒 Bloqueado</span>
+      </div>
+
+      <!-- 6. Relatórios (Bloqueada se não houver dados) -->
+      <div id="drawer-item-relatorios" class="sidebar-item disabled" data-page="page-relatorios">
+        <div class="sidebar-item-label">
+          <span class="sidebar-item-icon">📑</span>
+          <span>6. Relatórios</span>
+        </div>
+        <span id="drawer-relatorios-lock" class="sidebar-lock-badge">🔒 Bloqueado</span>
       </div>
 
       <!-- Configurações (na parte de baixo, mas acima do divider) -->
@@ -2570,7 +2855,224 @@
         </div>
 
         <!-- =========================================================
-             TELA 6: CONFIGURAÇÕES
+             TELA 6: RELATÓRIOS MENSAIS (4 SEÇÕES)
+             ========================================================= -->
+        <div id="page-relatorios" class="page">
+          <div class="page-header">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <div>
+                <h1 class="page-title">📑 Relatórios Mensais da Comunidade</h1>
+                <p class="page-subtitle">Diagnóstico consolidado do grupo por período: engajamento, pontos de atenção, volumetria e resumo executivo com IA.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- BARRA DE CONTROLE: SELETOR DE MÊS & AÇÕES -->
+          <div class="report-header-controls">
+            <div class="report-select-group">
+              <span style="font-size: 13px; font-weight: 700; color: #cbd5e1;">📅 Selecionar Mês:</span>
+              <div class="select-wrapper" style="min-width: 220px;">
+                <select id="select-relatorio-mes" class="custom-select" onchange="aoMudarMesRelatorio()">
+                  <option value="">Carregando meses...</option>
+                </select>
+              </div>
+              <span id="report-group-name-badge" class="byok-badge active" style="margin-left: 4px;">Comunidade</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="secondary" onclick="carregarRelatorioAtual()" title="Recarregar métricas do mês selecionado">
+                <span>🔄 Recarregar</span>
+              </button>
+              <button type="button" class="secondary" onclick="imprimirRelatorio()" title="Imprimir relatório ou exportar como PDF">
+                <span>🖨️ Imprimir / PDF</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- CONTAINER DO RELATÓRIO CARREGADO -->
+          <div id="relatorio-conteudo-area">
+
+            <!-- 1. SEÇÃO ENGAJAMENTO -->
+            <div class="report-section-card">
+              <div class="report-section-header">
+                <div>
+                  <div class="report-section-title">
+                    <span>📈</span> 1. Engajamento da Comunidade
+                  </div>
+                  <div class="report-section-subtitle">Principais índices de participação, intensidade das trocas e dinamicidade dos membros.</div>
+                </div>
+              </div>
+
+              <!-- Grid de KPIs de Engajamento -->
+              <div class="report-kpi-grid">
+                <div class="report-kpi-card">
+                  <div class="report-kpi-label">Total de Mensagens</div>
+                  <div id="rep-eng-total-msgs" class="report-kpi-value">-</div>
+                  <div id="rep-eng-total-sub" class="report-kpi-sub">no período selecionado</div>
+                </div>
+                <div class="report-kpi-card">
+                  <div class="report-kpi-label">Participantes Ativos</div>
+                  <div id="rep-eng-total-part" class="report-kpi-value" style="color: #a78bfa;">-</div>
+                  <div id="rep-eng-part-sub" class="report-kpi-sub">membros interagiram</div>
+                </div>
+                <div class="report-kpi-card">
+                  <div class="report-kpi-label">Média por Dia Ativo</div>
+                  <div id="rep-eng-media-dia" class="report-kpi-value" style="color: #34d399;">-</div>
+                  <div id="rep-eng-media-dia-sub" class="report-kpi-sub">msgs / dia</div>
+                </div>
+                <div class="report-kpi-card">
+                  <div class="report-kpi-label">Taxa de Resposta / Citação</div>
+                  <div id="rep-eng-taxa-resp" class="report-kpi-value" style="color: #fbbf24;">-</div>
+                  <div class="report-kpi-sub">% de mensagens encadeadas</div>
+                </div>
+                <div class="report-kpi-card">
+                  <div class="report-kpi-label">Dia de Pico & Período</div>
+                  <div id="rep-eng-pico" class="report-kpi-value" style="font-size: 16px; color: #f472b6; margin-top: 4px;">-</div>
+                  <div id="rep-eng-pico-sub" class="report-kpi-sub">maior volume concentrado</div>
+                </div>
+              </div>
+
+              <!-- Distribuição: Dias da Semana & Períodos do Dia -->
+              <div class="report-split-grid">
+                <div class="report-mini-chart-card">
+                  <div style="font-size: 12.5px; font-weight: 700; color: #93c5fd; margin-bottom: 10px;">📅 Atividade por Dia da Semana</div>
+                  <div id="rep-eng-dias-semana-bars"></div>
+                </div>
+                <div class="report-mini-chart-card">
+                  <div style="font-size: 12.5px; font-weight: 700; color: #c084fc; margin-bottom: 10px;">⏰ Distribuição por Turno do Dia</div>
+                  <div id="rep-eng-periodos-bars"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. SEÇÃO PONTOS DE ATENÇÃO -->
+            <div class="report-section-card">
+              <div class="report-section-header">
+                <div>
+                  <div class="report-section-title">
+                    <span>⚠️</span> 2. Pontos de Atenção & Monitoramento
+                  </div>
+                  <div class="report-section-subtitle">Mapeamento de riscos, gargalos pedagógicos, dúvidas recorrentes e termômetro de clima.</div>
+                </div>
+                <div id="rep-atencao-badge-container"></div>
+              </div>
+
+              <div class="report-kpi-grid">
+                <div class="report-kpi-card">
+                  <div class="report-kpi-label">Possíveis Dúvidas Mapeadas</div>
+                  <div id="rep-atencao-total-duvidas" class="report-kpi-value" style="color: #fbbf24;">-</div>
+                  <div class="report-kpi-sub">perguntas e solicitações de ajuda</div>
+                </div>
+                <div class="report-kpi-card">
+                  <div class="report-kpi-label">Ocorrências de Termos Críticos</div>
+                  <div id="rep-atencao-total-termos" class="report-kpi-value" style="color: #f87171;">-</div>
+                  <div class="report-kpi-sub">ex: erro, bug, travou, dúvida</div>
+                </div>
+                <div class="report-kpi-card">
+                  <div class="report-kpi-label">Participantes Isolados</div>
+                  <div id="rep-atencao-isolados" class="report-kpi-value" style="color: #94a3b8;">-</div>
+                  <div class="report-kpi-sub">com apenas 1 mensagem no mês</div>
+                </div>
+              </div>
+
+              <!-- Termos de Alerta Detectados -->
+              <div style="margin-bottom: 14px;">
+                <div style="font-size: 12.5px; font-weight: 700; color: #cbd5e1; margin-bottom: 8px;">🔥 Principais Termos de Dificuldade / Alerta:</div>
+                <div id="rep-atencao-termos-tags" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
+              </div>
+
+              <!-- Amostra de Dúvidas em Aberto -->
+              <div>
+                <div style="font-size: 12.5px; font-weight: 700; color: #cbd5e1; margin-bottom: 8px;">💡 Amostra de Dúvidas Identificadas no Período:</div>
+                <div id="rep-atencao-duvidas-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
+              </div>
+            </div>
+
+            <!-- 3. SEÇÃO ANÁLISES QUANTITATIVAS -->
+            <div class="report-section-card">
+              <div class="report-section-header">
+                <div>
+                  <div class="report-section-title">
+                    <span>📊</span> 3. Análises Quantitativas & Métricas
+                  </div>
+                  <div class="report-section-subtitle">Dados numéricos, tipologia de mensagens, distribuição semanal e ranking de participação.</div>
+                </div>
+              </div>
+
+              <div class="report-kpi-grid">
+                <div class="report-kpi-card">
+                  <div class="report-kpi-label">Representatividade na Base</div>
+                  <div id="rep-quant-pct-historico" class="report-kpi-value" style="color: #38bdf8;">-</div>
+                  <div id="rep-quant-pct-historico-sub" class="report-kpi-sub">do total geral do grupo</div>
+                </div>
+                <div class="report-kpi-card">
+                  <div class="report-kpi-label">Tamanho Médio das Mensagens</div>
+                  <div id="rep-quant-tamanho-medio" class="report-kpi-value" style="color: #34d399;">-</div>
+                  <div class="report-kpi-sub">caracteres por mensagem</div>
+                </div>
+                <div class="report-kpi-card">
+                  <div class="report-kpi-label">Mensagens com Anexos</div>
+                  <div id="rep-quant-anexos" class="report-kpi-value" style="color: #a78bfa;">-</div>
+                  <div id="rep-quant-anexos-sub" class="report-kpi-sub">áudios, imagens ou mídias</div>
+                </div>
+              </div>
+
+              <!-- Tabela Top 10 Participantes & Distribuição Semanal -->
+              <div class="report-split-grid">
+                <div>
+                  <div style="font-size: 12.5px; font-weight: 700; color: #93c5fd; margin-bottom: 10px;">🏆 Top 10 Participantes Mais Ativos</div>
+                  <div class="report-table-container">
+                    <table class="report-table">
+                      <thead>
+                        <tr>
+                          <th style="width: 40px;">#</th>
+                          <th>Membro / Remetente</th>
+                          <th style="text-align: right;">Mensagens</th>
+                          <th style="text-align: right;">% Mês</th>
+                        </tr>
+                      </thead>
+                      <tbody id="rep-quant-top-participantes-body"></tbody>
+                    </table>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size: 12.5px; font-weight: 700; color: #c084fc; margin-bottom: 10px;">🗓️ Evolução Semanal do Volume</div>
+                  <div class="report-mini-chart-card">
+                    <div id="rep-quant-semanal-bars"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. SEÇÃO RESUMO EXECUTIVO -->
+            <div class="report-section-card report-executive-card">
+              <div class="report-section-header">
+                <div>
+                  <div class="report-section-title" style="color: #e0e7ff;">
+                    <span>📝</span> 4. Resumo Executivo Consolidado
+                  </div>
+                  <div class="report-section-subtitle" style="color: #a5b4fc;">Visão geral consolidada ao final com diagnósticos estratégicos e recomendações práticas.</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <button type="button" id="btn-gerar-resumo-llm" class="btn" onclick="gerarResumoExecutivoIA()" title="Gerar resumo aprofundado com o Google Gemini">
+                    <span>✨ Gerar Resumo com Gemini AI</span>
+                  </button>
+                  <button type="button" class="secondary" onclick="copiarResumoExecutivo()" title="Copiar texto do resumo para a área de transferência">
+                    <span>📋 Copiar Resumo</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Caixa de Conteúdo do Resumo Executivo -->
+              <div id="rep-executivo-container" class="report-executive-content">
+                <div id="rep-executivo-texto">Carregando resumo executivo...</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- =========================================================
+             TELA 7: CONFIGURAÇÕES
              ========================================================= -->
         <div id="page-configuracoes" class="page">
           <div class="page-header">
@@ -3065,6 +3567,8 @@
       } else if (pageId === 'page-insights') {
         carregarLimitesDatasLLM();
         carregarHistoricoChat();
+      } else if (pageId === 'page-relatorios') {
+        carregarMesesRelatorio();
       } else if (pageId === 'page-configuracoes') {
         carregarConfiguracaoLLM();
       }
@@ -3129,6 +3633,8 @@
       const drawerVisualizacaoLock = document.getElementById('drawer-visualizacao-lock');
       const drawerInsights = document.getElementById('drawer-item-insights');
       const drawerInsightsLock = document.getElementById('drawer-insights-lock');
+      const drawerRelatorios = document.getElementById('drawer-item-relatorios');
+      const drawerRelatoriosLock = document.getElementById('drawer-relatorios-lock');
 
       const sidebarSessionStatus = document.getElementById('sidebar-session-status');
       const sidebarSessionLabel = document.getElementById('sidebar-session-label');
@@ -3284,35 +3790,41 @@
         }
       }
 
-      // 3. Alerta do Drawer para Extração e Bloqueio de Visualização / Insights
+      // 3. Alerta do Drawer para Extração e Bloqueio de Visualização / Insights / Relatórios
       if (count > 0) {
         drawerExtracao.classList.remove('alert-danger');
         drawerExtracaoBadge.style.display = 'inline-block';
         drawerExtracaoBadge.className = 'sidebar-success-badge';
         drawerExtracaoBadge.innerText = '✅ OK';
 
-        // Desbloqueia Visualização e Insights
+        // Desbloqueia Visualização, Insights e Relatórios
         drawerVisualizacao.classList.remove('disabled');
         if (drawerVisualizacaoLock) drawerVisualizacaoLock.style.display = 'none';
 
         drawerInsights.classList.remove('disabled');
         if (drawerInsightsLock) drawerInsightsLock.style.display = 'none';
+
+        if (drawerRelatorios) drawerRelatorios.classList.remove('disabled');
+        if (drawerRelatoriosLock) drawerRelatoriosLock.style.display = 'none';
       } else {
         drawerExtracao.classList.add('alert-danger');
         drawerExtracaoBadge.style.display = 'inline-block';
         drawerExtracaoBadge.className = 'sidebar-alert-badge';
         drawerExtracaoBadge.innerText = 'Sem dados';
 
-        // Bloqueia Visualização e Insights
+        // Bloqueia Visualização, Insights e Relatórios
         drawerVisualizacao.classList.add('disabled');
         if (drawerVisualizacaoLock) drawerVisualizacaoLock.style.display = 'inline-block';
 
         drawerInsights.classList.add('disabled');
         if (drawerInsightsLock) drawerInsightsLock.style.display = 'inline-block';
 
+        if (drawerRelatorios) drawerRelatorios.classList.add('disabled');
+        if (drawerRelatoriosLock) drawerRelatoriosLock.style.display = 'inline-block';
+
         // Se estiver em uma tela bloqueada, redireciona para Extração
         const activePage = document.querySelector('.page.active');
-        if (activePage && (activePage.id === 'page-visualizacao' || activePage.id === 'page-insights')) {
+        if (activePage && (activePage.id === 'page-visualizacao' || activePage.id === 'page-insights' || activePage.id === 'page-relatorios')) {
           navegarPara('page-extracao');
         }
       }
@@ -4665,6 +5177,354 @@
         chevron.innerText = isCollapsed ? '◄' : '►';
       }
       localStorage.setItem(STORAGE_KEY_ANALYSES_COLLAPSED, isCollapsed ? 'true' : 'false');
+    }
+
+    // =============================================================
+    // 12. MÓDULO DE RELATÓRIOS MENSAIS (4 SEÇÕES)
+    // =============================================================
+    let relatorioAtualDados = null;
+    let relatorioMesSelecionado = null;
+
+    async function carregarMesesRelatorio() {
+      const selectMes = document.getElementById('select-relatorio-mes');
+      if (!selectMes) return;
+
+      try {
+        const res = await fetch('/api/relatorios/meses');
+        const json = await res.json();
+        if (json.success && json.data && json.data.length > 0) {
+          selectMes.innerHTML = '';
+          json.data.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m.id;
+            opt.innerText = `${m.label} (${m.total_mensagens.toLocaleString('pt-BR')} msgs)`;
+            selectMes.appendChild(opt);
+          });
+
+          if (!relatorioMesSelecionado || !json.data.some(m => m.id === relatorioMesSelecionado)) {
+            relatorioMesSelecionado = json.data[0].id;
+          }
+          selectMes.value = relatorioMesSelecionado;
+          await carregarRelatorioMensal(relatorioMesSelecionado);
+        } else {
+          selectMes.innerHTML = '<option value="">Nenhum mês com mensagens</option>';
+          const area = document.getElementById('relatorio-conteudo-area');
+          if (area) {
+            area.innerHTML = `
+              <div class="card" style="text-align: center; padding: 40px 20px;">
+                <div style="font-size: 32px; margin-bottom: 10px;">📭</div>
+                <h3 style="color: #cbd5e1; margin-bottom: 8px;">Nenhum dado mensal disponível</h3>
+                <p style="color: #64748b; font-size: 13px;">Extraia ou importe mensagens de um grupo para visualizar os relatórios consolidados.</p>
+              </div>
+            `;
+          }
+        }
+      } catch (err) {
+        console.error("Erro ao carregar lista de meses:", err);
+      }
+    }
+
+    async function aoMudarMesRelatorio() {
+      const selectMes = document.getElementById('select-relatorio-mes');
+      if (!selectMes) return;
+      relatorioMesSelecionado = selectMes.value;
+      await carregarRelatorioMensal(relatorioMesSelecionado);
+    }
+
+    async function carregarRelatorioAtual() {
+      if (relatorioMesSelecionado) {
+        await carregarRelatorioMensal(relatorioMesSelecionado);
+        showToast("Relatório atualizado com sucesso.");
+      } else {
+        await carregarMesesRelatorio();
+      }
+    }
+
+    async function carregarRelatorioMensal(mes) {
+      if (!mes) return;
+
+      const badgeGrupo = document.getElementById('report-group-name-badge');
+      try {
+        const url = `/api/relatorios/dados?mes=${encodeURIComponent(mes)}`;
+        const res = await fetch(url);
+        const json = await res.json();
+
+        if (!json.success || !json.data || !json.data.tem_dados) {
+          showToast(json.data?.mensagem || "Não há mensagens para o mês selecionado.");
+          return;
+        }
+
+        const data = json.data;
+        relatorioAtualDados = data;
+
+        if (badgeGrupo) {
+          badgeGrupo.innerText = data.grupo_nome || "Comunidade";
+        }
+
+        renderizarSecoesRelatorio(data);
+      } catch (err) {
+        console.error("Erro ao carregar dados do relatório mensal:", err);
+        showToast("Erro ao conectar com o servidor local.");
+      }
+    }
+
+    function renderizarSecoesRelatorio(data) {
+      const eng = data.engajamento || {};
+      const atencao = data.pontos_atencao || {};
+      const quant = data.analises_quantitativas || {};
+      const resumo = data.resumo_executivo || {};
+
+      // 1. ENGAJAMENTO
+      const elEngTotal = document.getElementById('rep-eng-total-msgs');
+      const elEngPart = document.getElementById('rep-eng-total-part');
+      const elEngMediaDia = document.getElementById('rep-eng-media-dia');
+      const elEngTaxaResp = document.getElementById('rep-eng-taxa-resp');
+      const elEngPico = document.getElementById('rep-eng-pico');
+      const elEngPicoSub = document.getElementById('rep-eng-pico-sub');
+
+      if (elEngTotal) elEngTotal.innerText = (eng.total_mensagens || 0).toLocaleString('pt-BR');
+      if (elEngPart) elEngPart.innerText = (eng.total_participantes || 0).toLocaleString('pt-BR');
+      if (elEngMediaDia) elEngMediaDia.innerText = String(eng.media_mensagens_dia || 0).replace('.', ',');
+      if (elEngTaxaResp) elEngTaxaResp.innerText = `${String(eng.taxa_respostas_percent || 0).replace('.', ',')}%`;
+      if (elEngPico) elEngPico.innerText = eng.dia_pico || '-';
+      if (elEngPicoSub) elEngPicoSub.innerText = `${(eng.dia_pico_volume || 0).toLocaleString('pt-BR')} msgs (Turno: ${eng.periodo_predominante || '-'})`;
+
+      // Barras dias da semana
+      const elDiasSemana = document.getElementById('rep-eng-dias-semana-bars');
+      if (elDiasSemana && eng.dias_semana_distribuicao) {
+        const maxDia = Math.max(...eng.dias_semana_distribuicao.map(d => d.total), 1);
+        elDiasSemana.innerHTML = eng.dias_semana_distribuicao.map(d => {
+          const pct = Math.round((d.total / maxDia) * 100);
+          return `
+            <div class="report-chart-bar-row">
+              <span class="report-chart-label">${d.dia}</span>
+              <div class="report-chart-track">
+                <div class="report-chart-fill" style="width: ${pct}%;"></div>
+              </div>
+              <span class="report-chart-value">${d.total.toLocaleString('pt-BR')}</span>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Barras períodos do dia
+      const elPeriodos = document.getElementById('rep-eng-periodos-bars');
+      if (elPeriodos && eng.periodos_distribuicao) {
+        const periodosEntries = Object.entries(eng.periodos_distribuicao);
+        const maxPer = Math.max(...periodosEntries.map(e => e[1]), 1);
+        elPeriodos.innerHTML = periodosEntries.map(([perNome, perTotal]) => {
+          const pct = Math.round((perTotal / maxPer) * 100);
+          return `
+            <div class="report-chart-bar-row">
+              <span class="report-chart-label">${perNome}</span>
+              <div class="report-chart-track">
+                <div class="report-chart-fill" style="width: ${pct}%; background: linear-gradient(90deg, #9333ea, #c084fc);"></div>
+              </div>
+              <span class="report-chart-value">${perTotal.toLocaleString('pt-BR')}</span>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 2. PONTOS DE ATENÇÃO
+      const elBadgeAtencao = document.getElementById('rep-atencao-badge-container');
+      if (elBadgeAtencao) {
+        elBadgeAtencao.innerHTML = `
+          <div class="report-attention-badge" style="background: ${atencao.nivel_atencao_cor}22; border: 1px solid ${atencao.nivel_atencao_cor}; color: ${atencao.nivel_atencao_cor};">
+            <span>●</span> ${atencao.nivel_atencao}
+          </div>
+        `;
+      }
+
+      const elTotalDuvidas = document.getElementById('rep-atencao-total-duvidas');
+      const elTotalTermos = document.getElementById('rep-atencao-total-termos');
+      const elIsolados = document.getElementById('rep-atencao-isolados');
+      if (elTotalDuvidas) elTotalDuvidas.innerText = (atencao.total_duvidas_mapeadas || 0).toLocaleString('pt-BR');
+      if (elTotalTermos) elTotalTermos.innerText = (atencao.total_termos_alerta || 0).toLocaleString('pt-BR');
+      if (elIsolados) elIsolados.innerText = (atencao.participantes_isolados || 0).toLocaleString('pt-BR');
+
+      // Tags de termos de alerta
+      const elTermosTags = document.getElementById('rep-atencao-termos-tags');
+      if (elTermosTags) {
+        if (atencao.top_termos_alerta && atencao.top_termos_alerta.length > 0) {
+          elTermosTags.innerHTML = atencao.top_termos_alerta.map(t => {
+            return `<span class="report-tag">⚠️ "${t.termo}" (${t.ocorrencias})</span>`;
+          }).join('');
+        } else {
+          elTermosTags.innerHTML = '<span style="color: #64748b; font-size: 12px;">Nenhum termo de alerta ou dificuldade crítico recorrente detectado.</span>';
+        }
+      }
+
+      // Lista de amostra de dúvidas
+      const elDuvidasList = document.getElementById('rep-atencao-duvidas-list');
+      if (elDuvidasList) {
+        if (atencao.amostra_duvidas && atencao.amostra_duvidas.length > 0) {
+          elDuvidasList.innerHTML = atencao.amostra_duvidas.map(d => {
+            return `
+              <div style="background: #0b1120; border: 1px solid #1e293b; border-radius: 8px; padding: 10px 12px; font-size: 12.5px;">
+                <div style="display: flex; justify-content: space-between; color: #94a3b8; font-size: 11px; margin-bottom: 4px;">
+                  <span><b>@${d.remetente}</b></span>
+                  <span>${d.data_hora}</span>
+                </div>
+                <div style="color: #cbd5e1; line-height: 1.4;">${d.texto}</div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          elDuvidasList.innerHTML = '<div style="color: #64748b; font-size: 12px;">Nenhuma dúvida em aberto identificada na amostra.</div>';
+        }
+      }
+
+      // 3. ANÁLISES QUANTITATIVAS
+      const elQuantPctHist = document.getElementById('rep-quant-pct-historico');
+      const elQuantPctHistSub = document.getElementById('rep-quant-pct-historico-sub');
+      const elQuantTamMedio = document.getElementById('rep-quant-tamanho-medio');
+      const elQuantAnexos = document.getElementById('rep-quant-anexos');
+      const elQuantAnexosSub = document.getElementById('rep-quant-anexos-sub');
+
+      if (elQuantPctHist) elQuantPctHist.innerText = `${String(quant.percentual_do_historico || 0).replace('.', ',')}%`;
+      if (elQuantPctHistSub) elQuantPctHistSub.innerText = `do total geral (${(quant.total_historico_base || 0).toLocaleString('pt-BR')} msgs)`;
+      if (elQuantTamMedio) elQuantTamMedio.innerText = `${String(quant.tamanho_medio_caracteres || 0).replace('.', ',')} carac.`;
+      if (elQuantAnexos) elQuantAnexos.innerText = (quant.tipos_mensagens?.anexos_midia || 0).toLocaleString('pt-BR');
+      if (elQuantAnexosSub) elQuantAnexosSub.innerText = `${quant.tipos_mensagens?.percentual_anexos || 0}% do volume do mês`;
+
+      // Top participantes
+      const elTopPartBody = document.getElementById('rep-quant-top-participantes-body');
+      if (elTopPartBody && quant.top_participantes) {
+        elTopPartBody.innerHTML = quant.top_participantes.map((p, idx) => {
+          return `
+            <tr>
+              <td style="font-weight: 700; color: #94a3b8;">${idx + 1}</td>
+              <td style="font-weight: 600; color: #f1f5f9;">@${p.remetente}</td>
+              <td style="text-align: right; color: #38bdf8; font-weight: 700;">${p.total_mensagens.toLocaleString('pt-BR')}</td>
+              <td style="text-align: right; color: #94a3b8;">${String(p.percentual).replace('.', ',')}%</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // Barras de distribuição semanal
+      const elSemanalBars = document.getElementById('rep-quant-semanal-bars');
+      if (elSemanalBars && quant.distribuicao_semanal) {
+        const maxSem = Math.max(...quant.distribuicao_semanal.map(s => s.total), 1);
+        elSemanalBars.innerHTML = quant.distribuicao_semanal.map(s => {
+          const pct = Math.round((s.total / maxSem) * 100);
+          return `
+            <div class="report-chart-bar-row">
+              <span class="report-chart-label" style="width: 85px;">${s.semana}</span>
+              <div class="report-chart-track">
+                <div class="report-chart-fill" style="width: ${pct}%; background: linear-gradient(90deg, #059669, #34d399);"></div>
+              </div>
+              <span class="report-chart-value">${s.total.toLocaleString('pt-BR')} (${String(s.percentual).replace('.', ',')}%)</span>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 4. RESUMO EXECUTIVO
+      const elExecTexto = document.getElementById('rep-executivo-texto');
+      if (elExecTexto) {
+        elExecTexto.innerHTML = renderizarMarkdownSimples(resumo.texto_padrao || "Sem resumo disponível.");
+      }
+    }
+
+    async function gerarResumoExecutivoIA() {
+      const apiKey = localStorage.getItem(STORAGE_KEY_API) || '';
+      const model = localStorage.getItem(STORAGE_KEY_MODEL) || 'gemini-2.5-flash';
+      const btnGerar = document.getElementById('btn-gerar-resumo-llm');
+      const elExecTexto = document.getElementById('rep-executivo-texto');
+
+      if (!apiKey) {
+        showToast("Configure sua chave de API do Gemini no card da aba 'Gerar insights' ou em 'Configurações'.");
+        navegarPara('page-insights');
+        return;
+      }
+
+      if (!relatorioMesSelecionado) {
+        showToast("Selecione um mês válido para gerar o resumo executivo.");
+        return;
+      }
+
+      try {
+        if (btnGerar) {
+          btnGerar.disabled = true;
+          btnGerar.innerHTML = '<span>⏳ Analisando e gerando resumo com Gemini...</span>';
+        }
+        if (elExecTexto) {
+          elExecTexto.innerHTML = '<div style="display: flex; align-items: center; gap: 8px; color: #93c5fd; padding: 14px 0;"><span>⏳</span> Conectando ao Google Gemini e gerando análise executiva aprofundada...</div>';
+        }
+
+        appendLog(`[Relatórios / Gemini] Solicitando geração de Resumo Executivo para ${relatorioMesSelecionado} via modelo '${model}'...`);
+
+        const res = await fetch('/api/relatorios/gerar-resumo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            api_key: apiKey,
+            model: model,
+            mes: relatorioMesSelecionado
+          })
+        });
+
+        const json = await res.json();
+        if (json.success && json.resumo) {
+          if (elExecTexto) {
+            elExecTexto.innerHTML = `
+              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+                <span class="byok-badge active">✨ Gerado pelo Google Gemini (${model})</span>
+              </div>
+              ${renderizarMarkdownSimples(json.resumo)}
+            `;
+          }
+          if (relatorioAtualDados && relatorioAtualDados.resumo_executivo) {
+            relatorioAtualDados.resumo_executivo.texto_padrao = json.resumo;
+          }
+          appendLog(`[Relatórios / Gemini] ✅ Resumo Executivo gerado com sucesso.`);
+          showToast("Resumo Executivo gerado com sucesso pelo Gemini!");
+        } else {
+          const err = json.message || "Erro desconhecido ao gerar resumo.";
+          if (elExecTexto) {
+            elExecTexto.innerHTML = `<div style="color: #f87171;">⚠️ Falha ao gerar resumo: ${err}</div>`;
+          }
+          appendLog(`[Relatórios / Gemini - Erro] ${err}`);
+          showToast(err);
+        }
+      } catch (err) {
+        console.error("Erro ao chamar endpoint de resumo executivo:", err);
+        if (elExecTexto) {
+          elExecTexto.innerHTML = `<div style="color: #f87171;">❌ Erro de conexão com o servidor local: ${err}</div>`;
+        }
+        showToast("Erro ao conectar com o servidor local.");
+      } finally {
+        if (btnGerar) {
+          btnGerar.disabled = false;
+          btnGerar.innerHTML = '<span>✨ Gerar Resumo com Gemini AI</span>';
+        }
+      }
+    }
+
+    function copiarResumoExecutivo() {
+      const elExecTexto = document.getElementById('rep-executivo-texto');
+      if (!elExecTexto) return;
+      const texto = relatorioAtualDados?.resumo_executivo?.texto_padrao || elExecTexto.innerText;
+      if (!texto) {
+        showToast("Nenhum resumo para copiar.");
+        return;
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(texto).then(() => {
+          showToast("Resumo Executivo copiado para a área de transferência!");
+        }).catch(() => {
+          showToast("Erro ao copiar para a área de transferência.");
+        });
+      } else {
+        showToast("Área de transferência não suportada pelo navegador.");
+      }
+    }
+
+    function imprimirRelatorio() {
+      window.print();
     }
 
     // -------------------------------------------------------------
