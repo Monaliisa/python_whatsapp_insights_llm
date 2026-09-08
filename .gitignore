@@ -176,3 +176,6 @@ pyrightconfig.json
 # End of https://www.toptal.com/developers/gitignore/api/python
 
 sessao_whatsapp/
+
+# Banco de dados local com mensagens coletadas (dados pessoais, não versionar)
+data/
