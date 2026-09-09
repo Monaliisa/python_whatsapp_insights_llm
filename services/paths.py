@@ -118,3 +118,20 @@ def setup_environment() -> None:
     get_session_dir()
     get_backups_dir()
     get_consultas_dir()
+
+    # Configura o caminho dos navegadores do Playwright para executável (.exe / PyInstaller)
+    if "PLAYWRIGHT_BROWSERS_PATH" not in os.environ:
+        local_appdata = os.environ.get("LOCALAPPDATA")
+        if local_appdata:
+            ms_path = os.path.join(local_appdata, "ms-playwright")
+            if os.path.exists(ms_path):
+                os.environ["PLAYWRIGHT_BROWSERS_PATH"] = ms_path
+            else:
+                os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "0"
+        else:
+            os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "0"
+
+
+# Executa setup básico ao carregar o módulo
+setup_environment()
+

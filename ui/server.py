@@ -70,6 +70,7 @@ from services.paths import (
     get_data_dir,
     get_db_path,
     get_templates_dir,
+    setup_environment,
 )
 
 BASE_DIR = get_base_dir()
@@ -206,6 +207,7 @@ class ReportSummaryRequest(BaseModel):
 
 @app.on_event("startup")
 def startup_event():
+    setup_environment()
     init_db(get_db_path())
     detected = detect_active_group_from_db(get_db_path())
     if detected:
