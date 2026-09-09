@@ -189,9 +189,16 @@ def abrir_chat_por_nome(pagina, nome, nome_alternativo=None):
 
         if encontrou:
             # NUNCA pressionar Escape aqui, pois no WhatsApp Web o Escape fecha o chat ativo!
-            # Apenas damos foco no painel principal da conversa
+            # Foca no contêiner de mensagens com segurança (sem disparar cliques com mouse no centro do chat)
             try:
-                pagina.locator("#main").click(timeout=3000)
+                pagina.evaluate("""
+                    () => {
+                        const panel = document.querySelector("#main div[data-testid='conversation-panel-messages']") ||
+                                      document.querySelector("#main div[tabindex='-1']") ||
+                                      document.querySelector("#main header");
+                        if (panel) panel.focus();
+                    }
+                """)
             except Exception:
                 pass
             return True
@@ -506,6 +513,9 @@ def extrair_dados_comunidade(
             no_viewport=True,
         )
 
+        # Impede abertura acidental de novas abas/janelas provenientes de cliques em links de mensagens
+        contexto.on("page", lambda new_page: new_page.close())
+
         try:
             pagina = contexto.pages[0] if contexto.pages else contexto.new_page()
             print("Acessando https://web.whatsapp.com ...")
@@ -540,7 +550,27 @@ def extrair_dados_comunidade(
             print("\nAguardando o painel de mensagens carregar...")
             pagina.wait_for_selector("#main", timeout=20000)
             time.sleep(2)
-            pagina.click("#main")
+
+            # Injeta proteção contra cliques acidentais em links durante o processo de extração
+            try:
+                pagina.evaluate("""
+                    () => {
+                        let style = document.getElementById('whatsapp-insights-no-click-links');
+                        if (!style) {
+                            style = document.createElement('style');
+                            style.id = 'whatsapp-insights-no-click-links';
+                            style.innerHTML = '#main a, #main [role=\"button\"] a { pointer-events: none !important; }';
+                            document.head.appendChild(style);
+                        }
+                        const msgContainer = document.querySelector("#main div[data-testid='conversation-panel-messages']") ||
+                                             document.querySelector("#main div[tabindex='-1']") ||
+                                             document.querySelector("#main header") ||
+                                             document.querySelector("#main");
+                        if (msgContainer) msgContainer.focus();
+                    }
+                """)
+            except Exception:
+                pass
 
             print("\n--- Iniciando rolagem incremental e raspagem contínua ---")
 
