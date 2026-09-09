@@ -1,48 +1,42 @@
 """
-Módulo de Integração com Google Gemini (LLM) — WhatsApp Insights LLM
-Filosofia: Bring Your Own Key (BYOK)
+Módulo de Integração com Anthropic (Claude) — WhatsApp Insights LLM
 
-Este serviço encapsula todas as interações com os Modelos de Linguagem do Google Gemini,
-permitindo validação de credenciais fornecidas pelo usuário, seleção dinâmica de modelos,
-engenharia de prompts especializada e execução de chat analítico sobre as mensagens extraídas.
+Este serviço encapsula todas as interações com os Modelos de Linguagem da Anthropic (Claude),
+permitindo validação de credenciais fornecidas pelo usuário ou via variável de ambiente,
+seleção dinâmica de modelos, engenharia de prompts especializada e execução de chat
+analítico sobre as mensagens extraídas.
 """
 
 from __future__ import annotations
 
 import json
 import logging
+import os
 from typing import Any
 
 logger = logging.getLogger(__name__)
 
-# Modelos recomendados e catalogados da família Google Gemini
+# Modelos catalogados da família Anthropic Claude
 MODELOS_DISPONIVEIS = [
     {
-        "id": "gemini-2.5-flash",
-        "nome": "Gemini 2.5 Flash",
-        "descricao": "Recomendado. Rápido, eficiente e com ótima capacidade de síntese para grandes volumes de conversas.",
+        "id": "claude-3-5-sonnet-20241022",
+        "nome": "Claude 3.5 Sonnet",
+        "descricao": "Recomendado. Rápido, com capacidade analítica excepcional e síntese de alta precisão.",
         "tipo": "balanceado",
         "recomendado": True,
     },
     {
-        "id": "gemini-2.5-pro",
-        "nome": "Gemini 2.5 Pro",
-        "descricao": "Raciocínio avançado e análise qualitativa aprofundada. Ideal para análises temáticas complexas.",
-        "tipo": "avancado",
-        "recomendado": False,
-    },
-    {
-        "id": "gemini-3.7-flash",
-        "nome": "Gemini 3.7 Flash",
-        "descricao": "Última geração com velocidade superior e raciocínio multimodal otimizado.",
-        "tipo": "alta_performance",
-        "recomendado": False,
-    },
-    {
-        "id": "gemini-3.5-flash-lite",
-        "nome": "Gemini 3.5 Flash Lite",
-        "descricao": "Execução ultra leve e baixo consumo de cota de tokens.",
+        "id": "claude-3-5-haiku-20241022",
+        "nome": "Claude 3.5 Haiku",
+        "descricao": "Velocidade ultra rápida e ótimo custo-benefício para respostas dinâmicas.",
         "tipo": "leve",
+        "recomendado": False,
+    },
+    {
+        "id": "claude-3-opus-20240229",
+        "nome": "Claude 3 Opus",
+        "descricao": "Raciocínio profundo e análise qualitativa exaustiva para tópicos complexos.",
+        "tipo": "avancado",
         "recomendado": False,
     },
 ]
@@ -165,15 +159,17 @@ def formatar_contexto_mensagens(mensagens: list[dict], max_chars: int = 400000) 
     return "\n".join(linhas)
 
 
-class GeminiService:
+class AnthropicService:
     """
-    Serviço responsável pela conexão e inferência via Google Gemini API.
-    Segue a BYOK (Bring Your Own Key), onde a chave é fornecida sob demanda.
+    Serviço responsável pela conexão e inferência via Anthropic (Claude) API.
+    Suporta chaves informadas sob demanda na interface ou via variável de ambiente ANTHROPIC_API_KEY.
     """
 
-    def __init__(self, api_key: str | None = None, model: str = "gemini-2.5-flash"):
-        self.api_key = api_key.strip() if api_key else None
-        self.model = model
+    def __init__(self, api_key: str | None = None, model: str = "claude-3-5-sonnet-20241022"):
+        chave_informada = (api_key or "").strip()
+        chave_env = os.getenv("ANTHROPIC_API_KEY", "").strip()
+        self.api_key = chave_informada if chave_informada else (chave_env if chave_env else None)
+        self.model = model or "claude-3-5-sonnet-20241022"
 
     @classmethod
     def listar_modelos(cls) -> list[dict[str, Any]]:
@@ -187,69 +183,77 @@ class GeminiService:
 
     def validar_api_key(self, api_key: str | None = None, model: str | None = None) -> tuple[bool, str]:
         """
-        Testa a validade da API Key informada fazendo uma chamada de teste mínima na API do Gemini.
+        Testa a validade da API Key informada fazendo uma chamada de teste mínima na API da Anthropic.
         Retorna (sucesso: bool, mensagem_ou_erro: str).
         """
-        chave = (api_key or self.api_key or "").strip()
-        modelo_alvo = (model or self.model or "gemini-2.5-flash").strip()
+        chave = (api_key or self.api_key or os.getenv("ANTHROPIC_API_KEY", "")).strip()
+        modelo_alvo = (model or self.model or "claude-3-5-sonnet-20241022").strip()
 
         if not chave:
-            return False, "Nenhuma API Key informada. Forneça sua chave do Google Gemini."
+            return False, "Nenhuma API Key informada. Forneça sua chave da Anthropic (iniciada com 'sk-ant-')."
 
         try:
-            from google import genai
+            import anthropic
 
-            # Instancia o cliente oficial do Google GenAI com a chave BYOK
-            client = genai.Client(api_key=chave)
-
-            # Executa uma inferência curta de verificação de conectividade e autorização
-            response = client.models.generate_content(
+            client = anthropic.Anthropic(api_key=chave)
+            # Chamada curta de validação de autenticação e permissão
+            response = client.messages.create(
                 model=modelo_alvo,
-                contents="Responda apenas 'OK' em texto.",
+                max_tokens=10,
+                messages=[{"role": "user", "content": "Responda apenas 'OK'."}],
             )
 
-            texto_resposta = (response.text or "").strip()
-            return True, f"Chave validada com sucesso via modelo '{modelo_alvo}'! Conexão ativa com o Google Gemini."
+            return True, f"Chave validada com sucesso via modelo '{modelo_alvo}'! Conexão ativa com a Anthropic."
 
         except ImportError:
-            # Fallback caso a biblioteca google-genai ainda não esteja instalada no ambiente
+            # Fallback HTTP REST nativo caso a biblioteca 'anthropic' ainda não esteja instalada
             import urllib.error
             import urllib.request
 
-            # Teste HTTP direto no endpoint oficial do Gemini como fallback resiliente
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{modelo_alvo}:generateContent?key={chave}"
+            url = "https://api.anthropic.com/v1/messages"
             payload = json.dumps({
-                "contents": [{"parts": [{"text": "Responda apenas 'OK'."}]}]
+                "model": modelo_alvo,
+                "max_tokens": 10,
+                "messages": [{"role": "user", "content": "Responda apenas 'OK'."}],
             }).encode("utf-8")
 
             req = urllib.request.Request(
                 url,
                 data=payload,
-                headers={"Content-Type": "application/json"},
+                headers={
+                    "x-api-key": chave,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
                 method="POST",
             )
 
             try:
-                with urllib.request.urlopen(req, timeout=12) as res:
+                with urllib.request.urlopen(req, timeout=15) as res:
                     if res.status == 200:
                         return True, f"Chave validada com sucesso via modelo '{modelo_alvo}'!"
-                    return False, f"Resposta inesperada da API: HTTP {res.status}"
+                    return False, f"Resposta inesperada da API da Anthropic: HTTP {res.status}"
             except urllib.error.HTTPError as http_err:
-                if http_err.code in (400, 403):
-                    return False, "API Key inválida ou sem permissão de acesso aos modelos Gemini no Google AI Studio."
+                if http_err.code in (401, 403):
+                    return False, "API Key da Anthropic inválida ou não autorizada. Verifique a chave digitada no console da Anthropic."
                 if http_err.code == 404:
-                    return False, f"Modelo '{modelo_alvo}' não encontrado ou indisponível para esta chave."
-                return False, f"Erro HTTP {http_err.code} ao validar chave: {http_err.reason}"
+                    return False, f"Modelo '{modelo_alvo}' não encontrado ou indisponível na sua conta da Anthropic."
+                if http_err.code == 429:
+                    return False, "Limite de taxa/cota excedido na Anthropic (HTTP 429). Verifique seu saldo ou limite no console."
+                corpo_erro = http_err.read().decode("utf-8", errors="ignore")
+                return False, f"Erro HTTP {http_err.code} da Anthropic: {http_err.reason} ({corpo_erro[:150]})"
             except Exception as e:
-                return False, f"Falha de conexão com a API do Google Gemini: {e}"
+                return False, f"Falha de conexão com a API da Anthropic: {e}"
 
         except Exception as exc:
             msg = str(exc)
-            if "API_KEY_INVALID" in msg or "400" in msg or "403" in msg or "permission" in msg.lower():
-                return False, "API Key inválida ou sem permissão no Google AI Studio. Verifique a chave digitada."
-            if "RESOURCE_EXHAUSTED" in msg or "429" in msg:
-                return False, "Limite de cota de requisições excedido para esta chave no momento (HTTP 429)."
-            return False, f"Erro ao comunicar com Google Gemini: {msg}"
+            if "authentication_error" in msg.lower() or "401" in msg or "invalid_api_key" in msg.lower():
+                return False, "API Key da Anthropic inválida. Verifique sua chave no Console da Anthropic."
+            if "rate_limit_error" in msg.lower() or "429" in msg:
+                return False, "Limite de cota ou taxa excedido na Anthropic (HTTP 429)."
+            if "not_found_error" in msg.lower() or "404" in msg:
+                return False, f"Modelo '{modelo_alvo}' não disponível para sua conta Anthropic."
+            return False, f"Erro ao comunicar com a Anthropic: {msg}"
 
     def gerar_insights_chat(
         self,
@@ -260,14 +264,14 @@ class GeminiService:
         grupo_nome: str | None = None,
     ) -> tuple[bool, str]:
         """
-        Executa a geração de insights via Gemini unindo o prompt do usuário/template analítico
+        Executa a geração de insights via Anthropic (Claude) unindo o prompt do usuário/template analítico
         com o bloco de mensagens do banco SQLite no período filtrado.
         """
-        chave = (self.api_key or "").strip()
+        chave = (self.api_key or os.getenv("ANTHROPIC_API_KEY", "")).strip()
         if not chave:
-            return False, "Chave de API do Google Gemini não configurada. Insira sua chave no card de configuração."
+            return False, "Chave de API da Anthropic não configurada. Insira sua chave no card de configuração."
 
-        modelo_alvo = (self.model or "gemini-2.5-flash").strip()
+        modelo_alvo = (self.model or "claude-3-5-sonnet-20241022").strip()
         nome_grupo_str = grupo_nome or "Comunidade WhatsApp"
 
         # Formata o bloco de mensagens reais do período
@@ -279,10 +283,8 @@ class GeminiService:
         if tipo_analise and tipo_analise in ANALISES_PRE_PROGRAMADAS:
             instrucao_principal = ANALISES_PRE_PROGRAMADAS[tipo_analise]["prompt_template"]
 
-        # Montagem do Prompt Integrado
-        prompt_completo = f"""{SYSTEM_PROMPT_BASE}
-
----
+        # Montagem da mensagem do usuário com contexto
+        mensagem_conteudo = f"""---
 ### DADOS DO GRUPO ANALISADO
 - **Grupo:** {nome_grupo_str}
 - **Total de Mensagens no Período Selecionado:** {total_msgs}
@@ -298,33 +300,40 @@ class GeminiService:
 {instrucao_principal}
 """
 
-        # Histórico multi-turn prévio (se fornecido)
-        conteudos_chamada = []
+        # Monta a lista de mensagens para a API Anthropic (deve alternar user e assistant)
+        mensagens_api = []
         if historico and isinstance(historico, list):
-            for turno in historico[-6:]:  # últimos 6 turnos para preservar contexto
-                role = turno.get("role") or "user"
-                content = turno.get("content") or ""
+            for turno in historico[-6:]:
+                role = "assistant" if turno.get("role") == "assistant" else "user"
+                content = (turno.get("content") or "").strip()
                 if content:
-                    conteudos_chamada.append({"role": "model" if role == "assistant" else "user", "parts": [{"text": content}]})
+                    mensagens_api.append({"role": role, "content": content})
 
-        # Adiciona a solicitação atual
-        conteudos_chamada.append({"role": "user", "parts": [{"text": prompt_completo}]})
+        mensagens_api.append({"role": "user", "content": mensagem_conteudo})
 
         try:
-            from google import genai
-            from google.genai import types
+            import anthropic
 
-            client = genai.Client(api_key=chave)
-
-            # Chama a API do Gemini com o modelo configurado
-            response = client.models.generate_content(
+            client = anthropic.Anthropic(api_key=chave)
+            response = client.messages.create(
                 model=modelo_alvo,
-                contents=prompt_completo,
+                max_tokens=4096,
+                temperature=0.4,
+                system=SYSTEM_PROMPT_BASE,
+                messages=mensagens_api,
             )
 
-            texto_resposta = (response.text or "").strip()
+            # Extrai o texto da resposta
+            partes_texto = []
+            for block in response.content:
+                if getattr(block, "type", None) == "text":
+                    partes_texto.append(block.text)
+                elif hasattr(block, "text"):
+                    partes_texto.append(str(block.text))
+
+            texto_resposta = "\n".join(partes_texto).strip()
             if not texto_resposta:
-                return False, "O modelo Gemini não retornou conteúdo para esta consulta."
+                return False, "O modelo Claude não retornou conteúdo para esta consulta."
 
             return True, texto_resposta
 
@@ -333,45 +342,53 @@ class GeminiService:
             import urllib.error
             import urllib.request
 
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{modelo_alvo}:generateContent?key={chave}"
+            url = "https://api.anthropic.com/v1/messages"
             payload = json.dumps({
-                "contents": [{"parts": [{"text": prompt_completo}]}],
-                "generationConfig": {
-                    "temperature": 0.4,
-                    "topP": 0.95,
-                }
+                "model": modelo_alvo,
+                "max_tokens": 4096,
+                "temperature": 0.4,
+                "system": SYSTEM_PROMPT_BASE,
+                "messages": mensagens_api,
             }).encode("utf-8")
 
             req = urllib.request.Request(
                 url,
                 data=payload,
-                headers={"Content-Type": "application/json"},
+                headers={
+                    "x-api-key": chave,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
                 method="POST",
             )
 
             try:
-                with urllib.request.urlopen(req, timeout=60) as res:
+                with urllib.request.urlopen(req, timeout=90) as res:
                     if res.status == 200:
                         data = json.loads(res.read().decode("utf-8"))
-                        candidates = data.get("candidates") or []
-                        if candidates:
-                            partes = candidates[0].get("content", {}).get("parts", [])
-                            texto = "".join([p.get("text", "") for p in partes]).strip()
-                            if texto:
-                                return True, texto
-                        return False, "Nenhuma resposta gerada pelo modelo Gemini."
+                        conteudos = data.get("content", [])
+                        textos = [b.get("text", "") for b in conteudos if b.get("type") == "text"]
+                        texto_final = "\n".join(textos).strip()
+                        if texto_final:
+                            return True, texto_final
+                        return False, "Nenhuma resposta de texto gerada pela Anthropic."
                     return False, f"Resposta inesperada da API: HTTP {res.status}"
             except urllib.error.HTTPError as http_err:
                 detalhe = http_err.read().decode("utf-8", errors="ignore")
-                return False, f"Erro da API Google Gemini (HTTP {http_err.code}): {http_err.reason}"
+                return False, f"Erro da API Anthropic (HTTP {http_err.code}): {http_err.reason} ({detalhe[:200]})"
             except Exception as e:
-                return False, f"Falha de conexão com a API do Google Gemini: {e}"
+                return False, f"Falha de conexão com a API da Anthropic: {e}"
 
         except Exception as exc:
             msg = str(exc)
-            if "RESOURCE_EXHAUSTED" in msg or "429" in msg:
-                return False, "Limite de cota de requisições excedido no Google Gemini (HTTP 429). Tente novamente em alguns segundos ou use outro modelo."
-            if "API_KEY_INVALID" in msg or "400" in msg or "403" in msg:
-                return False, "Chave de API inválida ou sem permissão. Verifique sua chave no card de configuração."
-            return False, f"Erro ao processar consulta com o Gemini: {msg}"
+            if "authentication_error" in msg.lower() or "401" in msg:
+                return False, "Chave de API da Anthropic inválida. Verifique sua chave no card de configuração."
+            if "rate_limit_error" in msg.lower() or "429" in msg:
+                return False, "Limite de cota de requisições excedido na Anthropic (HTTP 429). Aguarde alguns instantes."
+            return False, f"Erro ao processar consulta com Anthropic (Claude): {msg}"
+
+
+# Alias para retrocompatibilidade
+GeminiService = AnthropicService
+
 

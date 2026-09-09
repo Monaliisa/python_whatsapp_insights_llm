@@ -3,4 +3,6 @@ PySide6>=6.6.0
 fastapi>=0.110.0
 uvicorn>=0.28.0
 pyinstaller>=6.4.0
+anthropic>=0.34.0
 google-genai>=1.0.0
+

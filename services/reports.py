@@ -19,7 +19,7 @@ from collections import Counter, defaultdict
 from datetime import datetime
 from typing import Any
 
-from services.llm import GeminiService
+from services.llm import AnthropicService, GeminiService
 from services.paths import get_db_path
 from services.storage import detect_active_group_from_db
 
@@ -425,10 +425,10 @@ O clima geral da comunidade foi classificado como **{nivel_atencao}**. Foram ide
         db_path: str | None = None,
     ) -> tuple[bool, str]:
         """
-        Gera um Resumo Executivo inteligente e qualitativo via Google Gemini BYOK.
+        Gera um Resumo Executivo inteligente e qualitativo via Anthropic (Claude).
         """
         if not api_key:
-            return False, "Chave de API do Google Gemini não fornecida. Configure sua chave BYOK."
+            return False, "Chave de API da Anthropic não fornecida. Configure sua chave no card de configuração."
 
         if db_path is None:
             db_path = get_db_path()
@@ -519,7 +519,7 @@ Proponha 3 a 5 ações práticas (ex.: novos materiais, lives de reforço, orien
 Utilize tom profissional, analítico, acolhedor e com formatação rica em Markdown (tópicos, negritos e destaques).
 """
 
-        service = GeminiService(api_key=api_key, model=model or "gemini-2.5-flash")
+        service = AnthropicService(api_key=api_key, model=model or "claude-3-5-sonnet-20241022")
         return service.gerar_insights_chat(
             prompt_usuario=prompt_executivo,
             mensagens=mensagens_estruturadas,

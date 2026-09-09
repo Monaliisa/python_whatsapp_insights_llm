@@ -61,7 +61,7 @@ from services.storage import (
     set_active_group,
     wipe_all_data,
 )
-from services.llm import GeminiService, MODELOS_DISPONIVEIS, ANALISES_PRE_PROGRAMADAS
+from services.llm import AnthropicService, GeminiService, MODELOS_DISPONIVEIS, ANALISES_PRE_PROGRAMADAS
 from services.reports import ReportService
 from services.paths import (
     get_backups_dir,
@@ -922,33 +922,33 @@ async def abrir_banco():
 
 @app.get("/api/llm/modelos")
 async def get_llm_modelos():
-    """Retorna os modelos de LLM suportados (Google Gemini)."""
+    """Retorna os modelos de LLM suportados (Anthropic Claude)."""
     return {
         "success": True,
-        "provedor": "Google Gemini",
-        "filosofia": "BYOK (Bring Your Own Key)",
-        "modelos": GeminiService.listar_modelos(),
+        "provedor": "Anthropic (Claude)",
+        "filosofia": "Chave de API / Configuração Local",
+        "modelos": AnthropicService.listar_modelos(),
     }
 
 
 @app.post("/api/llm/validar")
 async def validar_chave_llm(req: ValidateLLMKeyRequest):
-    """Valida a API Key informada pelo usuário executando um teste contra o Google Gemini."""
-    api_key = req.api_key.strip()
+    """Valida a API Key informada pelo usuário executando um teste contra a Anthropic."""
+    api_key = req.api_key.strip() or os.getenv("ANTHROPIC_API_KEY", "").strip()
     if not api_key:
-        return {"success": False, "message": "Nenhuma API Key informada. Digite sua chave do Google Gemini."}
+        return {"success": False, "message": "Nenhuma API Key informada. Digite sua chave da Anthropic (iniciada com 'sk-ant-')."}
 
-    modelo = req.model.strip() or "gemini-2.5-flash"
-    service = GeminiService(api_key=api_key, model=modelo)
+    modelo = req.model.strip() or "claude-3-5-sonnet-20241022"
+    service = AnthropicService(api_key=api_key, model=modelo)
 
-    state.add_log(f"[BYOK / Gemini] Validando API Key informada para o modelo '{modelo}'...")
+    state.add_log(f"[Anthropic / Claude] Validando API Key informada para o modelo '{modelo}'...")
     valida, msg = service.validar_api_key(api_key=api_key, model=modelo)
 
     if valida:
-        state.add_log(f"[BYOK / Gemini] ✅ {msg}")
+        state.add_log(f"[Anthropic / Claude] ✅ {msg}")
         return {"success": True, "message": msg, "model": modelo}
     else:
-        state.add_log(f"[BYOK / Gemini] ⚠️ {msg}")
+        state.add_log(f"[Anthropic / Claude] ⚠️ {msg}")
         return {"success": False, "message": msg, "model": modelo}
 
 
@@ -968,21 +968,21 @@ async def get_llm_analises_uteis():
     """Retorna a lista estruturada de análises úteis pré-programadas."""
     return {
         "success": True,
-        "data": GeminiService.listar_analises_uteis(),
+        "data": AnthropicService.listar_analises_uteis(),
     }
 
 
 @app.post("/api/llm/chat")
 async def processar_chat_llm(req: ChatLLMRequest):
     """
-    Executa a inferência de inteligência artificial via Google Gemini unindo a solicitação
+    Executa a inferência de inteligência artificial via Anthropic (Claude) unindo a solicitação
     do usuário às mensagens do banco SQLite dentro do intervalo de tempo selecionado.
     """
-    api_key = req.api_key.strip()
+    api_key = req.api_key.strip() or os.getenv("ANTHROPIC_API_KEY", "").strip()
     if not api_key:
-        return {"success": False, "message": "API Key do Google Gemini não fornecida. Configure sua chave no card superior."}
+        return {"success": False, "message": "API Key da Anthropic não fornecida. Configure sua chave no card superior."}
 
-    modelo = req.model.strip() or "gemini-2.5-flash"
+    modelo = req.model.strip() or "claude-3-5-sonnet-20241022"
     db_path = get_db_path()
 
     # Busca o grupo ativo
@@ -1004,9 +1004,9 @@ async def processar_chat_llm(req: ChatLLMRequest):
         }
 
     desc_analise = f" ({req.tipo_analise})" if req.tipo_analise else ""
-    state.add_log(f"[Gemini / Chat] Processando consulta{desc_analise} com {len(mensagens)} mensagens do grupo '{grupo_nome}' via modelo '{modelo}'...")
+    state.add_log(f"[Anthropic / Claude] Processando consulta{desc_analise} com {len(mensagens)} mensagens do grupo '{grupo_nome}' via modelo '{modelo}'...")
 
-    service = GeminiService(api_key=api_key, model=modelo)
+    service = AnthropicService(api_key=api_key, model=modelo)
     sucesso, resposta = service.gerar_insights_chat(
         prompt_usuario=req.prompt,
         mensagens=mensagens,
@@ -1016,7 +1016,7 @@ async def processar_chat_llm(req: ChatLLMRequest):
     )
 
     if sucesso:
-        state.add_log(f"[Gemini / Chat] ✅ Resposta gerada com sucesso ({len(resposta)} caracteres).")
+        state.add_log(f"[Anthropic / Claude] ✅ Resposta gerada com sucesso ({len(resposta)} caracteres).")
         return {
             "success": True,
             "response": resposta,
@@ -1025,7 +1025,7 @@ async def processar_chat_llm(req: ChatLLMRequest):
             "model": modelo,
         }
     else:
-        state.add_log(f"[Gemini / Chat] ⚠️ Falha na geração: {resposta}")
+        state.add_log(f"[Anthropic / Claude] ⚠️ Falha na geração: {resposta}")
         return {
             "success": False,
             "message": resposta,
@@ -1053,18 +1053,18 @@ async def get_report_data(mes: str | None = None):
 
 @app.post("/api/relatorios/gerar-resumo")
 async def generate_report_summary(req: ReportSummaryRequest):
-    """Gera um Resumo Executivo inteligente e consolidado via Google Gemini BYOK."""
-    api_key = req.api_key.strip()
+    """Gera um Resumo Executivo inteligente e consolidado via Anthropic (Claude)."""
+    api_key = req.api_key.strip() or os.getenv("ANTHROPIC_API_KEY", "").strip()
     if not api_key:
-        return {"success": False, "message": "API Key do Google Gemini não fornecida. Configure sua chave no card BYOK."}
+        return {"success": False, "message": "API Key da Anthropic não fornecida. Configure sua chave no card de configuração."}
 
     db_path = get_db_path()
     metricas = ReportService.calcular_metricas_mensais(mes=req.mes, db_path=db_path)
     if not metricas.get("tem_dados"):
         return {"success": False, "message": "Não há mensagens suficientes no mês selecionado para gerar o resumo executivo."}
 
-    modelo = req.model.strip() or "gemini-2.5-flash"
-    state.add_log(f"[Relatórios / Gemini] Gerando Resumo Executivo Mensal ({req.mes}) via modelo '{modelo}'...")
+    modelo = req.model.strip() or "claude-3-5-sonnet-20241022"
+    state.add_log(f"[Relatórios / Anthropic] Gerando Resumo Executivo Mensal ({req.mes}) via modelo '{modelo}'...")
     sucesso, texto = ReportService.gerar_resumo_executivo_llm(
         api_key=api_key,
         model=modelo,
@@ -1074,10 +1074,10 @@ async def generate_report_summary(req: ReportSummaryRequest):
     )
 
     if sucesso:
-        state.add_log(f"[Relatórios / Gemini] ✅ Resumo Executivo gerado com sucesso ({len(texto)} caracteres).")
+        state.add_log(f"[Relatórios / Anthropic] ✅ Resumo Executivo gerado com sucesso ({len(texto)} caracteres).")
         return {"success": True, "resumo": texto}
     else:
-        state.add_log(f"[Relatórios / Gemini] ⚠️ Falha na geração do resumo: {texto}")
+        state.add_log(f"[Relatórios / Anthropic] ⚠️ Falha na geração do resumo: {texto}")
         return {"success": False, "message": texto}
 
 

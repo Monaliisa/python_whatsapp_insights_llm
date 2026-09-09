@@ -2293,8 +2293,8 @@
                   SQLite, permitindo coletas cumulativas.</div>
                 <div><b>4. Visualização e auditoria:</b> Consulte as mensagens em tabela com pesquisa dinâmica e modal
                   de detalhes.</div>
-                <div><b>5. Insights via IA (BYOK):</b> Analise conversas com o <b>Google Gemini</b> utilizando sua
-                  própria chave de API (Bring Your Own Key), sem intermediários.</div>
+                <div><b>5. Insights via IA:</b> Analise conversas com a <b>Anthropic (Claude)</b> utilizando sua
+                  própria chave de API configurada no navegador ou no servidor, sem intermediários.</div>
               </div>
             </div>
 
@@ -2306,7 +2306,7 @@
                   servidores de terceiros.</div>
                 <div>⚡ <b>Sem perda de histórico:</b> A persistência incremental garante que coletas futuras apenas
                   complementem as existentes.</div>
-                <div>🔑 <b>BYOK:</b> Sua chave de API do Gemini fica gravada apenas no seu navegador, dando a
+                <div>🔑 <b>Controle de API:</b> Sua chave de API da Anthropic fica gravada no seu navegador ou via variável de ambiente, dando a
                   você controle direto de custos e cotas.</div>
                 <div>📊 <b>Exportação imediata:</b> Faça o download integral do banco de dados nos formatos CSV e JSON
                   com um clique.</div>
@@ -2598,27 +2598,29 @@
         </div>
 
         <!-- =========================================================
-             TELA 5: GERAR INSIGHTS COM GOOGLE GEMINI (CHAT & ANÁLISES)
-             ========================================================= -->
-        <div id="page-insights" class="page">
-          <div class="page-header">
-            <div
-              style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <!-- =================================================================== -->
+        <!-- TELA 5: GERAR INSIGHTS COM ANTHROPIC CLAUDE (CHAT & ANÁLISES)       -->
+        <!-- =================================================================== -->
+        <div id="page-insights" class="page-view">
+
+          <!-- HEADER DA TELA DE INSIGHTS -->
+          <div class="page-header" style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
               <div>
-                <h1 class="page-title">🧠 Chat & Geração de Insights com IA</h1>
-                <p class="page-subtitle">Converse diretamente com o histórico de mensagens do grupo e gere análises
-                  profundas com o Google Gemini.</p>
+                <h2>✨ Análise Qualitativa & Inteligência Artificial</h2>
+                <p>Faça perguntas livres sobre os debates do grupo ou acione templates analíticos para gerar sínteses
+                  profundas com Anthropic (Claude).</p>
               </div>
             </div>
           </div>
 
-          <!-- 1. CARD DE CONFIGURAÇÃO DO GOOGLE GEMINI (BYOK) -->
+          <!-- 1. CARD DE CONFIGURAÇÃO DA ANTHROPIC (CLAUDE) -->
           <div id="byok-card" class="byok-config-card">
             <div class="byok-header-row" onclick="toggleByokConfig()"
               title="Clique para recolher ou expandir a configuração da API">
               <div class="byok-title">
                 <span style="font-size: 20px;">🔑</span>
-                <span>Configuração da API</span>
+                <span>Configuração da API (Anthropic Claude)</span>
               </div>
               <div style="display: flex; align-items: center; gap: 10px;">
                 <span id="byok-status-badge" class="byok-badge pending">⚠️ Chave não testada</span>
@@ -2632,10 +2634,9 @@
 
             <div id="byok-card-content" class="byok-card-content">
               <p style="color: #cbd5e1; font-size: 13.5px; line-height: 1.6;">
-                O módulo de inteligência opera sob o modelo <b>BYOK (Bring Your Own Key)</b>. Sua chave pessoal do
-                <b>Google AI Studio</b> é utilizada diretamente para inferência, garantindo soberania dos dados,
-                controle
-                total sobre o consumo de tokens e privacidade absoluta.
+                O módulo de inteligência utiliza os modelos <b>Anthropic Claude</b>. Sua chave de API do
+                <b>Anthropic Console</b> pode ser informada abaixo ou definida via variável de ambiente (<code>ANTHROPIC_API_KEY</code>),
+                garantindo controle total sobre o consumo de tokens e privacidade das mensagens.
               </p>
 
               <!-- Formulário de API Key e Seleção de Modelo -->
@@ -2645,10 +2646,10 @@
                 <div>
                   <label for="input-gemini-api-key"
                     style="display: block; font-size: 12.5px; font-weight: 600; color: #d8b4fe; margin-bottom: 6px;">
-                    Chave de API (Gemini API Key):
+                    Chave de API (Anthropic API Key):
                   </label>
                   <div class="input-action-group">
-                    <input type="password" id="input-gemini-api-key" placeholder="Cole sua chave AIzaSy... aqui"
+                    <input type="password" id="input-gemini-api-key" placeholder="Cole sua chave sk-ant-... aqui"
                       oninput="aoAlterarCredenciaisLLM()">
                     <div class="inline-buttons">
                       <button type="button" class="btn-input-action" id="btn-toggle-key-visibility"
@@ -2667,14 +2668,13 @@
                 <div>
                   <label for="select-gemini-model"
                     style="display: block; font-size: 12.5px; font-weight: 600; color: #d8b4fe; margin-bottom: 6px;">
-                    Modelo do Gemini:
+                    Modelo do Claude:
                   </label>
                   <div class="select-wrapper">
                     <select id="select-gemini-model" class="custom-select" onchange="aoAlterarCredenciaisLLM()">
-                      <option value="gemini-2.5-flash" selected>⚡ Gemini 2.5 Flash (Recomendado / Rápido)</option>
-                      <option value="gemini-2.5-pro">🧠 Gemini 2.5 Pro (Raciocínio Avançado)</option>
-                      <option value="gemini-3.7-flash">🚀 Gemini 3.7 Flash (Alta Performance)</option>
-                      <option value="gemini-3.5-flash-lite">💨 Gemini 3.5 Flash Lite (Ultra Rápido / Leve)</option>
+                      <option value="claude-3-5-sonnet-20241022" selected>⚡ Claude 3.5 Sonnet (Recomendado / Rápido e Analítico)</option>
+                      <option value="claude-3-5-haiku-20241022">💨 Claude 3.5 Haiku (Ultra Rápido / Econômico)</option>
+                      <option value="claude-3-opus-20240229">🧠 Claude 3 Opus (Raciocínio Profundo)</option>
                     </select>
                   </div>
                 </div>
@@ -2692,20 +2692,20 @@
               <!-- Banner de Informação e Segurança -->
               <div class="byok-info-banner">
                 🔒 <b>Segurança e Privacidade:</b> Sua chave de API é mantida com segurança no armazenamento local do
-                seu navegador (<code>localStorage</code>) e é utilizada exclusivamente pelo servidor local durante as
-                requisições de geração de relatórios.
+                seu navegador (<code>localStorage</code>) ou carregada via ambiente (<code>.env</code>), sendo utilizada exclusivamente
+                durante as requisições de geração de análises.
               </div>
 
               <!-- Links de Documentação e Recursos -->
               <div class="byok-docs-row">
                 <span style="font-size: 12px; color: #94a3b8; font-weight: 600;">Documentações & Recursos:</span>
-                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer"
-                  class="byok-doc-link" title="Gere sua chave gratuita ou gerencie cotas no Google AI Studio">
-                  <span>🔑 Obter API Key no Google AI Studio</span> ↗
+                <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer"
+                  class="byok-doc-link" title="Gere sua chave ou gerencie cotas no Anthropic Console">
+                  <span>🔑 Obter API Key no Anthropic Console</span> ↗
                 </a>
-                <a href="https://ai.google.dev/gemini-api/docs/models/gemini" target="_blank" rel="noopener noreferrer"
-                  class="byok-doc-link" title="Veja os limites de contexto, benchmarks e custos dos modelos Gemini">
-                  <span>📖 Comparativo de Modelos Gemini</span> ↗
+                <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener noreferrer"
+                  class="byok-doc-link" title="Veja os limites de contexto e capacidades dos modelos Claude">
+                  <span>📖 Modelos Anthropic Claude</span> ↗
                 </a>
                 <a href="https://pt.wikipedia.org/wiki/BYOK" target="_blank" rel="noopener noreferrer"
                   class="byok-doc-link" title="Entenda o modelo de Bring Your Own Key em aplicações modernas">
@@ -2788,7 +2788,7 @@
                   placeholder="Pergunte qualquer coisa sobre as conversas... (Enter para enviar, Shift+Enter para quebra de linha)"
                   rows="1" oninput="autoResizeChatTextarea(this)" onkeydown="aoDigitarNoChat(event)"></textarea>
                 <button type="button" id="btn-chat-send" class="btn" onclick="enviarMensagemChat()"
-                  title="Enviar pergunta para o Google Gemini">
+                  title="Enviar pergunta para Anthropic (Claude)">
                   <span>Enviar 🚀</span>
                 </button>
               </div>
@@ -3062,8 +3062,8 @@
                   <div class="report-section-subtitle" style="color: #a5b4fc;">Visão geral consolidada ao final com diagnósticos estratégicos e recomendações práticas.</div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                  <button type="button" id="btn-gerar-resumo-llm" class="btn" onclick="gerarResumoExecutivoIA()" title="Gerar resumo aprofundado com o Google Gemini">
-                    <span>✨ Gerar Resumo com Gemini AI</span>
+                  <button type="button" id="btn-gerar-resumo-llm" class="btn" onclick="gerarResumoExecutivoIA()" title="Gerar resumo aprofundado com Anthropic (Claude)">
+                    <span>✨ Gerar Resumo com Claude AI</span>
                   </button>
                   <button type="button" class="secondary" onclick="copiarResumoExecutivo()" title="Copiar texto do resumo para a área de transferência">
                     <span>📋 Copiar Resumo</span>
@@ -3212,22 +3212,22 @@
               do sistema.</p>
           </div>
 
-          <!-- CARD 1: GERENCIAR API KEY DO GOOGLE GEMINI (BYOK) -->
+          <!-- CARD 1: GERENCIAR API KEY DA ANTHROPIC (CLAUDE) -->
           <div class="card">
             <div
               style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
               <div class="card-title" style="margin-bottom: 0;">
                 <span>🔑</span>
-                <span>Google Gemini & BYOK (Bring Your Own Key)</span>
+                <span>Anthropic Claude & Configuração de API</span>
               </div>
               <span id="config-byok-status-badge" class="byok-badge pending">⚠️ Chave não configurada</span>
             </div>
 
             <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 16px;">
-              Defina e valide sua chave de API para habilitar análises qualitativas, sumarização de conversas e o chat
-              inteligente.
-              Seguindo a filosofia <b>BYOK</b>, suas credenciais ficam salvas unicamente no armazenamento local do seu
-              navegador (<code>localStorage</code>) e são transmitidas somente para suas inferências locais.
+              Defina e valide sua chave de API da Anthropic para habilitar análises qualitativas, sumarização de conversas e o chat
+              inteligente com modelos Claude.
+              Suas credenciais ficam salvas unicamente no armazenamento local do seu
+              navegador (<code>localStorage</code>) ou podem ser lidas via variável de ambiente (<code>ANTHROPIC_API_KEY</code>).
             </p>
 
             <div style="display: flex; flex-direction: column; gap: 16px;">
@@ -3235,10 +3235,10 @@
               <div>
                 <label for="config-gemini-api-key"
                   style="display: block; font-size: 13px; font-weight: 600; color: #93c5fd; margin-bottom: 6px;">
-                  Chave de API do Google Gemini:
+                  Chave de API da Anthropic:
                 </label>
                 <div class="input-action-group">
-                  <input type="password" id="config-gemini-api-key" placeholder="Cole sua chave AIzaSy... aqui"
+                  <input type="password" id="config-gemini-api-key" placeholder="Cole sua chave sk-ant-... aqui"
                     oninput="aoAlterarCredenciaisConfig()">
                   <div class="inline-buttons">
                     <button type="button" class="btn-input-action" id="btn-toggle-config-key-visibility"
@@ -3262,13 +3262,12 @@
                 <div>
                   <label for="config-gemini-model"
                     style="display: block; font-size: 13px; font-weight: 600; color: #93c5fd; margin-bottom: 6px;">
-                    Modelo do Google Gemini Padrão:
+                    Modelo Claude Padrão:
                   </label>
                   <select id="config-gemini-model" class="custom-select" onchange="aoAlterarCredenciaisConfig()">
-                    <option value="gemini-2.5-flash" selected>⚡ Gemini 2.5 Flash (Recomendado / Rápido)</option>
-                    <option value="gemini-2.5-pro">🧠 Gemini 2.5 Pro (Raciocínio Analítico Avançado)</option>
-                    <option value="gemini-3.7-flash">🚀 Gemini 3.7 Flash (Alta Performance)</option>
-                    <option value="gemini-3.5-flash-lite">💨 Gemini 3.5 Flash Lite (Ultra Rápido / Leve)</option>
+                    <option value="claude-3-5-sonnet-20241022" selected>⚡ Claude 3.5 Sonnet (Recomendado / Rápido e Analítico)</option>
+                    <option value="claude-3-5-haiku-20241022">💨 Claude 3.5 Haiku (Ultra Rápido / Econômico)</option>
+                    <option value="claude-3-opus-20240229">🧠 Claude 3 Opus (Raciocínio Profundo)</option>
                   </select>
                 </div>
 
@@ -3285,14 +3284,14 @@
 
               <!-- Links & Recursos Úteis -->
               <div class="byok-docs-row" style="margin-top: 4px;">
-                <span style="font-size: 12px; color: #94a3b8; font-weight: 600;">Recursos & Chaves Gratuitas:</span>
-                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer"
-                  class="byok-doc-link" title="Obtenha sua chave gratuita no Google AI Studio">
-                  <span>🔑 Criar API Key no Google AI Studio</span> ↗
+                <span style="font-size: 12px; color: #94a3b8; font-weight: 600;">Recursos & Documentação:</span>
+                <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer"
+                  class="byok-doc-link" title="Obtenha ou gerencie suas chaves no Anthropic Console">
+                  <span>🔑 Anthropic Console (API Keys)</span> ↗
                 </a>
-                <a href="https://ai.google.dev/gemini-api/docs/models/gemini" target="_blank" rel="noopener noreferrer"
-                  class="byok-doc-link" title="Consulte documentação oficial dos modelos Gemini">
-                  <span>📖 Documentação de Modelos Gemini</span> ↗
+                <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener noreferrer"
+                  class="byok-doc-link" title="Consulte documentação oficial dos modelos Claude">
+                  <span>📖 Modelos Anthropic Claude</span> ↗
                 </a>
               </div>
             </div>
@@ -4589,12 +4588,12 @@
     }
 
     // -------------------------------------------------------------
-    // Gerenciamento de Provedor LLM & BYOK (Google Gemini)
+    // Gerenciamento de Provedor LLM & API (Anthropic Claude)
     // -------------------------------------------------------------
-    const STORAGE_KEY_API = 'zap_gemini_api_key';
-    const STORAGE_KEY_MODEL = 'zap_gemini_model';
-    const STORAGE_KEY_VALIDATED = 'zap_gemini_validated';
-    const STORAGE_KEY_COLLAPSED = 'zap_gemini_config_collapsed';
+    const STORAGE_KEY_API = 'zap_anthropic_api_key';
+    const STORAGE_KEY_MODEL = 'zap_anthropic_model';
+    const STORAGE_KEY_VALIDATED = 'zap_anthropic_validated';
+    const STORAGE_KEY_COLLAPSED = 'zap_anthropic_config_collapsed';
 
     function toggleByokConfig(forcarEstado) {
       const card = document.getElementById('byok-card');
@@ -4641,8 +4640,9 @@
     }
 
     function carregarConfiguracaoLLM() {
-      const savedKey = localStorage.getItem(STORAGE_KEY_API) || '';
-      const savedModel = localStorage.getItem(STORAGE_KEY_MODEL) || 'gemini-2.5-flash';
+      // Tenta carregar chave da Anthropic (com fallback para chave anterior caso exista)
+      const savedKey = localStorage.getItem(STORAGE_KEY_API) || localStorage.getItem('zap_gemini_api_key') || '';
+      const savedModel = localStorage.getItem(STORAGE_KEY_MODEL) || 'claude-3-5-sonnet-20241022';
       const isValidated = localStorage.getItem(STORAGE_KEY_VALIDATED) === 'true';
       const savedCollapsedPref = localStorage.getItem(STORAGE_KEY_COLLAPSED);
 
@@ -4670,7 +4670,7 @@
       const configModel = document.getElementById('config-gemini-model');
 
       const key = inputKey ? inputKey.value.trim() : '';
-      const model = selectModel ? selectModel.value : 'gemini-2.5-flash';
+      const model = selectModel ? selectModel.value : 'claude-3-5-sonnet-20241022';
 
       localStorage.setItem(STORAGE_KEY_API, key);
       localStorage.setItem(STORAGE_KEY_MODEL, model);
@@ -4689,7 +4689,7 @@
       const configModel = document.getElementById('config-gemini-model');
 
       const key = configKey ? configKey.value.trim() : '';
-      const model = configModel ? configModel.value : 'gemini-2.5-flash';
+      const model = configModel ? configModel.value : 'claude-3-5-sonnet-20241022';
 
       localStorage.setItem(STORAGE_KEY_API, key);
       localStorage.setItem(STORAGE_KEY_MODEL, model);
@@ -4778,7 +4778,7 @@
     }
 
     function limparApiKeyConfig() {
-      if (!confirm("Deseja realmente remover a chave de API do Google Gemini salva neste navegador?")) {
+      if (!confirm("Deseja realmente remover a chave de API da Anthropic salva neste navegador?")) {
         return;
       }
       localStorage.removeItem(STORAGE_KEY_API);
@@ -4789,11 +4789,11 @@
       if (inputKey) inputKey.value = '';
       if (configKey) configKey.value = '';
 
-      const model = localStorage.getItem(STORAGE_KEY_MODEL) || 'gemini-2.5-flash';
+      const model = localStorage.getItem(STORAGE_KEY_MODEL) || 'claude-3-5-sonnet-20241022';
       atualizarBadgesBYOK('', false, model);
 
-      showToast("Chave de API do Gemini removida com sucesso.");
-      appendLog("[BYOK / Gemini] Chave de API desconfigurada pelo usuário.");
+      showToast("Chave de API da Anthropic removida com sucesso.");
+      appendLog("[Anthropic / Claude] Chave de API desconfigurada pelo usuário.");
     }
 
     function salvarCredenciaisConfig() {
@@ -4807,10 +4807,10 @@
       const btnValidar = document.getElementById('btn-validar-chave');
 
       const apiKey = inputKey ? inputKey.value.trim() : '';
-      const model = selectModel ? selectModel.value : 'gemini-2.5-flash';
+      const model = selectModel ? selectModel.value : 'claude-3-5-sonnet-20241022';
 
       if (!apiKey) {
-        showToast("Por favor, digite ou cole sua API Key do Google Gemini antes de testar.");
+        showToast("Por favor, digite ou cole sua API Key da Anthropic antes de testar.");
         if (inputKey) inputKey.focus();
         return;
       }
@@ -4820,7 +4820,7 @@
         btnValidar.innerHTML = '<span>⏳ Testando conexão...</span>';
       }
 
-      appendLog(`[BYOK / Gemini] Iniciando teste de autenticação com o modelo '${model}'...`);
+      appendLog(`[Anthropic / Claude] Iniciando teste de autenticação com o modelo '${model}'...`);
 
       try {
         const res = await fetch('/api/llm/validar', {
@@ -4833,8 +4833,8 @@
         if (json.success) {
           localStorage.setItem(STORAGE_KEY_VALIDATED, 'true');
           atualizarBadgesBYOK(apiKey, true, model);
-          showToast("API Key do Google Gemini validada com sucesso!");
-          appendLog(`[BYOK / Gemini] ${json.message}`);
+          showToast("API Key da Anthropic validada com sucesso!");
+          appendLog(`[Anthropic / Claude] ${json.message}`);
 
           // Colapsa automaticamente o card de configuração da API após validação bem-sucedida
           setTimeout(() => {
@@ -4844,13 +4844,13 @@
           localStorage.setItem(STORAGE_KEY_VALIDATED, 'false');
           atualizarBadgesBYOK(apiKey, false, model);
           showToast(json.message || "Falha ao validar API Key.");
-          appendLog(`[BYOK / Gemini - Erro] ${json.message}`);
+          appendLog(`[Anthropic / Claude - Erro] ${json.message}`);
         }
       } catch (err) {
         localStorage.setItem(STORAGE_KEY_VALIDATED, 'false');
         atualizarBadgesBYOK(apiKey, false, model);
         showToast("Erro ao conectar com o servidor para validar a chave.");
-        appendLog(`[BYOK / Gemini - Erro] Falha na requisição de validação: ${err}`);
+        appendLog(`[Anthropic / Claude - Erro] Falha na requisição de validação: ${err}`);
       } finally {
         if (btnValidar) {
           btnValidar.disabled = false;
@@ -4865,10 +4865,10 @@
       const btnValidar = document.getElementById('btn-testar-chave-config');
 
       const apiKey = configKey ? configKey.value.trim() : '';
-      const model = configModel ? configModel.value : 'gemini-2.5-flash';
+      const model = configModel ? configModel.value : 'claude-3-5-sonnet-20241022';
 
       if (!apiKey) {
-        showToast("Por favor, digite ou cole sua API Key do Google Gemini antes de testar.");
+        showToast("Por favor, digite ou cole sua API Key da Anthropic antes de testar.");
         if (configKey) configKey.focus();
         return;
       }
@@ -4878,7 +4878,7 @@
         btnValidar.innerHTML = '<span>⏳ Testando conexão...</span>';
       }
 
-      appendLog(`[BYOK / Gemini] Iniciando teste de autenticação com o modelo '${model}'...`);
+      appendLog(`[Anthropic / Claude] Iniciando teste de autenticação com o modelo '${model}'...`);
 
       try {
         const res = await fetch('/api/llm/validar', {
@@ -4891,19 +4891,19 @@
         if (json.success) {
           localStorage.setItem(STORAGE_KEY_VALIDATED, 'true');
           atualizarBadgesBYOK(apiKey, true, model);
-          showToast("API Key do Google Gemini validada com sucesso!");
-          appendLog(`[BYOK / Gemini] ${json.message}`);
+          showToast("API Key da Anthropic validada com sucesso!");
+          appendLog(`[Anthropic / Claude] ${json.message}`);
         } else {
           localStorage.setItem(STORAGE_KEY_VALIDATED, 'false');
           atualizarBadgesBYOK(apiKey, false, model);
           showToast(json.message || "Falha ao validar API Key.");
-          appendLog(`[BYOK / Gemini - Erro] ${json.message}`);
+          appendLog(`[Anthropic / Claude - Erro] ${json.message}`);
         }
       } catch (err) {
         localStorage.setItem(STORAGE_KEY_VALIDATED, 'false');
         atualizarBadgesBYOK(apiKey, false, model);
         showToast("Erro ao conectar com o servidor para validar a chave.");
-        appendLog(`[BYOK / Gemini - Erro] Falha na requisição de validação: ${err}`);
+        appendLog(`[Anthropic / Claude - Erro] Falha na requisição de validação: ${err}`);
       } finally {
         if (btnValidar) {
           btnValidar.disabled = false;
@@ -5280,10 +5280,10 @@
       const input = document.getElementById('chat-input-textarea');
       const btnSend = document.getElementById('btn-chat-send');
       const apiKey = localStorage.getItem(STORAGE_KEY_API) || '';
-      const model = localStorage.getItem(STORAGE_KEY_MODEL) || 'gemini-2.5-flash';
+      const model = localStorage.getItem(STORAGE_KEY_MODEL) || 'claude-3-5-sonnet-20241022';
 
       if (!apiKey) {
-        showToast("⚠️ Configure sua API Key do Google Gemini no topo antes de enviar.");
+        showToast("⚠️ Configure sua API Key da Anthropic no topo antes de enviar.");
         toggleByokConfig(false); // expande o card de chave para o usuário preencher
         const inputKey = document.getElementById('input-gemini-api-key');
         if (inputKey) inputKey.focus();
@@ -5641,12 +5641,12 @@
 
     async function gerarResumoExecutivoIA() {
       const apiKey = localStorage.getItem(STORAGE_KEY_API) || '';
-      const model = localStorage.getItem(STORAGE_KEY_MODEL) || 'gemini-2.5-flash';
+      const model = localStorage.getItem(STORAGE_KEY_MODEL) || 'claude-3-5-sonnet-20241022';
       const btnGerar = document.getElementById('btn-gerar-resumo-llm');
       const elExecTexto = document.getElementById('rep-executivo-texto');
 
       if (!apiKey) {
-        showToast("Configure sua chave de API do Gemini no card da aba 'Gerar insights' ou em 'Configurações'.");
+        showToast("Configure sua chave de API da Anthropic no card da aba 'Gerar insights' ou em 'Configurações'.");
         navegarPara('page-insights');
         return;
       }
