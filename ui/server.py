@@ -30,31 +30,53 @@ from services.extrator import NOME_DO_GRUPO, extrair_dados_comunidade
 from services.storage import (
     clear_active_group,
     count_messages,
+    create_backup,
+    create_new_consulta_db,
+    delete_backup,
+    delete_consulta,
     detect_active_group_from_db,
     export_to_csv,
     export_to_json,
     fetch_message_by_id,
     fetch_messages_for_llm_range,
     fetch_recent,
+    get_active_consulta_info,
     get_app_state,
     get_catalog_group_names,
     get_message_date_bounds,
+    get_persistence_stats,
     import_from_csv_data,
     import_from_json_data,
     init_db,
+    list_backups,
+    list_coletas_historico,
+    list_consultas,
+    list_grupos_historico,
     load_catalog_groups,
+    record_coleta_historico,
     reset_messages_db,
+    restore_backup,
     save_catalog_groups,
+    set_active_consulta,
     set_active_group,
     wipe_all_data,
 )
 from services.llm import GeminiService, MODELOS_DISPONIVEIS, ANALISES_PRE_PROGRAMADAS
 from services.reports import ReportService
-from services.paths import get_base_dir, get_data_dir, get_db_path, get_templates_dir
+from services.paths import (
+    get_backups_dir,
+    get_base_dir,
+    get_consultas_dir,
+    get_data_dir,
+    get_db_path,
+    get_templates_dir,
+)
 
 BASE_DIR = get_base_dir()
 TEMPLATES_DIR = get_templates_dir()
 DATA_DIR = get_data_dir()
+BACKUPS_DIR = get_backups_dir()
+CONSULTAS_DIR = get_consultas_dir()
 DEFAULT_EXPORT_PATH = DATA_DIR / "export_messages.csv"
 
 app = FastAPI(title="WhatsApp Insights Web", version="1.0.0")
@@ -163,6 +185,19 @@ class ChatLLMRequest(BaseModel):
     historico: list[dict] | None = None
 
 
+class CreateBackupRequest(BaseModel):
+    tag: str = "manual"
+    description: str = ""
+
+
+class RestoreBackupRequest(BaseModel):
+    filename: str
+
+
+class SetActiveConsultaRequest(BaseModel):
+    filename: str
+
+
 class ReportSummaryRequest(BaseModel):
     api_key: str
     model: str = "gemini-2.5-flash"
@@ -223,18 +258,39 @@ async def select_group_endpoint(req: SelectGroupRequest):
     if not req.grupo_nome and not req.grupo_id:
         return {"success": False, "message": "Nome ou ID do grupo não informado."}
 
-    new_state = set_active_group(group_id=req.grupo_id, group_name=req.grupo_nome)
-    state.add_log(f"[Grupo] Grupo ativo definido: '{req.grupo_nome or req.grupo_id}'.")
+    total = count_messages(db_path=get_db_path(), grupo_id=req.grupo_id, grupo_nome=req.grupo_nome)
+    new_state = set_active_group(group_id=req.grupo_id, group_name=req.grupo_nome, total_messages=total)
+    state.add_log(f"[Grupo] Grupo ativo definido: '{req.grupo_nome or req.grupo_id}' ({total} mensagens registradas).")
     return {"success": True, "state": new_state}
 
 
 @app.post("/api/state/clear-group")
 async def clear_group_endpoint():
-    """Limpa a base messages.db e reseta o grupo ativo para liberar nova extração."""
-    reset_messages_db(get_db_path())
+    """Cria backup preventivo e reseta as mensagens locais da sessão para permitir trocar de grupo."""
+    db_path = get_db_path()
+    total_antes = count_messages(db_path)
+
+    # 1. Cria backup de segurança automático caso haja mensagens
+    if total_antes > 0:
+        try:
+            create_backup(
+                tag="auto_troca_grupo",
+                description="Backup preventivo gerado antes da troca de grupo ativo",
+                db_path=db_path,
+            )
+        except Exception as e:
+            print(f"[AVISO] Falha ao gerar backup pré-troca de grupo: {e}")
+
+    # 2. Reseta o banco de dados messages.db e limpa o grupo ativo do app_state.json
+    reset_messages_db(db_path)
     new_state = get_app_state()
-    state.add_log("[Grupo] Contexto de grupo liberado e mensagens limpas da sessão.")
-    return {"success": True, "state": new_state, "message": "Grupo desmarcado da memória."}
+
+    state.add_log(f"[Grupo] Base da sessão limpa ({total_antes} mensagens arquivadas em backup). Pronto para novo grupo.")
+    return {
+        "success": True,
+        "state": new_state,
+        "message": f"Base de mensagens resetada com sucesso ({total_antes} mensagens salvas em backup preventivo).",
+    }
 
 
 @app.post("/api/importar")
@@ -245,15 +301,6 @@ async def import_data(req: ImportRequest):
     content = req.content.strip()
     if not content:
         return {"success": False, "message": "Nenhum conteúdo fornecido para importação."}
-
-    # Bloqueia importação se já houver um grupo ativo na base
-    active_group = detect_active_group_from_db(get_db_path())
-    if active_group and (active_group.get("nome") or active_group.get("id")):
-        grp_nome = active_group.get("nome") or active_group.get("id")
-        return {
-            "success": False,
-            "message": f"Importação bloqueada: o grupo '{grp_nome}' já está ativo na sessão. Clique em 'Mudar de grupo' antes de importar.",
-        }
 
     fmt = req.format.lower().strip()
     if req.filename:
@@ -269,7 +316,7 @@ async def import_data(req: ImportRequest):
             count, grupo_nome = import_from_csv_data(content, db_path=get_db_path())
 
         nome_arq = f" '{req.filename}'" if req.filename else ""
-        msg = f"Importação concluída com sucesso! {count} mensagens processadas a partir de{nome_arq}."
+        msg = f"Importação concluída com sucesso! {count} mensagens processadas e preservadas a partir de{nome_arq}."
         if grupo_nome:
             msg += f" Grupo ativo fixado: '{grupo_nome}'."
         state.add_log(f"[Importação] {msg}")
@@ -284,6 +331,239 @@ async def import_data(req: ImportRequest):
         err_msg = f"Erro ao importar dados: {exc}"
         state.add_log(f"[Importação - Erro] {err_msg}")
         return {"success": False, "error": err_msg}
+
+
+# =====================================================================
+# ROTAS DE GESTÃO DE CONSULTAS INDEPENDENTES (PROJETOS / BASES .DB)
+# =====================================================================
+
+@app.get("/api/consultas")
+async def get_consultas_list():
+    """Retorna a lista de todos os bancos .db de consultas independentes salvos em data/consultas/."""
+    try:
+        consultas = list_consultas()
+        active_info = get_active_consulta_info()
+        return {
+            "success": True,
+            "count": len(consultas),
+            "active": active_info,
+            "data": consultas,
+        }
+    except Exception as exc:
+        return {"success": False, "error": str(exc), "data": []}
+
+
+@app.get("/api/consultas/ativa")
+async def get_active_consulta():
+    """Retorna as informações da consulta ativa no momento."""
+    try:
+        active_info = get_active_consulta_info()
+        return {"success": True, "data": active_info}
+    except Exception as exc:
+        return {"success": False, "error": str(exc)}
+
+
+@app.post("/api/consultas/ativar")
+async def activate_consulta(req: SetActiveConsultaRequest):
+    """Define uma consulta específica como o banco de dados ativo para análise e chat."""
+    filename = req.filename.strip()
+    if not filename:
+        return {"success": False, "message": "Nome do arquivo da consulta não informado."}
+    try:
+        res = set_active_consulta(filename)
+        state.add_log(f"[Consulta] 📂 Consulta '{filename}' ativada com sucesso! Grupo: {res.get('active_group_name', 'Geral')} ({res.get('total_messages', 0)} mensagens).")
+        return {"success": True, "data": res, "message": f"Consulta '{filename}' ativada com sucesso."}
+    except Exception as exc:
+        err = f"Falha ao ativar consulta: {exc}"
+        state.add_log(f"[Consulta - Erro] {err}")
+        return {"success": False, "error": err}
+
+
+@app.delete("/api/consultas/{filename}")
+async def delete_consulta_endpoint(filename: str):
+    """Exclui com segurança um arquivo de consulta independente."""
+    clean_name = os.path.basename(filename)
+    removido = delete_consulta(clean_name)
+    if removido:
+        state.add_log(f"[Consulta] 🗑️ Consulta '{clean_name}' excluída com sucesso.")
+        return {"success": True, "message": f"Consulta '{clean_name}' removida com sucesso."}
+    else:
+        return {"success": False, "message": f"Consulta '{clean_name}' não encontrada para exclusão."}
+
+
+@app.get("/api/consultas/download/{filename}")
+async def download_consulta_file(filename: str):
+    """Permite o download direto do arquivo de banco SQLite (.db) de uma consulta independente."""
+    clean_name = os.path.basename(filename)
+    consultas_dir = get_consultas_dir()
+    target_file = consultas_dir / clean_name
+    if not target_file.exists():
+        legacy_file = get_data_dir() / clean_name
+        if legacy_file.exists():
+            target_file = legacy_file
+        else:
+            raise HTTPException(status_code=404, detail="Arquivo de consulta não encontrado.")
+
+    state.add_log(f"[Consulta] Download do banco de dados '{clean_name}' iniciado.")
+    return FileResponse(
+        path=str(target_file),
+        filename=clean_name,
+        media_type="application/octet-stream",
+    )
+
+
+@app.post("/api/consultas/abrir-pasta")
+async def open_consultas_folder():
+    """Abre a pasta data/consultas/ no explorador de arquivos do Windows."""
+    consultas_dir = get_consultas_dir()
+    try:
+        if sys.platform == "win32":
+            os.startfile(str(consultas_dir))
+        elif sys.platform == "darwin":
+            subprocess.run(["open", str(consultas_dir)], check=True)
+        else:
+            subprocess.run(["xdg-open", str(consultas_dir)], check=True)
+        state.add_log(f"[Consulta] Pasta de consultas aberta: {consultas_dir}")
+        return {"success": True, "path": str(consultas_dir)}
+    except Exception as exc:
+        return {"success": False, "error": str(exc)}
+
+
+# =====================================================================
+# ROTAS DA NOVA ABA DE HISTÓRICO & GERENCIAMENTO DE BACKUPS
+# =====================================================================
+
+@app.get("/api/historico/stats")
+async def get_historico_stats():
+    """Retorna os KPIs gerais de persistência, histórico e espaço ocupado."""
+    try:
+        stats = get_persistence_stats(get_db_path())
+        return {"success": True, "data": stats}
+    except Exception as exc:
+        return {"success": False, "error": str(exc)}
+
+
+@app.get("/api/historico/coletas")
+async def get_historico_coletas(limit: int = 100):
+    """Retorna a lista cronológica de coletas e consultas realizadas."""
+    try:
+        coletas = list_coletas_historico(limit=limit, db_path=get_db_path())
+        return {"success": True, "count": len(coletas), "data": coletas}
+    except Exception as exc:
+        return {"success": False, "error": str(exc), "data": []}
+
+
+@app.get("/api/historico/grupos")
+async def get_historico_grupos():
+    """Retorna os grupos persistidos no banco SQLite com suas respectivas métricas."""
+    try:
+        grupos = list_grupos_historico(get_db_path())
+        return {"success": True, "count": len(grupos), "data": grupos}
+    except Exception as exc:
+        return {"success": False, "error": str(exc), "data": []}
+
+
+@app.get("/api/backups")
+async def get_backups_list():
+    """Retorna a lista de todos os snapshots de backup salvos em data/backups/."""
+    try:
+        backups = list_backups()
+        return {"success": True, "count": len(backups), "data": backups}
+    except Exception as exc:
+        return {"success": False, "error": str(exc), "data": []}
+
+
+@app.post("/api/backups/criar")
+async def create_backup_endpoint(req: CreateBackupRequest):
+    """Cria um novo backup manual (snapshot completo do banco messages.db)."""
+    if state.is_busy:
+        return {"success": False, "message": "Operação em andamento. Aguarde antes de gerar um backup."}
+
+    try:
+        tag = req.tag.strip() or "manual"
+        desc = req.description.strip() or "Backup manual gerado pelo usuário"
+        meta = create_backup(tag=tag, description=desc, db_path=get_db_path())
+        state.add_log(f"[Backup] ✅ Snapshot '{meta['filename']}' ({meta['size_formatted']}) criado com sucesso!")
+        return {
+            "success": True,
+            "backup": meta,
+            "message": f"Backup '{meta['filename']}' gerado com sucesso ({meta['total_messages']} mensagens em {meta['total_grupos']} grupos).",
+        }
+    except Exception as exc:
+        err = f"Falha ao criar backup: {exc}"
+        state.add_log(f"[Backup - Erro] {err}")
+        return {"success": False, "error": err}
+
+
+@app.post("/api/backups/restaurar")
+async def restore_backup_endpoint(req: RestoreBackupRequest):
+    """Restaura o banco messages.db a partir de um snapshot selecionado em data/backups/."""
+    if state.is_busy:
+        return {"success": False, "message": "Operação em andamento. Aguarde antes de restaurar o backup."}
+
+    filename = req.filename.strip()
+    if not filename:
+        return {"success": False, "message": "Nome do arquivo de backup não informado."}
+
+    try:
+        state.add_log(f"[Backup] Iniciando restauração do snapshot '{filename}'...")
+        res = restore_backup(filename=filename, db_path=get_db_path())
+        state.add_log(f"[Backup] ✅ {res['message']}")
+        return res
+    except Exception as exc:
+        err = f"Erro ao restaurar backup: {exc}"
+        state.add_log(f"[Backup - Erro] {err}")
+        return {"success": False, "error": err}
+
+
+@app.delete("/api/backups/{filename}")
+async def delete_backup_endpoint(filename: str):
+    """Remove um arquivo de backup do disco."""
+    clean_name = os.path.basename(filename)
+    removido = delete_backup(clean_name)
+    if removido:
+        state.add_log(f"[Backup] Snapshot '{clean_name}' excluído.")
+        return {"success": True, "message": f"Backup '{clean_name}' removido."}
+    else:
+        return {"success": False, "message": f"Backup '{clean_name}' não encontrado para exclusão."}
+
+
+@app.get("/api/backups/download/{filename}")
+async def download_backup_file(filename: str):
+    """Permite o download direto do arquivo de backup SQLite (.db)."""
+    clean_name = os.path.basename(filename)
+    backups_dir = get_backups_dir()
+    target_file = backups_dir / clean_name
+    if not target_file.exists():
+        raise HTTPException(status_code=404, detail="Arquivo de backup não encontrado.")
+
+    state.add_log(f"[Backup] Download do arquivo '{clean_name}' iniciado.")
+    return FileResponse(
+        path=str(target_file),
+        filename=clean_name,
+        media_type="application/octet-stream",
+    )
+
+
+@app.post("/api/backups/abrir-pasta")
+async def abrir_pasta_backups():
+    """Abre a pasta data/backups/ no gerenciador de arquivos do sistema operacional."""
+    backups_dir = get_backups_dir()
+    backups_dir.mkdir(parents=True, exist_ok=True)
+    pasta_str = str(backups_dir)
+
+    try:
+        if sys.platform == "win32":
+            os.startfile(pasta_str)
+        elif sys.platform == "darwin":
+            subprocess.run(["open", pasta_str])
+        else:
+            subprocess.run(["xdg-open", pasta_str])
+        state.add_log(f"Pasta de backups aberta: {pasta_str}")
+        return {"success": True, "message": f"Pasta aberta: {pasta_str}"}
+    except Exception as exc:
+        state.add_log(f"Erro ao abrir pasta de backups: {exc}")
+        return {"success": False, "error": str(exc)}
 
 
 @app.get("/api/session/status")

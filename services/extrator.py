@@ -8,8 +8,11 @@ from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeo
 from services.paths import get_session_dir
 from services.storage import (
     count_messages,
+    create_backup,
+    create_new_consulta_db,
     gerar_grupo_id,
     init_db,
+    record_coleta_historico,
     save_messages,
     set_active_group,
 )
@@ -648,15 +651,49 @@ def extrair_dados_comunidade(
 
                 print("-" * 50)
 
-            # Persistir mensagens no banco local (SQLite) incrementalmente para o grupo ativo
+            # Persistir mensagens em um banco de dados SQLite novo, independente e isolado para esta consulta
             try:
-                init_db()
-                novas_inseridas = save_messages(lista_final)
-                total_no_banco = count_messages()
-                set_active_group(group_id=grupo_id, group_name=nome_grupo, total_messages=total_no_banco)
-                print(f"[INFO] {novas_inseridas} mensagens processadas ({len(lista_final)} coletadas nesta rodada, {total_no_banco} mensagens totais no banco). Grupo ativo: '{nome_grupo}'")
+                # Cria novo banco isolado para esta consulta e define como ativo
+                consulta_filename, consulta_path = create_new_consulta_db(group_name=nome_grupo)
+                print(f"[INFO] Novo banco de dados independente criado para esta consulta: {consulta_filename}")
+
+                novas_inseridas = save_messages(lista_final, db_path=consulta_path)
+                total_no_banco = count_messages(db_path=consulta_path, grupo_id=grupo_id, grupo_nome=nome_grupo)
+                set_active_group(group_id=grupo_id, group_name=nome_grupo, total_messages=total_no_banco, db_filename=consulta_filename)
+
+                # Registra auditoria da coleta no histórico do banco independente
+                record_coleta_historico({
+                    "id": coleta_id,
+                    "grupo_id": grupo_id,
+                    "grupo_nome": nome_grupo,
+                    "comunidade_nome": nome_comunidade,
+                    "executado_em": datetime.now().isoformat(),
+                    "unidade_tempo": unidade_tempo,
+                    "valor": valor,
+                    "tipo_filtro": tipo_filtro or "tempo",
+                    "total_extraido": len(lista_final),
+                    "total_acumulado": total_no_banco,
+                    "status": "Concluído",
+                    "detalhes": {
+                        "novas_inseridas": novas_inseridas,
+                        "coleta_id": coleta_id,
+                        "banco_consulta": consulta_filename,
+                    }
+                }, db_path=consulta_path)
+
+                # Cria snapshot de backup automático pós-extração
+                try:
+                    create_backup(
+                        tag="auto_extracao",
+                        description=f"Snapshot automático após coleta de '{nome_grupo}' ({len(lista_final)} msgs coletadas)",
+                        db_path=consulta_path,
+                    )
+                except Exception as b_err:
+                    print(f"[AVISO] Falha ao criar snapshot automático de backup: {b_err}")
+
+                print(f"[INFO] {novas_inseridas} mensagens gravadas no banco independente '{consulta_filename}'. Consulta ativa: '{nome_grupo}'")
             except Exception as e:
-                print(f"[ERRO] Falha ao salvar mensagens ou estado: {e}")
+                print(f"[ERRO] Falha ao salvar mensagens no banco da consulta: {e}")
 
             time.sleep(3)
 

@@ -42,7 +42,35 @@ def get_session_dir() -> Path:
 
 
 def get_db_path() -> str:
-    """Retorna o caminho absoluto para o arquivo SQLite de mensagens."""
+    """
+    Retorna o caminho absoluto para o arquivo SQLite de mensagens da consulta ativa.
+    Se houver uma consulta selecionada no app_state.json, usa ela.
+    Caso contrário, seleciona a consulta mais recente ou o banco padrão.
+    """
+    state_file = get_state_file_path()
+    consultas_dir = get_consultas_dir()
+
+    if state_file.exists():
+        try:
+            import json
+            with open(state_file, "r", encoding="utf-8") as f:
+                state = json.load(f)
+                active_db = state.get("active_db_filename")
+                if active_db:
+                    target = consultas_dir / active_db
+                    if target.exists():
+                        return str(target)
+                    legacy = get_data_dir() / active_db
+                    if legacy.exists():
+                        return str(legacy)
+        except Exception:
+            pass
+
+    # Se existirem consultas salvas em data/consultas/, usa a mais recente
+    consultas = sorted(consultas_dir.glob("*.db"), key=lambda p: p.stat().st_mtime, reverse=True)
+    if consultas:
+        return str(consultas[0])
+
     return str(get_data_dir() / "messages.db")
 
 
@@ -54,6 +82,20 @@ def get_state_file_path() -> Path:
 def get_groups_catalog_path() -> Path:
     """Retorna o caminho do arquivo JSON de catálogo de grupos catalogados do WhatsApp."""
     return get_data_dir() / "groups_catalog.json"
+
+
+def get_backups_dir() -> Path:
+    """Retorna o diretório para armazenamento persistente de snapshots e cópias de backup (.db, .json)."""
+    backups_dir = get_data_dir() / "backups"
+    backups_dir.mkdir(parents=True, exist_ok=True)
+    return backups_dir
+
+
+def get_consultas_dir() -> Path:
+    """Retorna o diretório para armazenamento de bancos de dados (.db) de consultas independentes."""
+    consultas_dir = get_data_dir() / "consultas"
+    consultas_dir.mkdir(parents=True, exist_ok=True)
+    return consultas_dir
 
 
 def get_templates_dir() -> Path:
@@ -74,3 +116,5 @@ def setup_environment() -> None:
     # Garante que diretórios essenciais existam
     get_data_dir()
     get_session_dir()
+    get_backups_dir()
+    get_consultas_dir()

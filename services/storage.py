@@ -3,11 +3,13 @@ from __future__ import annotations
 import csv
 import io
 import json
+import os
 import re
 import shutil
 import sqlite3
 import sys
 import unicodedata
+import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -20,6 +22,8 @@ except OverflowError:
 
 
 from services.paths import (
+    get_backups_dir,
+    get_consultas_dir,
     get_data_dir,
     get_db_path,
     get_groups_catalog_path,
@@ -62,6 +66,7 @@ def get_app_state() -> dict:
     state_path = get_state_file_path()
     if not state_path.exists():
         return {
+            "active_db_filename": None,
             "active_group_id": None,
             "active_group_name": None,
             "last_updated": None,
@@ -72,6 +77,7 @@ def get_app_state() -> dict:
         with open(state_path, "r", encoding="utf-8") as f:
             data = json.load(f)
             return {
+                "active_db_filename": data.get("active_db_filename"),
                 "active_group_id": data.get("active_group_id"),
                 "active_group_name": data.get("active_group_name"),
                 "last_updated": data.get("last_updated"),
@@ -79,6 +85,7 @@ def get_app_state() -> dict:
             }
     except Exception:
         return {
+            "active_db_filename": None,
             "active_group_id": None,
             "active_group_name": None,
             "last_updated": None,
@@ -90,12 +97,17 @@ def set_active_group(
     group_id: str | None,
     group_name: str | None,
     total_messages: int = 0,
+    db_filename: str | None = None,
 ) -> dict:
     """
-    Salva na memória persistente qual o grupo ativo atual na sessão.
+    Salva na memória persistente qual o grupo e banco ativo atual na sessão.
     """
     state_path = get_state_file_path()
+    current = get_app_state()
+    active_filename = db_filename or current.get("active_db_filename")
+
     state = {
+        "active_db_filename": active_filename,
         "active_group_id": group_id,
         "active_group_name": group_name,
         "last_updated": datetime.now().isoformat(),
@@ -111,9 +123,10 @@ def set_active_group(
 
 def clear_active_group() -> dict:
     """
-    Limpa o grupo ativo do app_state.json.
+    Limpa o grupo ativo do app_state.json, mantendo o arquivo de banco se houver.
     """
-    return set_active_group(None, None, 0)
+    current = get_app_state()
+    return set_active_group(None, None, 0, db_filename=current.get("active_db_filename"))
 
 
 # =====================================================================
@@ -216,7 +229,7 @@ def get_catalog_group_names() -> list[str]:
 def init_db(db_path: str | None = None) -> None:
     """
     Inicializa o banco SQLite messages.db.
-    Garante que o banco armazena EXCLUSIVAMENTE a tabela messages do grupo ativo.
+    Garante as tabelas messages (com histórico cumulativo de grupos) e coletas_historico.
     """
     if db_path is None:
         db_path = get_db_path()
@@ -224,10 +237,10 @@ def init_db(db_path: str | None = None) -> None:
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
 
-    # 1. Remove qualquer resquício de tabela de contatos/conhecidos antiga
+    # 1. Remove resquícios de tabelas legadas obsoletas
     cur.execute("DROP TABLE IF EXISTS known_groups")
 
-    # 2. Criação da tabela messages dedicada ao grupo
+    # 2. Criação da tabela messages dedicada às mensagens
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS messages (
@@ -257,7 +270,27 @@ def init_db(db_path: str | None = None) -> None:
         """
     )
 
-    # Migrações caso colunas novas faltem
+    # 3. Criação da tabela de auditoria e histórico de coletas/consultas
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS coletas_historico (
+            id TEXT PRIMARY KEY,
+            grupo_id TEXT,
+            grupo_nome TEXT,
+            comunidade_nome TEXT,
+            executado_em TEXT,
+            unidade_tempo TEXT,
+            valor INTEGER,
+            tipo_filtro TEXT,
+            total_extraido INTEGER,
+            total_acumulado INTEGER,
+            status TEXT,
+            detalhes_json TEXT
+        )
+        """
+    )
+
+    # Migrações caso colunas novas faltem na tabela messages
     cols_msg = [row[1] for row in cur.execute("PRAGMA table_info(messages)").fetchall()]
     for column_name, column_type in {
         "coleta_id": "TEXT",
@@ -276,6 +309,8 @@ def init_db(db_path: str | None = None) -> None:
     cur.execute("CREATE INDEX IF NOT EXISTS idx_messages_remetente ON messages(remetente);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_messages_has_attachments ON messages(has_attachments);")
     cur.execute("CREATE INDEX IF NOT EXISTS idx_messages_grupo_id ON messages(grupo_id);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_coletas_executado_em ON coletas_historico(executado_em);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_coletas_grupo_id ON coletas_historico(grupo_id);")
 
     conn.commit()
     conn.close()
@@ -283,8 +318,9 @@ def init_db(db_path: str | None = None) -> None:
 
 def detect_active_group_from_db(db_path: str | None = None) -> dict | None:
     """
-    Inspeciona o messages.db. Se houver mensagens, detecta qual grupo está armazenado,
-    atualiza o app_state.json e retorna os dados do grupo ativo.
+    Inspeciona o messages.db.
+    Se app_state.json tiver um grupo ativo com mensagens no banco, preserva-o.
+    Caso contrário, detecta o grupo mais recentemente alimentado e atualiza o app_state.json.
     """
     if db_path is None:
         db_path = get_db_path()
@@ -292,29 +328,59 @@ def detect_active_group_from_db(db_path: str | None = None) -> dict | None:
 
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
+
+    total_msgs_total = cur.execute("SELECT COUNT(*) FROM messages").fetchone()[0]
+    if total_msgs_total == 0:
+        conn.close()
+        clear_active_group()
+        return None
+
+    # 1. Verifica se o grupo registrado no app_state ainda possui mensagens
+    current_state = get_app_state()
+    active_gid = current_state.get("active_group_id")
+    active_gnome = current_state.get("active_group_name")
+
+    if active_gid or active_gnome:
+        conds = []
+        params = []
+        if active_gid:
+            conds.append("grupo_id = ?")
+            params.append(active_gid)
+        if active_gnome:
+            conds.append("grupo_nome = ?")
+            params.append(active_gnome)
+        
+        q_check = f"SELECT COUNT(*) FROM messages WHERE {' OR '.join(conds)}"
+        cur.execute(q_check, params)
+        count_active = cur.fetchone()[0]
+        if count_active > 0:
+            conn.close()
+            set_active_group(active_gid, active_gnome, count_active)
+            return {
+                "id": active_gid,
+                "nome": active_gnome,
+                "total_messages": count_active,
+            }
+
+    # 2. Se não houver grupo ativo fixado ou se não possuir mensagens, seleciona o grupo com dados mais recentes
     row = cur.execute(
         """
-        SELECT grupo_id, grupo_nome, COUNT(*)
+        SELECT grupo_id, grupo_nome, COUNT(*), MAX(data_hora_ts)
         FROM messages
         WHERE (grupo_nome IS NOT NULL AND TRIM(grupo_nome) != '')
            OR (grupo_id IS NOT NULL AND TRIM(grupo_id) != '')
         GROUP BY grupo_id, grupo_nome
-        ORDER BY COUNT(*) DESC
+        ORDER BY MAX(data_hora_ts) DESC, COUNT(*) DESC
         LIMIT 1
         """
     ).fetchone()
 
-    total_msgs = cur.execute("SELECT COUNT(*) FROM messages").fetchone()[0]
     conn.close()
 
-    if total_msgs > 0:
-        gid = row[0] if row else None
-        gnome = row[1] if row else None
-        if not gnome and not gid:
-            gnome = "Grupo Importado"
-            gid = "grupo_importado"
-
-        # Sincroniza app_state.json
+    if row:
+        gid = row[0]
+        gnome = row[1] or "Grupo Importado"
+        total_msgs = row[2]
         set_active_group(gid, gnome, total_msgs)
         return {
             "id": gid,
@@ -328,7 +394,7 @@ def detect_active_group_from_db(db_path: str | None = None) -> dict | None:
 
 def reset_messages_db(db_path: str | None = None) -> None:
     """
-    Limpa completamente as mensagens do banco de dados local para troca de grupo.
+    Limpa completamente as mensagens e coletas do banco de dados local.
     Também limpa o estado ativo da aplicação.
     """
     if db_path is None:
@@ -338,10 +404,624 @@ def reset_messages_db(db_path: str | None = None) -> None:
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     cur.execute("DELETE FROM messages")
+    cur.execute("DELETE FROM coletas_historico")
     conn.commit()
     conn.close()
 
     clear_active_group()
+
+
+def record_coleta_historico(
+    coleta_data: dict,
+    db_path: str | None = None,
+) -> str:
+    """
+    Registra uma rodada de extração ou consulta na tabela coletas_historico.
+    Retorna o ID da coleta registrada.
+    """
+    if db_path is None:
+        db_path = get_db_path()
+    init_db(db_path)
+
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+
+    cid = coleta_data.get("id") or str(uuid.uuid4())
+    executado_em = coleta_data.get("executado_em") or datetime.now().isoformat()
+    grupo_id = coleta_data.get("grupo_id")
+    grupo_nome = coleta_data.get("grupo_nome") or ""
+    comunidade_nome = coleta_data.get("comunidade_nome") or ""
+    unidade_tempo = coleta_data.get("unidade_tempo") or "dias"
+    valor = int(coleta_data.get("valor", 7))
+    tipo_filtro = coleta_data.get("tipo_filtro") or ""
+    total_extraido = int(coleta_data.get("total_extraido", 0))
+    total_acumulado = int(coleta_data.get("total_acumulado", 0))
+    status = coleta_data.get("status") or "Concluído"
+    detalhes_json = (
+        json.dumps(coleta_data.get("detalhes", {}), ensure_ascii=False)
+        if isinstance(coleta_data.get("detalhes"), dict)
+        else (coleta_data.get("detalhes_json") or "{}")
+    )
+
+    cur.execute(
+        """
+        INSERT OR REPLACE INTO coletas_historico (
+            id, grupo_id, grupo_nome, comunidade_nome, executado_em,
+            unidade_tempo, valor, tipo_filtro, total_extraido,
+            total_acumulado, status, detalhes_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            cid,
+            grupo_id,
+            grupo_nome,
+            comunidade_nome,
+            executado_em,
+            unidade_tempo,
+            valor,
+            tipo_filtro,
+            total_extraido,
+            total_acumulado,
+            status,
+            detalhes_json,
+        ),
+    )
+    conn.commit()
+    conn.close()
+    return cid
+
+
+def list_coletas_historico(
+    limit: int = 100,
+    db_path: str | None = None,
+) -> list[dict]:
+    """
+    Retorna o histórico cronológico decrescente de coletas e consultas realizadas.
+    """
+    if db_path is None:
+        db_path = get_db_path()
+    init_db(db_path)
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT id, grupo_id, grupo_nome, comunidade_nome, executado_em,
+               unidade_tempo, valor, tipo_filtro, total_extraido,
+               total_acumulado, status, detalhes_json
+        FROM coletas_historico
+        ORDER BY executado_em DESC
+        LIMIT ?
+        """,
+        (limit,),
+    )
+    rows = cur.fetchall()
+    conn.close()
+
+    result = []
+    for r in rows:
+        item = dict(r)
+        try:
+            item["detalhes"] = json.loads(item.get("detalhes_json") or "{}")
+        except Exception:
+            item["detalhes"] = {}
+        result.append(item)
+    return result
+
+
+def list_grupos_historico(db_path: str | None = None) -> list[dict]:
+    """
+    Retorna a lista agregada de todos os grupos persistidos no banco de dados,
+    com contagem de mensagens, primeira data, última data e última coleta.
+    """
+    if db_path is None:
+        db_path = get_db_path()
+    init_db(db_path)
+
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT 
+            COALESCE(NULLIF(TRIM(grupo_id), ''), 'grupo_desconhecido') AS gid,
+            COALESCE(NULLIF(TRIM(grupo_nome), ''), 'Grupo Sem Nome') AS gnome,
+            COUNT(*) AS total,
+            MIN(data_hora) AS primeira_data,
+            MAX(data_hora) AS ultima_data,
+            MAX(coletado_em) AS ultima_coleta,
+            MAX(data_hora_ts) AS max_ts
+        FROM messages
+        GROUP BY gid, gnome
+        ORDER BY max_ts DESC, total DESC
+        """
+    )
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "grupo_id": r[0],
+            "grupo_nome": r[1],
+            "total_mensagens": r[2],
+            "primeira_data": r[3] or "-",
+            "ultima_data": r[4] or "-",
+            "ultima_coleta": r[5] or "-",
+        }
+        for r in rows
+    ]
+
+
+# =====================================================================
+# GESTÃO DE CONSULTAS E BANCOS INDEPENDENTES (DATA/CONSULTAS/)
+# =====================================================================
+
+def create_new_consulta_db(group_name: str | None = None) -> tuple[str, str]:
+    """
+    Cria um novo banco de dados SQLite 100% independente para uma nova consulta em data/consultas/.
+    Retorna (filename, absolute_path).
+    """
+    consultas_dir = get_consultas_dir()
+    slug = gerar_grupo_id(group_name) if group_name else "consulta"
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"consulta_{slug}_{timestamp}.db"
+    db_path = str(consultas_dir / filename)
+
+    # Inicializa o novo banco de dados isolado com o schema limpo
+    init_db(db_path)
+
+    # Define esse novo banco como o ativo no app_state.json
+    state_path = get_state_file_path()
+    current_state = get_app_state()
+    current_state["active_db_filename"] = filename
+    current_state["active_group_name"] = group_name
+    current_state["active_group_id"] = gerar_grupo_id(group_name) if group_name else None
+    current_state["total_messages"] = 0
+    current_state["last_updated"] = datetime.now().isoformat()
+
+    with open(state_path, "w", encoding="utf-8") as f:
+        json.dump(current_state, f, ensure_ascii=False, indent=2)
+
+    return filename, db_path
+
+
+def list_consultas() -> list[dict]:
+    """
+    Lista todos os bancos de dados independentes de consultas em data/consultas/ (e messages.db se existir).
+    Retorna metadados como nome do arquivo, grupo principal, total de mensagens, tamanho, data de criação e se está ativo.
+    """
+    consultas_dir = get_consultas_dir()
+    active_path_str = get_db_path()
+    active_filename = Path(active_path_str).name
+
+    arquivos_db = list(consultas_dir.glob("*.db"))
+
+    # Inclui o messages.db raiz se existir e possuir conteúdo
+    legacy_db = get_data_dir() / "messages.db"
+    if legacy_db.exists() and legacy_db.stat().st_size > 0 and legacy_db not in arquivos_db:
+        arquivos_db.append(legacy_db)
+
+    # Ordena por data de modificação decrescente (mais recentes primeiro)
+    arquivos_db.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+
+    resultado = []
+    for db_file in arquivos_db:
+        try:
+            stat = db_file.stat()
+            size_kb = round(stat.st_size / 1024, 1)
+            size_fmt = f"{size_kb} KB" if size_kb < 1024 else f"{round(size_kb/1024, 2)} MB"
+            dt_modificacao = datetime.fromtimestamp(stat.st_mtime).strftime("%d/%m/%Y %H:%M:%S")
+
+            # Inspeciona informações básicas dentro do banco SQLite
+            conn = sqlite3.connect(str(db_file))
+            cur = conn.cursor()
+            try:
+                cur.execute("SELECT count(*) FROM messages")
+                total_msgs = cur.fetchone()[0]
+            except Exception:
+                total_msgs = 0
+
+            try:
+                cur.execute(
+                    "SELECT DISTINCT grupo_nome FROM messages WHERE grupo_nome IS NOT NULL AND grupo_nome != '' LIMIT 5"
+                )
+                grupos = [r[0] for r in cur.fetchall()]
+                grupo_principal = grupos[0] if grupos else "Sem grupo identificado"
+            except Exception:
+                grupo_principal = "Sem grupo identificado"
+                grupos = []
+
+            try:
+                cur.execute("SELECT min(data_hora), max(data_hora) FROM messages WHERE data_hora IS NOT NULL")
+                min_dt, max_dt = cur.fetchone()
+            except Exception:
+                min_dt, max_dt = None, None
+
+            conn.close()
+
+            is_active = (db_file.name == active_filename) or (str(db_file) == active_path_str)
+
+            resultado.append({
+                "filename": db_file.name,
+                "path": str(db_file),
+                "is_active": is_active,
+                "grupo_principal": grupo_principal,
+                "grupos": grupos,
+                "total_mensagens": total_msgs,
+                "tamanho_formatado": size_fmt,
+                "tamanho_bytes": stat.st_size,
+                "modificado_em": dt_modificacao,
+                "periodo_inicio": min_dt or "-",
+                "periodo_fim": max_dt or "-",
+            })
+        except Exception as e:
+            print(f"[AVISO] Erro ao listar consulta {db_file.name}: {e}")
+
+    return resultado
+
+
+def get_active_consulta_info() -> dict:
+    """
+    Retorna as informações completas da consulta ativa no momento.
+    """
+    active_path_str = get_db_path()
+    active_path = Path(active_path_str)
+    filename = active_path.name
+
+    total_msgs = 0
+    grupo_principal = "Nenhum grupo ativo"
+    if active_path.exists():
+        try:
+            conn = sqlite3.connect(active_path_str)
+            cur = conn.cursor()
+            total_msgs = cur.execute("SELECT count(*) FROM messages").fetchone()[0]
+            grupo_row = cur.execute(
+                "SELECT grupo_nome FROM messages WHERE grupo_nome IS NOT NULL AND grupo_nome != '' LIMIT 1"
+            ).fetchone()
+            if grupo_row and grupo_row[0]:
+                grupo_principal = grupo_row[0]
+            conn.close()
+        except Exception:
+            pass
+
+    return {
+        "filename": filename,
+        "path": active_path_str,
+        "grupo_principal": grupo_principal,
+        "total_mensagens": total_msgs,
+        "exists": active_path.exists(),
+    }
+
+
+def set_active_consulta(filename: str) -> dict:
+    """
+    Define a consulta informada como o banco ativo para Dashboard, Estatísticas e Chat do Gemini.
+    """
+    consultas_dir = get_consultas_dir()
+    target_path = consultas_dir / filename
+    if not target_path.exists():
+        legacy_path = get_data_dir() / filename
+        if legacy_path.exists():
+            target_path = legacy_path
+        else:
+            raise FileNotFoundError(f"Banco de consulta '{filename}' não foi encontrado.")
+
+    init_db(str(target_path))
+
+    # Lê dados do banco
+    conn = sqlite3.connect(str(target_path))
+    cur = conn.cursor()
+    total_msgs = cur.execute("SELECT count(*) FROM messages").fetchone()[0]
+    grupo_row = cur.execute(
+        "SELECT grupo_id, grupo_nome FROM messages WHERE grupo_nome IS NOT NULL AND grupo_nome != '' LIMIT 1"
+    ).fetchone()
+    conn.close()
+
+    gid = grupo_row[0] if grupo_row else None
+    gnome = grupo_row[1] if grupo_row else None
+
+    state_path = get_state_file_path()
+    current_state = get_app_state()
+    current_state["active_db_filename"] = filename
+    current_state["active_group_id"] = gid
+    current_state["active_group_name"] = gnome
+    current_state["total_messages"] = total_msgs
+    current_state["last_updated"] = datetime.now().isoformat()
+
+    with open(state_path, "w", encoding="utf-8") as f:
+        json.dump(current_state, f, ensure_ascii=False, indent=2)
+
+    return {
+        "success": True,
+        "active_db_filename": filename,
+        "active_group_name": gnome,
+        "total_messages": total_msgs,
+    }
+
+
+def delete_consulta(filename: str) -> bool:
+    """
+    Exclui com segurança o arquivo .db de uma consulta independente.
+    """
+    consultas_dir = get_consultas_dir()
+    target_path = consultas_dir / filename
+    if not target_path.exists():
+        legacy_path = get_data_dir() / filename
+        if legacy_path.exists():
+            target_path = legacy_path
+        else:
+            return False
+
+    try:
+        target_path.unlink()
+
+        # Se era o banco ativo, busca o próximo banco disponível para ativar
+        state = get_app_state()
+        if state.get("active_db_filename") == filename:
+            consultas_restantes = list(consultas_dir.glob("*.db"))
+            if consultas_restantes:
+                set_active_consulta(consultas_restantes[0].name)
+            else:
+                state_path = get_state_file_path()
+                state["active_db_filename"] = None
+                state["active_group_id"] = None
+                state["active_group_name"] = None
+                state["total_messages"] = 0
+                with open(state_path, "w", encoding="utf-8") as f:
+                    json.dump(state, f, ensure_ascii=False, indent=2)
+
+        return True
+    except Exception as e:
+        print(f"[ERRO] Falha ao excluir consulta {filename}: {e}")
+        return False
+
+
+# =====================================================================
+# GERENCIAMENTO AVANÇADO DE BACKUPS (DATA/BACKUPS)
+# =====================================================================
+
+def create_backup(
+    tag: str = "manual",
+    description: str = "",
+    db_path: str | None = None,
+) -> dict:
+    """
+    Cria uma cópia íntegra e atômica de backup do banco SQLite messages.db
+    no diretório data/backups/, utilizando a SQLite Online Backup API.
+    Gera também um arquivo de manifesto metadata companion (.json).
+    """
+    if db_path is None:
+        db_path = get_db_path()
+    init_db(db_path)
+
+    backups_dir = get_backups_dir()
+    now = datetime.now()
+    stamp = now.strftime("%Y%m%d_%H%M%S")
+    clean_tag = re.sub(r"[^\w-]", "_", tag).lower()
+    backup_filename = f"backup_{stamp}_{clean_tag}.db"
+    dest_path = backups_dir / backup_filename
+    meta_path = backups_dir / f"backup_{stamp}_{clean_tag}.json"
+
+    # Realiza o backup atômico via sqlite3 API
+    src_conn = sqlite3.connect(db_path)
+    dst_conn = sqlite3.connect(str(dest_path))
+    try:
+        src_conn.backup(dst_conn)
+    finally:
+        dst_conn.close()
+
+    # Coleta estatísticas do snapshot gerado
+    cur = src_conn.cursor()
+    total_messages = cur.execute("SELECT COUNT(*) FROM messages").fetchone()[0]
+    grupos_rows = cur.execute(
+        "SELECT DISTINCT grupo_nome FROM messages WHERE grupo_nome IS NOT NULL AND grupo_nome != ''"
+    ).fetchall()
+    grupos = [g[0] for g in grupos_rows]
+    src_conn.close()
+
+    size_bytes = dest_path.stat().st_size if dest_path.exists() else 0
+
+    metadata = {
+        "filename": backup_filename,
+        "path": str(dest_path),
+        "created_at": now.isoformat(),
+        "created_at_formatted": now.strftime("%d/%m/%Y %H:%M:%S"),
+        "tag": clean_tag,
+        "description": description or f"Backup snapshot ({clean_tag})",
+        "size_bytes": size_bytes,
+        "size_formatted": f"{size_bytes / 1024:.1f} KB" if size_bytes < 1048576 else f"{size_bytes / 1048576:.2f} MB",
+        "total_messages": total_messages,
+        "total_grupos": len(grupos),
+        "grupos": grupos,
+    }
+
+    try:
+        with open(meta_path, "w", encoding="utf-8") as f:
+            json.dump(metadata, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"[AVISO] Não foi possível salvar manifesto de backup {meta_path}: {e}")
+
+    return metadata
+
+
+def list_backups() -> list[dict]:
+    """
+    Retorna a lista estruturada de todos os backups salvos em data/backups/,
+    ordenados cronologicamente do mais recente para o mais antigo.
+    """
+    backups_dir = get_backups_dir()
+    if not backups_dir.exists():
+        return []
+
+    backups = []
+    db_files = list(backups_dir.glob("*.db"))
+
+    for f in db_files:
+        meta_file = backups_dir / f"{f.stem}.json"
+        if meta_file.exists():
+            try:
+                with open(meta_file, "r", encoding="utf-8") as mf:
+                    data = json.load(mf)
+                    data["filename"] = f.name
+                    data["path"] = str(f)
+                    size = f.stat().st_size
+                    data["size_bytes"] = size
+                    data["size_formatted"] = f"{size / 1024:.1f} KB" if size < 1048576 else f"{size / 1048576:.2f} MB"
+                    backups.append(data)
+                    continue
+            except Exception:
+                pass
+
+        # Fallback caso não haja arquivo .json de metadados
+        size = f.stat().st_size
+        mtime = datetime.fromtimestamp(f.stat().st_mtime)
+        total_msgs = 0
+        grupos = []
+        try:
+            b_conn = sqlite3.connect(str(f))
+            b_cur = b_conn.cursor()
+            total_msgs = b_cur.execute("SELECT COUNT(*) FROM messages").fetchone()[0]
+            g_rows = b_cur.execute(
+                "SELECT DISTINCT grupo_nome FROM messages WHERE grupo_nome IS NOT NULL AND grupo_nome != ''"
+            ).fetchall()
+            grupos = [g[0] for g in g_rows]
+            b_conn.close()
+        except Exception:
+            pass
+
+        tag = "manual"
+        parts = f.stem.split("_")
+        if len(parts) >= 4:
+            tag = "_".join(parts[3:])
+
+        backups.append(
+            {
+                "filename": f.name,
+                "path": str(f),
+                "created_at": mtime.isoformat(),
+                "created_at_formatted": mtime.strftime("%d/%m/%Y %H:%M:%S"),
+                "tag": tag,
+                "description": f"Backup ({tag})",
+                "size_bytes": size,
+                "size_formatted": f"{size / 1024:.1f} KB" if size < 1048576 else f"{size / 1048576:.2f} MB",
+                "total_messages": total_msgs,
+                "total_grupos": len(grupos),
+                "grupos": grupos,
+            }
+        )
+
+    backups.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+    return backups
+
+
+def restore_backup(filename: str, db_path: str | None = None) -> dict:
+    """
+    Restaura um backup a partir de um arquivo .db na pasta data/backups/.
+    Antes da restauração, cria automaticamente um backup preventivo de segurança
+    do estado atual do banco messages.db.
+    """
+    if db_path is None:
+        db_path = get_db_path()
+
+    backups_dir = get_backups_dir()
+    clean_name = os.path.basename(filename)
+    source_backup_file = backups_dir / clean_name
+
+    if not source_backup_file.exists():
+        raise FileNotFoundError(f"Arquivo de backup não encontrado: {clean_name}")
+
+    # 1. Cria backup de segurança prévio do banco atual
+    try:
+        create_backup(tag="seguranca_pre_restauracao", description="Backup de segurança automático antes da restauração", db_path=db_path)
+    except Exception as e:
+        print(f"[AVISO] Falha ao gerar backup prévio de segurança: {e}")
+
+    # 2. Restaura o arquivo selecionado para o messages.db via sqlite backup
+    src_conn = sqlite3.connect(str(source_backup_file))
+    dst_conn = sqlite3.connect(db_path)
+    try:
+        src_conn.backup(dst_conn)
+    finally:
+        src_conn.close()
+        dst_conn.close()
+
+    # 3. Detecta novo grupo ativo e sincroniza app_state
+    detected = detect_active_group_from_db(db_path)
+    total = count_messages(db_path)
+
+    return {
+        "success": True,
+        "filename": clean_name,
+        "total_messages": total,
+        "active_group": detected,
+        "message": f"Backup '{clean_name}' restaurado com sucesso! Total de mensagens ativas: {total}.",
+    }
+
+
+def delete_backup(filename: str) -> bool:
+    """
+    Remove um arquivo de backup específico e seu manifesto JSON.
+    """
+    backups_dir = get_backups_dir()
+    clean_name = os.path.basename(filename)
+    target_file = backups_dir / clean_name
+    meta_file = backups_dir / f"{target_file.stem}.json"
+
+    removed = False
+    if target_file.exists():
+        target_file.unlink(missing_ok=True)
+        removed = True
+    if meta_file.exists():
+        meta_file.unlink(missing_ok=True)
+
+    return removed
+
+
+def get_persistence_stats(db_path: str | None = None) -> dict:
+    """
+    Retorna métricas consolidadas de persistência e histórico geral:
+    - total_messages_all
+    - total_groups_count
+    - total_coletas_count
+    - total_backups_count
+    - db_size_bytes
+    - backups_size_bytes
+    - last_backup
+    """
+    if db_path is None:
+        db_path = get_db_path()
+    init_db(db_path)
+
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+
+    total_msgs = cur.execute("SELECT COUNT(*) FROM messages").fetchone()[0]
+    total_grupos = cur.execute(
+        "SELECT COUNT(DISTINCT COALESCE(NULLIF(TRIM(grupo_id), ''), grupo_nome)) FROM messages"
+    ).fetchone()[0]
+    total_coletas = cur.execute("SELECT COUNT(*) FROM coletas_historico").fetchone()[0]
+    conn.close()
+
+    db_p = Path(db_path)
+    db_size = db_p.stat().st_size if db_p.exists() else 0
+
+    backups = list_backups()
+    backups_size = sum(b.get("size_bytes", 0) for b in backups)
+    last_backup = backups[0] if backups else None
+
+    return {
+        "total_messages_all": total_msgs,
+        "total_groups_count": total_grupos,
+        "total_coletas_count": total_coletas,
+        "total_backups_count": len(backups),
+        "db_size_bytes": db_size,
+        "db_size_formatted": f"{db_size / 1024:.1f} KB" if db_size < 1048576 else f"{db_size / 1048576:.2f} MB",
+        "backups_size_bytes": backups_size,
+        "backups_size_formatted": f"{backups_size / 1024:.1f} KB" if backups_size < 1048576 else f"{backups_size / 1048576:.2f} MB",
+        "last_backup": last_backup,
+    }
 
 
 def save_messages(messages: list[dict], db_path: str | None = None) -> int:
@@ -765,9 +1445,36 @@ def import_from_csv_data(
     if not messages:
         return (0, "")
 
-    # Reseta banco de mensagens para a nova sessão de grupo
-    reset_messages_db(db_path=db_path)
-    save_messages(messages, db_path=db_path)
+    # Salva mensagens cumulativamente sem apagar outros grupos
+    novas = save_messages(messages, db_path=db_path)
+    total_acumulado = count_messages(db_path=db_path, grupo_nome=grupo_identificado)
+
+    # Registra no histórico de consultas/coletas
+    record_coleta_historico(
+        {
+            "grupo_id": gerar_grupo_id(grupo_identificado),
+            "grupo_nome": grupo_identificado,
+            "comunidade_nome": "",
+            "unidade_tempo": "arquivo",
+            "valor": len(messages),
+            "tipo_filtro": "importacao_csv",
+            "total_extraido": len(messages),
+            "total_acumulado": total_acumulado,
+            "status": "Concluído (Importação CSV)",
+            "detalhes": {"arquivo_tipo": "CSV", "novas_mensagens": novas},
+        },
+        db_path=db_path,
+    )
+
+    # Cria snapshot de backup automático pós-importação
+    try:
+        create_backup(
+            tag="importacao_csv",
+            description=f"Backup gerado após importação CSV do grupo '{grupo_identificado}' ({len(messages)} msgs)",
+            db_path=db_path,
+        )
+    except Exception as e:
+        print(f"[AVISO] Falha ao criar backup pós-importação CSV: {e}")
 
     return (len(messages), grupo_identificado)
 
@@ -778,7 +1485,7 @@ def import_from_json_data(
 ) -> tuple[int, str]:
     """
     Importa mensagens a partir do conteúdo de um arquivo JSON.
-    Reseta o messages.db para acolher o novo grupo importado.
+    Preserva dados cumulativamente sem sobrescrever mensagens anteriores.
     Retorna uma tupla (total_importado, nome_do_grupo).
     """
     if not json_content.strip():
@@ -828,9 +1535,36 @@ def import_from_json_data(
     if not messages:
         return (0, "")
 
-    # Reseta banco de mensagens para a nova sessão de grupo
-    reset_messages_db(db_path=db_path)
-    save_messages(messages, db_path=db_path)
+    # Salva mensagens cumulativamente sem apagar outros grupos
+    novas = save_messages(messages, db_path=db_path)
+    total_acumulado = count_messages(db_path=db_path, grupo_nome=grupo_identificado)
+
+    # Registra no histórico de consultas/coletas
+    record_coleta_historico(
+        {
+            "grupo_id": gerar_grupo_id(grupo_identificado),
+            "grupo_nome": grupo_identificado,
+            "comunidade_nome": "",
+            "unidade_tempo": "arquivo",
+            "valor": len(messages),
+            "tipo_filtro": "importacao_json",
+            "total_extraido": len(messages),
+            "total_acumulado": total_acumulado,
+            "status": "Concluído (Importação JSON)",
+            "detalhes": {"arquivo_tipo": "JSON", "novas_mensagens": novas},
+        },
+        db_path=db_path,
+    )
+
+    # Cria snapshot de backup automático pós-importação
+    try:
+        create_backup(
+            tag="importacao_json",
+            description=f"Backup gerado após importação JSON do grupo '{grupo_identificado}' ({len(messages)} msgs)",
+            db_path=db_path,
+        )
+    except Exception as e:
+        print(f"[AVISO] Falha ao criar backup pós-importação JSON: {e}")
 
     return (len(messages), grupo_identificado)
 

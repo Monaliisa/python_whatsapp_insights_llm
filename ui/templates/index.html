@@ -2216,6 +2216,15 @@
         <span id="drawer-relatorios-lock" class="sidebar-lock-badge">🔒 Bloqueado</span>
       </div>
 
+      <!-- Histórico -->
+      <div id="drawer-item-historico" class="sidebar-item" data-page="page-historico">
+        <div class="sidebar-item-label">
+          <span class="sidebar-item-icon">🕒</span>
+          <span>Histórico</span>
+        </div>
+        <span id="drawer-historico-badge" class="sidebar-success-badge" style="display: none;">0 msgs</span>
+      </div>
+
       <!-- Configurações (na parte de baixo, mas acima do divider) -->
       <div id="drawer-item-configuracoes" class="sidebar-item" data-page="page-configuracoes" style="margin-top: auto;">
         <div class="sidebar-item-label">
@@ -2377,14 +2386,14 @@
               prévios.</p>
           </div>
 
-          <!-- Banner / Card de Grupo Ativo na Sessão Local -->
+          <!-- Banner / Card de Grupo Carregado no Banco Local -->
           <div id="active-group-banner" class="active-group-card" style="display: none;">
 
             <!-- Linha Superior: Título/Grupo à esquerda e botão Mudar de Grupo com destaque à direita -->
             <div class="active-group-top-row">
               <div class="active-group-title-col">
                 <div class="active-group-label-row">
-                  <span class="active-group-badge">🟢 Grupo Ativo na Sessão Local</span>
+                  <span class="active-group-badge">🟢 Grupo Carregado no Banco Local</span>
                   <span id="active-group-id-badge" class="active-group-id-badge"></span>
                 </div>
                 <div class="active-group-name" id="active-group-name-display">-</div>
@@ -2392,7 +2401,7 @@
 
               <div>
                 <button type="button" id="btn-mudar-grupo" class="btn-mudar-grupo" onclick="abrirModalTrocaGrupo()"
-                  title="Limpar base de mensagens da sessão local e escolher ou coletar outro grupo">
+                  title="Limpar base de mensagens do banco local e escolher ou coletar outro grupo">
                   <span>🔄 Mudar de grupo</span>
                 </button>
               </div>
@@ -3072,7 +3081,129 @@
         </div>
 
         <!-- =========================================================
-             TELA 7: CONFIGURAÇÕES
+             TELA 7: HISTÓRICO & CONSULTAS INDEPENDENTES
+             ========================================================= -->
+        <div id="page-historico" class="page">
+          <div class="page-header">
+            <h1 class="page-title">🕒 Histórico de Consultas & Bases de Dados</h1>
+            <p class="page-subtitle">Cada consulta realizada é um banco de dados independente e isolado (.db). Escolha qual consulta deseja analisar, baixe os arquivos ou guarde cópias seguras.</p>
+          </div>
+
+          <!-- CARDS RESUMO DO HISTÓRICO -->
+          <div class="grid-3" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+            <div class="card" style="padding: 16px;">
+              <div style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Consultas Independentes</div>
+              <div id="hist-kpi-total-consultas" style="font-size: 24px; font-weight: 800; color: #38bdf8; margin: 6px 0;">0</div>
+              <div style="font-size: 11px; color: #64748b;">Bancos de dados (.db) salvos</div>
+            </div>
+
+            <div class="card" style="padding: 16px;">
+              <div style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Consulta Ativa Agora</div>
+              <div id="hist-kpi-consulta-ativa" style="font-size: 16px; font-weight: 800; color: #34d399; margin: 10px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Nenhuma ativa</div>
+              <div id="hist-kpi-consulta-ativa-sub" style="font-size: 11px; color: #64748b;">Pronta para análise no Dashboard</div>
+            </div>
+
+            <div class="card" style="padding: 16px;">
+              <div style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Total de Mensagens Guardadas</div>
+              <div id="hist-kpi-total-msgs" style="font-size: 24px; font-weight: 800; color: #f59e0b; margin: 6px 0;">0</div>
+              <div style="font-size: 11px; color: #64748b;">Somatório das conversas salvas</div>
+            </div>
+
+            <div class="card" style="padding: 16px;">
+              <div style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Espaço em Disco</div>
+              <div id="hist-kpi-backups-size" style="font-size: 20px; font-weight: 800; color: #a78bfa; margin: 8px 0;">0 KB</div>
+              <div style="font-size: 11px; color: #64748b;">Ocupado pelos arquivos de consulta</div>
+            </div>
+          </div>
+
+          <!-- SEÇÃO 1: CONSULTAS SALVAS (BANCOS INDEPENDENTES) -->
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+              <div class="card-title" style="margin-bottom: 0;">
+                <span>📁</span>
+                <span>Minhas Consultas Salvas (Bancos de Dados Independentes)</span>
+              </div>
+              <div class="btn-group">
+                <button type="button" class="btn secondary btn-sm" onclick="abrirPastaConsultasLocal()">
+                  <span>📂 Abrir Pasta no Computador</span>
+                </button>
+                <button type="button" class="btn secondary btn-sm" onclick="carregarHistorico()">
+                  <span>🔄 Atualizar Lista</span>
+                </button>
+              </div>
+            </div>
+            <p style="font-size: 13px; color: #94a3b8; margin-bottom: 14px;">
+              Cada consulta abaixo é um arquivo de banco de dados (.db) próprio, 100% isolado. Clique em <b>Abrir Consulta</b> para carregar os dados no Dashboard e na Inteligência Artificial.
+            </p>
+
+            <div style="overflow-x: auto; border: 1px solid var(--border-color-light); border-radius: 8px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Grupo / Conversa</th>
+                    <th>Data da Consulta</th>
+                    <th>Mensagens</th>
+                    <th>Período Coletado</th>
+                    <th>Tamanho</th>
+                    <th style="text-align: right;">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="tabela-consultas-corpo">
+                  <tr>
+                    <td colspan="7" style="text-align: center; color: #64748b; padding: 24px;">Carregando consultas salvas...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- SEÇÃO 2: CÓPIAS DE SEGURANÇA (BACKUPS) -->
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+              <div class="card-title" style="margin-bottom: 0;">
+                <span>🛡️</span>
+                <span>Cópias de Segurança & Snapshots</span>
+              </div>
+              <div class="btn-group">
+                <button type="button" class="btn success btn-sm" onclick="abrirModalCriarBackup()">
+                  <span>➕ Salvar Cópia da Base Ativa</span>
+                </button>
+                <button type="button" class="btn secondary btn-sm" onclick="abrirPastaBackupsLocal()">
+                  <span>📂 Pasta de Backups</span>
+                </button>
+              </div>
+            </div>
+            <p style="font-size: 13px; color: #94a3b8; margin-bottom: 14px;">
+              Gere cópias de segurança congeladas para arquivamento ou recuperação de emergência.
+            </p>
+
+            <div style="overflow-x: auto; border: 1px solid var(--border-color-light); border-radius: 8px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Data e Hora</th>
+                    <th>Arquivo</th>
+                    <th>Tipo</th>
+                    <th>Lembrete</th>
+                    <th>Mensagens</th>
+                    <th>Tamanho</th>
+                    <th style="text-align: right;">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="tabela-backups-corpo">
+                  <tr>
+                    <td colspan="7" style="text-align: center; color: #64748b; padding: 24px;">Nenhuma cópia de segurança salva ainda.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- =========================================================
+             TELA 8: CONFIGURAÇÕES
              ========================================================= -->
         <div id="page-configuracoes" class="page">
           <div class="page-header">
@@ -3422,6 +3553,84 @@
     </div>
   </div>
 
+  <!-- =============================================================
+       MODAL DIALOG: CRIAR CÓPIA DE SEGURANÇA (BACKUP)
+       ============================================================= -->
+  <div id="modal-criar-backup" class="modal-backdrop" onclick="fecharModalCriarBackup(event)">
+    <div class="modal-dialog" style="max-width: 500px;" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title" style="color: #93c5fd;">
+          <span>💾 Salvar Cópia de Segurança</span>
+        </div>
+        <button class="modal-close" onclick="fecharModalCriarBackup()">✕</button>
+      </div>
+
+      <div class="modal-body" style="gap: 14px;">
+        <p style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">
+          Você está criando um ponto de recuperação com todas as conversas salvas até o momento.
+        </p>
+
+        <div>
+          <label for="backup-input-tag" style="display: block; font-size: 13px; font-weight: 600; color: #93c5fd; margin-bottom: 6px;">
+            Identificador (ex: manual, fechamento_mes, grupo_projeto):
+          </label>
+          <input type="text" id="backup-input-tag" placeholder="ex: manual, fechamento_mes, grupo_projeto" value="manual">
+        </div>
+
+        <div>
+          <label for="backup-input-desc" style="display: block; font-size: 13px; font-weight: 600; color: #93c5fd; margin-bottom: 6px;">
+            Anotação ou lembrete (opcional):
+          </label>
+          <input type="text" id="backup-input-desc" placeholder="ex: Cópia antes de extrair novas mensagens">
+        </div>
+      </div>
+
+      <div class="modal-footer" style="justify-content: flex-end; gap: 10px;">
+        <button type="button" class="secondary" onclick="fecharModalCriarBackup()">Cancelar</button>
+        <button type="button" id="btn-executar-criar-backup" class="btn success" onclick="executarCriarBackup()">
+          <span>💾 Salvar Cópia Agora</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============================================================
+       MODAL DIALOG: CONFIRMAR RESTAURAÇÃO DE CÓPIA
+       ============================================================= -->
+  <div id="modal-restaurar-backup" class="modal-backdrop" onclick="fecharModalRestaurarBackup(event)">
+    <div class="modal-dialog" style="max-width: 520px;" onclick="event.stopPropagation()">
+      <div class="modal-header" style="border-bottom-color: rgba(56, 189, 248, 0.4);">
+        <div class="modal-title" style="color: #38bdf8;">
+          <span>🔄 Restaurar Cópia de Segurança</span>
+        </div>
+        <button class="modal-close" onclick="fecharModalRestaurarBackup()">✕</button>
+      </div>
+
+      <div class="modal-body" style="gap: 14px;">
+        <div class="card" style="padding: 14px; background: rgba(30, 58, 138, 0.25); border: 1px solid rgba(59, 130, 246, 0.4);">
+          <div style="font-size: 13.5px; color: #e0f2fe; line-height: 1.5; font-weight: 600;">
+            🛡️ Fique tranquilo: Proteção Automática
+          </div>
+          <div style="font-size: 12.5px; color: #bae6fd; margin-top: 6px; line-height: 1.5;">
+            Antes de restaurar, o sistema salvará uma cópia de segurança preventiva do seu estado atual. Nenhum dado será perdido.
+          </div>
+        </div>
+
+        <p style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">
+          Você quer carregar as mensagens da seguinte cópia de segurança? <br>
+          <code id="modal-restaurar-backup-nome" style="color: #38bdf8; font-weight: 700; font-size: 13.5px; display: inline-block; margin-top: 4px;">-</code>
+        </p>
+      </div>
+
+      <div class="modal-footer" style="justify-content: flex-end; gap: 10px;">
+        <button type="button" class="secondary" onclick="fecharModalRestaurarBackup()">Cancelar</button>
+        <button type="button" id="btn-executar-restaurar-backup" class="btn" onclick="executarRestaurarBackup()">
+          <span>🔄 Confirmar e Restaurar Conversas</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST DE NOTIFICAÇÃO -->
   <div id="toast" class="toast">Mensagem</div>
 
@@ -3569,6 +3778,8 @@
         carregarHistoricoChat();
       } else if (pageId === 'page-relatorios') {
         carregarMesesRelatorio();
+      } else if (pageId === 'page-historico') {
+        carregarHistorico();
       } else if (pageId === 'page-configuracoes') {
         carregarConfiguracaoLLM();
       }
@@ -3749,7 +3960,7 @@
         if (selectGrupo) selectGrupo.disabled = true;
         if (containerGrupoManual) containerGrupoManual.style.display = 'none';
         if (btnSyncGrupos) btnSyncGrupos.style.display = 'none';
-        if (statusGruposCount) statusGruposCount.innerText = `Grupo fixado na sessão ativa: "${activeGroup.nome || activeGroup.id}"`;
+        if (statusGruposCount) statusGruposCount.innerText = `Grupo carregado no banco local: "${activeGroup.nome || activeGroup.id}"`;
         if (coletaCardBadge) {
           coletaCardBadge.innerText = 'Coleta Incremental';
         }
@@ -3960,7 +4171,7 @@
 
           if (statusCount) {
             if (grupoAtivoGlobal && (grupoAtivoGlobal.nome || grupoAtivoGlobal.id)) {
-              statusCount.innerText = `Grupo fixado na sessão: "${grupoAtivoGlobal.nome || grupoAtivoGlobal.id}"`;
+              statusCount.innerText = `Grupo carregado no banco local: "${grupoAtivoGlobal.nome || grupoAtivoGlobal.id}"`;
             } else if (grupos.length === 0) {
               statusCount.innerText = "Nenhum grupo catalogado.";
             } else {
@@ -5528,6 +5739,355 @@
     }
 
     // -------------------------------------------------------------
+    // GESTÃO DE HISTÓRICO, CONSULTAS INDEPENDENTES & BACKUPS
+    // -------------------------------------------------------------
+    let backupParaRestaurar = null;
+
+    async function carregarHistorico() {
+      await Promise.all([
+        carregarHistoricoStats(),
+        carregarConsultasLista(),
+        carregarBackupsLista()
+      ]);
+    }
+
+    async function carregarConsultasLista() {
+      const tbody = document.getElementById('tabela-consultas-corpo');
+      const elTotalConsultas = document.getElementById('hist-kpi-total-consultas');
+      const elConsultaAtiva = document.getElementById('hist-kpi-consulta-ativa');
+      const elConsultaAtivaSub = document.getElementById('hist-kpi-consulta-ativa-sub');
+      const elSidebarConsulta = document.getElementById('sidebar-consulta-label');
+      if (!tbody) return;
+
+      try {
+        const res = await fetch('/api/consultas');
+        const json = await res.json();
+        if (json.success && json.data) {
+          const consultas = json.data;
+          const active = json.active;
+
+          if (elTotalConsultas) {
+            elTotalConsultas.innerText = `${consultas.length}`;
+          }
+
+          if (active && active.exists) {
+            const activeName = active.grupo_principal || active.filename;
+            if (elConsultaAtiva) elConsultaAtiva.innerText = activeName;
+            if (elConsultaAtivaSub) elConsultaAtivaSub.innerText = `${(active.total_mensagens || 0).toLocaleString('pt-BR')} msgs (${active.filename})`;
+            if (elSidebarConsulta) {
+              elSidebarConsulta.innerText = activeName;
+              elSidebarConsulta.title = `${activeName} - ${(active.total_mensagens || 0).toLocaleString('pt-BR')} msgs (${active.filename})`;
+            }
+          } else {
+            if (elConsultaAtiva) elConsultaAtiva.innerText = 'Nenhuma consulta ativa';
+            if (elConsultaAtivaSub) elConsultaAtivaSub.innerText = 'Selecione uma abaixo ou faça uma extração';
+            if (elSidebarConsulta) elSidebarConsulta.innerText = 'Nenhuma';
+          }
+
+          if (consultas.length > 0) {
+            tbody.innerHTML = consultas.map(c => {
+              const isAtivo = Boolean(c.is_active);
+              const statusBadge = isAtivo
+                ? '<span class="byok-badge active" style="font-size: 11px;">● Ativa Agora</span>'
+                : '<span class="byok-badge pending" style="font-size: 11px; background: rgba(100, 116, 139, 0.15); border-color: rgba(100, 116, 139, 0.3); color: #94a3b8;">Salva</span>';
+
+              const periodoStr = (c.periodo_inicio && c.periodo_inicio !== '-') 
+                ? `${c.periodo_inicio.substring(0, 10)} até ${c.periodo_fim.substring(0, 10)}` 
+                : '-';
+
+              const btnAbrir = isAtivo
+                ? `<button type="button" class="btn secondary btn-sm" disabled style="opacity: 0.6;"><span>✓ Em Análise</span></button>`
+                : `<button type="button" class="btn btn-sm" onclick="ativarConsultaArquivo('${c.filename}')" title="Carregar este banco para análise no Dashboard e IA"><span>📂 Abrir Consulta</span></button>`;
+
+              return `
+                <tr style="${isAtivo ? 'background: rgba(37, 99, 235, 0.12);' : ''}">
+                  <td>${statusBadge}</td>
+                  <td style="font-weight: 700; color: #f1f5f9;">
+                    ${c.grupo_principal}
+                    <div style="font-family: monospace; font-size: 11px; color: #64748b; font-weight: normal;">${c.filename}</div>
+                  </td>
+                  <td style="color: #cbd5e1; white-space: nowrap;">${c.modificado_em}</td>
+                  <td style="color: #38bdf8; font-weight: 700;">${(c.total_mensagens || 0).toLocaleString('pt-BR')} msgs</td>
+                  <td style="color: #94a3b8; font-size: 12px;">${periodoStr}</td>
+                  <td style="color: #a78bfa; font-weight: 600;">${c.tamanho_formatado}</td>
+                  <td style="text-align: right; white-space: nowrap;">
+                    ${btnAbrir}
+                    <button type="button" class="btn secondary btn-sm" onclick="baixarConsultaArquivo('${c.filename}')" title="Baixar arquivo SQLite .db desta consulta">
+                      <span>📥 Baixar</span>
+                    </button>
+                    <button type="button" class="btn danger btn-sm" onclick="excluirConsultaArquivo('${c.filename}')" title="Excluir este banco de consulta">
+                      <span>🗑️</span>
+                    </button>
+                  </td>
+                </tr>
+              `;
+            }).join('');
+          } else {
+            tbody.innerHTML = `
+              <tr>
+                <td colspan="7" style="text-align: center; color: #64748b; padding: 28px;">
+                  Nenhuma consulta salva ainda. Vá até <b>"3. Coletar mensagens"</b> para realizar sua primeira busca independente.
+                </td>
+              </tr>
+            `;
+          }
+        }
+      } catch (err) {
+        console.error("Erro ao listar consultas independentes:", err);
+      }
+    }
+
+    async function ativarConsultaArquivo(filename) {
+      try {
+        showToast("Carregando consulta...");
+        const res = await fetch('/api/consultas/ativar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename })
+        });
+        const json = await res.json();
+        if (json.success) {
+          showToast(`Consulta '${filename}' aberta para análise!`);
+          await carregarEstatisticas();
+          await carregarMensagensTabela(1);
+          await carregarHistorico();
+          
+          // Redireciona para o Dashboard (Visão Geral / Auditoria)
+          const itemDashboard = document.getElementById('drawer-item-auditoria');
+          if (itemDashboard) itemDashboard.click();
+        } else {
+          showToast(json.error || "Falha ao ativar consulta.");
+        }
+      } catch (err) {
+        showToast("Erro ao comunicar com o servidor.");
+        console.error("Erro ao ativar consulta:", err);
+      }
+    }
+
+    function baixarConsultaArquivo(filename) {
+      window.location.href = `/api/consultas/download/${encodeURIComponent(filename)}`;
+    }
+
+    async function excluirConsultaArquivo(filename) {
+      if (!confirm(`Deseja realmente excluir a consulta independente '${filename}'?\n\nO arquivo de banco de dados (.db) será removido.`)) {
+        return;
+      }
+      try {
+        const res = await fetch(`/api/consultas/${encodeURIComponent(filename)}`, {
+          method: 'DELETE'
+        });
+        const json = await res.json();
+        if (json.success) {
+          showToast(json.message);
+          await carregarHistorico();
+          await carregarEstatisticas();
+        } else {
+          showToast(json.message || "Erro ao excluir consulta.");
+        }
+      } catch (err) {
+        showToast("Erro ao excluir consulta.");
+        console.error("Erro ao excluir consulta:", err);
+      }
+    }
+
+    async function abrirPastaConsultasLocal() {
+      try {
+        const res = await fetch('/api/consultas/abrir-pasta', { method: 'POST' });
+        const json = await res.json();
+        if (json.success) {
+          showToast("Pasta de consultas aberta no seu computador!");
+        } else {
+          showToast("Não foi possível abrir a pasta automaticamente.");
+        }
+      } catch (err) {
+        console.error("Erro ao abrir pasta de consultas:", err);
+      }
+    }
+
+    async function carregarHistoricoStats() {
+      try {
+        const res = await fetch('/api/historico/stats');
+        const json = await res.json();
+        if (json.success && json.data) {
+          const s = json.data;
+          const elMsgs = document.getElementById('hist-kpi-total-msgs');
+          const elBackupsSize = document.getElementById('hist-kpi-backups-size');
+
+          if (elMsgs) elMsgs.innerText = (s.total_messages_all || 0).toLocaleString('pt-BR');
+          if (elBackupsSize) elBackupsSize.innerText = `${s.db_size_formatted || '0 KB'} (${s.total_groups_count || 0} grupos)`;
+
+          const drawerBadge = document.getElementById('drawer-historico-badge');
+          if (drawerBadge) {
+            drawerBadge.style.display = 'inline-block';
+            drawerBadge.innerText = `${(s.total_messages_all || 0).toLocaleString('pt-BR')} msgs`;
+          }
+        }
+      } catch (err) {
+        console.error("Erro ao carregar KPIs de histórico:", err);
+      }
+    }
+
+    function abrirModalCriarBackup() {
+      const modal = document.getElementById('modal-criar-backup');
+      const inputTag = document.getElementById('backup-input-tag');
+      const inputDesc = document.getElementById('backup-input-desc');
+      if (inputTag) inputTag.value = 'manual';
+      if (inputDesc) inputDesc.value = '';
+      if (modal) modal.classList.add('active');
+    }
+
+    function fecharModalCriarBackup(event) {
+      if (event && event.target !== document.getElementById('modal-criar-backup') && !event.target.classList.contains('modal-close') && event.target.tagName !== 'BUTTON') {
+        return;
+      }
+      const modal = document.getElementById('modal-criar-backup');
+      if (modal) modal.classList.remove('active');
+    }
+
+    async function executarCriarBackup() {
+      const tag = document.getElementById('backup-input-tag')?.value.trim() || 'manual';
+      const desc = document.getElementById('backup-input-desc')?.value.trim() || '';
+      const btn = document.getElementById('btn-executar-criar-backup');
+
+      try {
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = '<span>⏳ Gerando snapshot...</span>';
+        }
+        const res = await fetch('/api/backups/criar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tag, description: desc })
+        });
+        const json = await res.json();
+        if (json.success) {
+          showToast(json.message);
+          fecharModalCriarBackup();
+          await carregarHistorico();
+        } else {
+          showToast(json.error || "Erro ao criar backup.");
+        }
+      } catch (err) {
+        showToast("Erro ao conectar ao servidor para gerar backup.");
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>💾 Salvar Snapshot</span>';
+        }
+      }
+    }
+
+    function abrirModalRestaurarBackup(filename) {
+      backupParaRestaurar = filename;
+      const modal = document.getElementById('modal-restaurar-backup');
+      const nomeEl = document.getElementById('modal-restaurar-backup-nome');
+      if (nomeEl) nomeEl.innerText = filename;
+      if (modal) modal.classList.add('active');
+    }
+
+    function fecharModalRestaurarBackup(event) {
+      if (event && event.target !== document.getElementById('modal-restaurar-backup') && !event.target.classList.contains('modal-close') && event.target.tagName !== 'BUTTON') {
+        return;
+      }
+      const modal = document.getElementById('modal-restaurar-backup');
+      if (modal) modal.classList.remove('active');
+    }
+
+    async function executarRestaurarBackup() {
+      if (!backupParaRestaurar) return;
+      const btn = document.getElementById('btn-executar-restaurar-backup');
+
+      try {
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = '<span>⏳ Restaurando banco de dados...</span>';
+        }
+        const res = await fetch('/api/backups/restaurar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename: backupParaRestaurar })
+        });
+        const json = await res.json();
+        if (json.success) {
+          showToast(json.message);
+          fecharModalRestaurarBackup();
+          await carregarStatus();
+          await carregarHistorico();
+          await carregarMensagens();
+        } else {
+          showToast(json.error || "Erro ao restaurar backup.");
+        }
+      } catch (err) {
+        showToast("Erro ao conectar ao servidor para restaurar backup.");
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>🔄 Restaurar Banco de Dados</span>';
+        }
+      }
+    }
+
+    async function excluirBackupArquivo(filename) {
+      if (!confirm(`Deseja realmente excluir permanentemente o arquivo de backup "${filename}"?`)) {
+        return;
+      }
+      try {
+        const res = await fetch(`/api/backups/${encodeURIComponent(filename)}`, {
+          method: 'DELETE'
+        });
+        const json = await res.json();
+        if (json.success) {
+          showToast(json.message);
+          await carregarHistorico();
+        } else {
+          showToast(json.message || "Erro ao excluir backup.");
+        }
+      } catch (err) {
+        showToast("Erro ao conectar ao servidor para excluir backup.");
+      }
+    }
+
+    function baixarBackupArquivo(filename) {
+      window.location.href = `/api/backups/download/${encodeURIComponent(filename)}`;
+    }
+
+    async function abrirPastaBackupsLocal() {
+      try {
+        const res = await fetch('/api/backups/abrir-pasta', { method: 'POST' });
+        const json = await res.json();
+        if (json.success) {
+          showToast("Pasta de backups aberta no seu computador.");
+        } else {
+          showToast(json.error || "Não foi possível abrir a pasta.");
+        }
+      } catch (err) {
+        showToast("Erro ao conectar com o servidor local.");
+      }
+    }
+
+    async function selecionarGrupoPeloHistorico(grupoId, grupoNome) {
+      try {
+        const res = await fetch('/api/state/select-group', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ grupo_id: grupoId, grupo_nome: grupoNome })
+        });
+        const json = await res.json();
+        if (json.success) {
+          showToast(`Grupo ativo definido: "${grupoNome}". Carregando mensagens...`);
+          await carregarStatus();
+          await carregarMensagens();
+          await carregarGruposHistoricoLista();
+          navegarPara('page-visualizacao');
+        } else {
+          showToast(json.message || "Erro ao selecionar grupo.");
+        }
+      } catch (err) {
+        showToast("Erro ao conectar com o servidor.");
+      }
+    }
+
+    // -------------------------------------------------------------
     // Inicialização ao Carregar a Página
     // -------------------------------------------------------------
     window.addEventListener('DOMContentLoaded', () => {
@@ -5536,6 +6096,7 @@
       carregarConfiguracaoLLM();
       carregarLimitesDatasLLM();
       carregarHistoricoChat();
+      carregarHistoricoStats();
 
       // Restaura preferência da coluna lateral de análises
       if (localStorage.getItem(STORAGE_KEY_ANALYSES_COLLAPSED) === 'true') {
