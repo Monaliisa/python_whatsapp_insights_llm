@@ -2282,41 +2282,161 @@
       color: #94a3b8;
     }
 
+    @page {
+      size: A4 portrait;
+      margin: 12mm 15mm;
+    }
+
     @media print {
-      body {
-        overflow: visible !important;
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      html, body {
         height: auto !important;
+        min-height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
         background: #ffffff !important;
-        color: #000000 !important;
+        color: #0f172a !important;
+        font-size: 11pt;
       }
-      .appbar, .sidebar, .report-header-controls, .appbar-menu-btn, button {
-        display: none !important;
-      }
-      .main-content, .page-container, .page.active {
-        overflow: visible !important;
+
+      .app-container {
+        display: block !important;
         height: auto !important;
+        min-height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
         padding: 0 !important;
         margin: 0 !important;
       }
-      .report-section-card, .report-executive-card, .report-kpi-card, .report-main-chart-card, .report-mini-chart-card, .report-executive-content {
-        background: #ffffff !important;
-        color: #000000 !important;
-        border: 1px solid #cccccc !important;
-        page-break-inside: avoid;
+
+      .main-content, .page-container, .page.active {
+        display: block !important;
+        height: auto !important;
+        min-height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        background: transparent !important;
         box-shadow: none !important;
       }
-      .report-kpi-value, .report-section-title, h1, h2, h3, h4 {
-        color: #000000 !important;
+
+      /* Ocultar elementos de navegação, console e interativos */
+      .appbar, 
+      .sidebar, 
+      .sidebar-resizer, 
+      .console-panel, 
+      .console-resizer, 
+      .report-header-controls, 
+      .appbar-menu-btn, 
+      .toast-container, 
+      .modal-overlay, 
+      button, 
+      .sidebar-alert-badge, 
+      .sidebar-lock-badge {
+        display: none !important;
+      }
+
+      .page-header {
+        border-bottom: 2px solid #cbd5e1 !important;
+        padding-bottom: 12px !important;
+        margin-bottom: 16px !important;
+      }
+
+      .page-title, h1, h2, h3, h4, .report-section-title {
+        color: #0f172a !important;
+      }
+
+      .page-subtitle, .report-section-subtitle {
+        color: #475569 !important;
+      }
+
+      /* Evitar quebra no meio dos cards e tabelas */
+      .report-section-card, 
+      .report-executive-card, 
+      .report-kpi-card, 
+      .report-main-chart-card, 
+      .report-mini-chart-card, 
+      .report-executive-content,
+      .report-kpi-grid,
+      .report-split-grid,
+      .report-vol-grid,
+      .report-table-container,
+      .report-table tr {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      .report-section-card, 
+      .report-executive-card, 
+      .report-kpi-card, 
+      .report-main-chart-card, 
+      .report-mini-chart-card {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+        margin-bottom: 14px !important;
+      }
+
+      .report-kpi-label, .report-kpi-sub {
+        color: #64748b !important;
+      }
+
+      /* Gráficos em barra e distribuições */
+      .report-chart-label {
+        color: #1e293b !important;
+      }
+      .report-chart-track {
+        background: #e2e8f0 !important;
+      }
+      .report-chart-value {
+        color: #475569 !important;
+      }
+
+      /* Gráficos SVG */
+      .report-svg-chart-container line {
+        stroke: #cbd5e1 !important;
+      }
+      .report-svg-chart-container text,
+      .report-horario-chart-container text {
+        fill: #475569 !important;
+      }
+      .report-donut-center-val {
+        fill: #0f172a !important;
+      }
+      .report-donut-center-lbl {
+        color: #64748b !important;
+      }
+      .report-donut-legend-item {
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        color: #1e293b !important;
+      }
+
+      /* Tags e Badges */
+      .report-tag {
+        background: #fee2e2 !important;
+        border: 1px solid #fca5a5 !important;
+        color: #991b1b !important;
+      }
+
+      /* Tabelas */
+      .report-table-container {
+        border: 1px solid #cbd5e1 !important;
       }
       .report-table {
-        color: #000000 !important;
+        color: #0f172a !important;
       }
       .report-table th {
         background: #f1f5f9 !important;
         color: #0f172a !important;
         border-bottom: 2px solid #cbd5e1 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
       }
       .report-table td {
         color: #0f172a !important;
@@ -2324,18 +2444,32 @@
       }
       .report-table tr.top-1 td {
         background: #fef3c7 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        color: #92400e !important;
       }
       .report-table tr.top-2 td {
         background: #f1f5f9 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        color: #334155 !important;
       }
       .report-table tr.top-3 td {
         background: #ffedd5 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        color: #9a3412 !important;
+      }
+
+      /* Resumo Executivo */
+      .report-executive-content {
+        background: #f8fafc !important;
+        color: #1e293b !important;
+        border: 1px solid #cbd5e1 !important;
+      }
+      .report-executive-content h2,
+      .report-executive-content h3,
+      .report-executive-content h4 {
+        color: #1d4ed8 !important;
+      }
+      .report-executive-content blockquote {
+        background: #f0f9ff !important;
+        border-left: 3px solid #0284c7 !important;
+        color: #334155 !important;
       }
     }
   </style>
