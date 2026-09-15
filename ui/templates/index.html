@@ -3009,11 +3009,6 @@
 
               <div class="report-kpi-grid">
                 <div class="report-kpi-card">
-                  <div class="report-kpi-label">Representatividade na Base</div>
-                  <div id="rep-quant-pct-historico" class="report-kpi-value" style="color: #38bdf8;">-</div>
-                  <div id="rep-quant-pct-historico-sub" class="report-kpi-sub">do total geral do grupo</div>
-                </div>
-                <div class="report-kpi-card">
                   <div class="report-kpi-label">Tamanho Médio das Mensagens</div>
                   <div id="rep-quant-tamanho-medio" class="report-kpi-value" style="color: #34d399;">-</div>
                   <div class="report-kpi-sub">caracteres por mensagem</div>
@@ -5587,14 +5582,10 @@
       }
 
       // 3. ANÁLISES QUANTITATIVAS
-      const elQuantPctHist = document.getElementById('rep-quant-pct-historico');
-      const elQuantPctHistSub = document.getElementById('rep-quant-pct-historico-sub');
       const elQuantTamMedio = document.getElementById('rep-quant-tamanho-medio');
       const elQuantAnexos = document.getElementById('rep-quant-anexos');
       const elQuantAnexosSub = document.getElementById('rep-quant-anexos-sub');
 
-      if (elQuantPctHist) elQuantPctHist.innerText = `${String(quant.percentual_do_historico || 0).replace('.', ',')}%`;
-      if (elQuantPctHistSub) elQuantPctHistSub.innerText = `do total geral (${(quant.total_historico_base || 0).toLocaleString('pt-BR')} msgs)`;
       if (elQuantTamMedio) elQuantTamMedio.innerText = `${String(quant.tamanho_medio_caracteres || 0).replace('.', ',')} carac.`;
       if (elQuantAnexos) elQuantAnexos.innerText = (quant.tipos_mensagens?.anexos_midia || 0).toLocaleString('pt-BR');
       if (elQuantAnexosSub) elQuantAnexosSub.innerText = `${quant.tipos_mensagens?.percentual_anexos || 0}% do volume do mês`;

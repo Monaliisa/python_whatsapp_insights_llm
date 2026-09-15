@@ -217,8 +217,10 @@ def sincronizar_grupos_whatsapp(headless: bool = False, timeout_segundos: int = 
             args=["--start-maximized"],
             no_viewport=True,
         )
+        contexto.on("page", lambda p: p.close())
         try:
             pagina = contexto.pages[0] if contexto.pages else contexto.new_page()
+            pagina.add_init_script("window.open = function() { return null; };")
             pagina.goto("https://web.whatsapp.com")
 
             seletores_painel = "#pane-side, header[data-testid='chatlist-header']"
@@ -260,8 +262,10 @@ def iniciar_coletor(timeout_segundos: int = 300) -> bool:
             no_viewport=True
         )
         
+        contexto.on("page", lambda p: p.close())
         try:
             pagina = contexto.pages[0] if contexto.pages else contexto.new_page()
+            pagina.add_init_script("window.open = function() { return null; };")
             
             print("Acessando https://web.whatsapp.com ...")
             pagina.goto("https://web.whatsapp.com")

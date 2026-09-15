@@ -514,10 +514,84 @@ def extrair_dados_comunidade(
         )
 
         # Impede abertura acidental de novas abas/janelas provenientes de cliques em links de mensagens
-        contexto.on("page", lambda new_page: new_page.close())
+        def _fechar_aba_acidental(nova_aba):
+            try:
+                nova_aba.close()
+            except Exception:
+                pass
+
+        contexto.on("page", _fechar_aba_acidental)
 
         try:
             pagina = contexto.pages[0] if contexto.pages else contexto.new_page()
+
+            # Bloqueio rigoroso de navegação externa e cliques em links no WhatsApp Web
+            pagina.add_init_script("""
+                // 1. Sobrescreve window.open para neutralizar popups
+                window.open = function() { return null; };
+
+                // 2. Intercepta todos os eventos de clique em links e previews na fase de captura
+                ['click', 'auxclick', 'mousedown', 'mouseup', 'dblclick'].forEach(evtName => {
+                    document.addEventListener(evtName, function(e) {
+                        const target = e.target;
+                        if (!target) return;
+                        const isLink = target.closest('a, [role="link"], [data-testid*="link"], [data-testid*="preview"], [data-js-link="true"]');
+                        if (isLink) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                            return false;
+                        }
+                    }, true);
+                });
+
+                // 3. Injeta regra CSS global para desativar interações de ponteiro em links e cards
+                const injectAntiLinkCSS = () => {
+                    if (document.getElementById('whatsapp-anti-link-style')) return;
+                    const style = document.createElement('style');
+                    style.id = 'whatsapp-anti-link-style';
+                    style.innerHTML = `
+                        a, 
+                        [role="link"], 
+                        [data-testid*="link"], 
+                        [data-testid*="preview"],
+                        div[data-testid="link-preview"],
+                        div[data-testid="media-url-preview"],
+                        a *, 
+                        [role="link"] *, 
+                        [data-testid*="link"] *, 
+                        [data-testid*="preview"] * {
+                            pointer-events: none !important;
+                            cursor: default !important;
+                            user-select: text !important;
+                        }
+                    `;
+                    (document.head || document.documentElement).appendChild(style);
+                };
+
+                // 4. MutationObserver contínuo para desarmar hrefs e targets de todos os links dinâmicos
+                const observer = new MutationObserver(() => {
+                    document.querySelectorAll('a[href], [data-testid*="preview"]').forEach(el => {
+                        if (el.tagName === 'A') {
+                            el.removeAttribute('href');
+                            el.removeAttribute('target');
+                        }
+                        el.style.pointerEvents = 'none';
+                    });
+                });
+
+                const startArmor = () => {
+                    injectAntiLinkCSS();
+                    observer.observe(document.documentElement, { childList: true, subtree: true });
+                };
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', startArmor);
+                } else {
+                    startArmor();
+                }
+            """)
+
             print("Acessando https://web.whatsapp.com ...")
             pagina.goto("https://web.whatsapp.com")
 
@@ -550,27 +624,6 @@ def extrair_dados_comunidade(
             print("\nAguardando o painel de mensagens carregar...")
             pagina.wait_for_selector("#main", timeout=20000)
             time.sleep(2)
-
-            # Injeta proteção contra cliques acidentais em links durante o processo de extração
-            try:
-                pagina.evaluate("""
-                    () => {
-                        let style = document.getElementById('whatsapp-insights-no-click-links');
-                        if (!style) {
-                            style = document.createElement('style');
-                            style.id = 'whatsapp-insights-no-click-links';
-                            style.innerHTML = '#main a, #main [role=\"button\"] a { pointer-events: none !important; }';
-                            document.head.appendChild(style);
-                        }
-                        const msgContainer = document.querySelector("#main div[data-testid='conversation-panel-messages']") ||
-                                             document.querySelector("#main div[tabindex='-1']") ||
-                                             document.querySelector("#main header") ||
-                                             document.querySelector("#main");
-                        if (msgContainer) msgContainer.focus();
-                    }
-                """)
-            except Exception:
-                pass
 
             print("\n--- Iniciando rolagem incremental e raspagem contínua ---")
 
@@ -606,23 +659,36 @@ def extrair_dados_comunidade(
                 else:
                     tentativas_sem_novos_dados = 0
 
-                # Executa a rolagem para cima com múltiplos seletores e wheel
+                # Executa a rolagem para cima com manipulação segura direta do container (sem mouse/teclado para evitar foco em links)
                 pagina.evaluate("""
-                    let container = document.querySelector("#main div[data-testid='conversation-panel-messages']") ||
-                                    document.querySelector("#main div[tabindex='-1']") || 
-                                    document.querySelector("div[data-tab='8']") ||
-                                    document.querySelector("#main .copyable-area > div:nth-child(2)") ||
-                                    document.querySelector("#main .copyable-area > div") ||
-                                    document.querySelector("#main [role='application']");
-                    if (container) {
-                        container.scrollTop = 0;
+                    () => {
+                        // 1. Remove href e target de qualquer link residual
+                        document.querySelectorAll('#main a').forEach(a => {
+                            a.removeAttribute('href');
+                            a.removeAttribute('target');
+                            a.style.pointerEvents = 'none';
+                        });
+
+                        // 2. Rola o container de mensagens para o topo
+                        const container = document.querySelector("#main div[data-testid='conversation-panel-messages']") ||
+                                          document.querySelector("#main div[tabindex='-1']") || 
+                                          document.querySelector("div[data-tab='8']") ||
+                                          document.querySelector("#main .copyable-area > div:nth-child(2)") ||
+                                          document.querySelector("#main .copyable-area > div") ||
+                                          document.querySelector("#main [role='application']");
+                        if (container) {
+                            container.scrollTop = 0;
+                        }
+
+                        // 3. Traz a mensagem mais ao topo para a visualização
+                        const firstMsg = document.querySelector("#main div[data-id], #main div.message-in, #main div.message-out");
+                        if (firstMsg) {
+                            try {
+                                firstMsg.scrollIntoView({ block: 'start', behavior: 'instant' });
+                            } catch (e) {}
+                        }
                     }
                 """)
-                try:
-                    pagina.mouse.wheel(0, -3000)
-                except Exception:
-                    pass
-                pagina.keyboard.press("PageUp")
                 time.sleep(1.8)  # Tempo para renderização e requisição de histórico
 
             # Ordenação cronológica das mensagens extraídas
