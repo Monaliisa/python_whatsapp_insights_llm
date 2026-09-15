@@ -944,14 +944,14 @@ async def validar_chave_llm(req: ValidateLLMKeyRequest):
     service = AnthropicService(api_key=api_key, model=modelo)
 
     state.add_log(f"[Anthropic / Claude] Validando API Key informada para o modelo '{modelo}'...")
-    valida, msg = service.validar_api_key(api_key=api_key, model=modelo)
+    valida, msg, modelos_disp, modelo_resolvido = service.validar_api_key(api_key=api_key, model=modelo)
 
     if valida:
         state.add_log(f"[Anthropic / Claude] ✅ {msg}")
-        return {"success": True, "message": msg, "model": modelo}
+        return {"success": True, "message": msg, "model": modelo_resolvido, "available_models": modelos_disp}
     else:
         state.add_log(f"[Anthropic / Claude] ⚠️ {msg}")
-        return {"success": False, "message": msg, "model": modelo}
+        return {"success": False, "message": msg, "model": modelo_resolvido, "available_models": modelos_disp}
 
 
 @app.get("/api/llm/range-datas")

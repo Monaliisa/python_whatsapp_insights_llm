@@ -191,10 +191,13 @@ class ReportService:
         # -----------------------------------------------------------------
         # PROCESSAMENTO ESTATÍSTICO
         # -----------------------------------------------------------------
+        import calendar
+
         participantes_counter: Counter = Counter()
         mensagens_por_dia: dict[str, int] = defaultdict(int)
         mensagens_por_dia_semana: dict[int, int] = defaultdict(int)
         mensagens_por_periodo: dict[str, int] = {"Madrugada": 0, "Manhã": 0, "Tarde": 0, "Noite": 0}
+        mensagens_por_hora: dict[int, int] = {h: 0 for h in range(24)}
         mensagens_por_semana: dict[str, int] = defaultdict(int)
 
         total_replies = 0
@@ -228,6 +231,8 @@ class ReportService:
                 mensagens_por_dia_semana[dt.weekday()] += 1
 
                 hora = dt.hour
+                mensagens_por_hora[hora] += 1
+
                 if 0 <= hora < 6:
                     mensagens_por_periodo["Madrugada"] += 1
                 elif 6 <= hora < 12:
@@ -284,6 +289,25 @@ class ReportService:
                 "total": mensagens_por_dia_semana.get(d_idx, 0),
             })
 
+        # Série cronológica diária completa cobrindo todos os dias do mês
+        num_dias_mes = calendar.monthrange(ano, mes_num)[1]
+        evolucao_diaria = []
+        for d in range(1, num_dias_mes + 1):
+            dia_iso = f"{ano:04d}-{mes_num:02d}-{d:02d}"
+            dia_fmt = f"{d:02d}/{mes_num:02d}"
+            total_dia = mensagens_por_dia.get(dia_iso, 0)
+            evolucao_diaria.append({
+                "dia": dia_iso,
+                "dia_label": dia_fmt,
+                "dia_numero": d,
+                "total": total_dia,
+            })
+
+        distribuicao_horaria = [
+            {"hora": h, "label": f"{h:02d}h", "total": mensagens_por_hora[h]}
+            for h in range(24)
+        ]
+
         engajamento_data = {
             "total_mensagens": total_mensagens,
             "total_participantes": total_participantes,
@@ -296,6 +320,8 @@ class ReportService:
             "periodo_predominante": periodo_predominante,
             "periodos_distribuicao": mensagens_por_periodo,
             "dias_semana_distribuicao": distribuicao_dias_semana,
+            "distribuicao_horaria": distribuicao_horaria,
+            "evolucao_diaria": evolucao_diaria,
         }
 
         # -----------------------------------------------------------------
@@ -376,6 +402,7 @@ class ReportService:
                 "texto_puro": total_texto_puro,
                 "anexos_midia": total_anexos,
                 "replies_citacoes": total_replies,
+                "percentual_texto_puro": round((total_texto_puro / total_mensagens) * 100, 1) if total_mensagens > 0 else 0,
                 "percentual_anexos": round((total_anexos / total_mensagens) * 100, 1) if total_mensagens > 0 else 0,
                 "percentual_replies": round((total_replies / total_mensagens) * 100, 1) if total_mensagens > 0 else 0,
             },

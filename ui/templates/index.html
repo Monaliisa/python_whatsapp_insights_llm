@@ -1941,6 +1941,172 @@
       }
     }
 
+    .report-main-chart-card {
+      background: #0b1120;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 16px;
+      position: relative;
+    }
+
+    .report-svg-chart-container {
+      width: 100%;
+      height: 220px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .report-chart-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .report-chart-dot {
+      fill: #38bdf8;
+      stroke: #0b1120;
+      stroke-width: 2px;
+      transition: r 0.2s ease, fill 0.2s ease;
+      cursor: pointer;
+    }
+
+    .report-chart-dot:hover {
+      r: 6px;
+      fill: #fbbf24;
+      stroke: #ffffff;
+    }
+
+    .report-chart-tooltip {
+      position: absolute;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid #38bdf8;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 11.5px;
+      color: #f8fafc;
+      pointer-events: none;
+      z-index: 30;
+      transform: translate(-50%, -115%);
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      white-space: nowrap;
+      opacity: 0;
+    }
+
+    .report-horario-chart-container {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 130px;
+      padding: 12px 4px 4px 4px;
+      position: relative;
+    }
+
+    .report-horario-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      justify-content: flex-end;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .report-horario-bar-wrapper {
+      width: 100%;
+      height: 95px;
+      display: flex;
+      align-items: flex-end;
+      background: rgba(30, 41, 59, 0.4);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .report-horario-bar {
+      width: 100%;
+      background: linear-gradient(180deg, #38bdf8, #2563eb);
+      border-radius: 4px 4px 0 0;
+      transition: height 0.4s ease, background 0.2s ease;
+      min-height: 2px;
+    }
+
+    .report-horario-col:hover .report-horario-bar {
+      background: linear-gradient(180deg, #fbbf24, #f59e0b);
+    }
+
+    .report-horario-bar.peak {
+      background: linear-gradient(180deg, #f472b6, #ec4899);
+    }
+
+    .report-horario-label {
+      font-size: 10px;
+      color: #64748b;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    .report-donut-layout {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      gap: 20px;
+      padding: 8px 0;
+      flex-wrap: wrap;
+    }
+
+    .report-donut-svg-wrapper {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .report-donut-center-info {
+      position: absolute;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .report-donut-center-val {
+      font-size: 16px;
+      font-weight: 800;
+      color: #f8fafc;
+      line-height: 1.1;
+    }
+
+    .report-donut-center-lbl {
+      font-size: 10px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .report-donut-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .report-donut-legend-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #1e293b;
+    }
+
     .report-mini-chart-card {
       background: #0b1120;
       border: 1px solid #1e293b;
@@ -2132,7 +2298,7 @@
         padding: 0 !important;
         margin: 0 !important;
       }
-      .report-section-card, .report-executive-card, .report-kpi-card, .report-mini-chart-card, .report-executive-content {
+      .report-section-card, .report-executive-card, .report-kpi-card, .report-main-chart-card, .report-mini-chart-card, .report-executive-content {
         background: #ffffff !important;
         color: #000000 !important;
         border: 1px solid #cccccc !important;
@@ -2733,7 +2899,8 @@
                   <div class="select-wrapper">
                     <select id="select-gemini-model" class="custom-select" onchange="aoAlterarCredenciaisLLM()">
                       <option value="claude-3-5-sonnet-20241022" selected>⚡ Claude 3.5 Sonnet (Recomendado / Rápido e Analítico)</option>
-                      <option value="claude-3-5-haiku-20241022">💨 Claude 3.5 Haiku (Ultra Rápido / Econômico)</option>
+                      <option value="claude-3-7-sonnet-20250219">🚀 Claude 3.7 Sonnet (Alta Performance / Raciocínio Híbrido)</option>
+                      <option value="claude-3-haiku-20240307">💨 Claude 3 Haiku (Ultra Rápido / Econômico)</option>
                       <option value="claude-3-opus-20240229">🧠 Claude 3 Opus (Raciocínio Profundo)</option>
                     </select>
                   </div>
@@ -3000,8 +3167,22 @@
                 </div>
               </div>
 
+              <!-- Gráfico Principal: Evolução Diária de Mensagens (Timeline) -->
+              <div class="report-main-chart-card" style="margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                  <div>
+                    <div style="font-size: 13.5px; font-weight: 700; color: #93c5fd; display: flex; align-items: center; gap: 6px;">
+                      <span>📈</span> Evolução Diária de Mensagens no Mês
+                    </div>
+                    <div style="font-size: 11.5px; color: #64748b;">Curva cronológica do volume de interações dia a dia, evidenciando dias de pico e oscilações</div>
+                  </div>
+                  <div id="rep-eng-timeline-stats" style="font-size: 11.5px; color: #94a3b8; font-weight: 600;"></div>
+                </div>
+                <div id="rep-eng-timeline-container" class="report-svg-chart-container"></div>
+              </div>
+
               <!-- Distribuição: Dias da Semana & Períodos do Dia -->
-              <div class="report-split-grid">
+              <div class="report-split-grid" style="margin-bottom: 16px;">
                 <div class="report-mini-chart-card">
                   <div style="font-size: 12.5px; font-weight: 700; color: #93c5fd; margin-bottom: 10px;">📅 Atividade por Dia da Semana</div>
                   <div id="rep-eng-dias-semana-bars"></div>
@@ -3010,6 +3191,17 @@
                   <div style="font-size: 12.5px; font-weight: 700; color: #c084fc; margin-bottom: 10px;">⏰ Distribuição por Turno do Dia</div>
                   <div id="rep-eng-periodos-bars"></div>
                 </div>
+              </div>
+
+              <!-- Histograma de Atividade por Faixa Horária (24 Horas) -->
+              <div class="report-mini-chart-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px;">
+                  <div style="font-size: 12.5px; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
+                    <span>⏱️</span> Concentração de Atividade por Horário (00h às 23h)
+                  </div>
+                  <div style="font-size: 11px; color: #64748b;">Mapeamento dos horários nobres de maior interação</div>
+                </div>
+                <div id="rep-eng-horario-container" class="report-horario-chart-container"></div>
               </div>
             </div>
 
@@ -3080,29 +3272,33 @@
                 </div>
               </div>
 
-              <!-- Tabela Top 10 Participantes & Distribuição Semanal -->
-              <div class="report-split-grid">
-                <div>
-                  <div style="font-size: 12.5px; font-weight: 700; color: #93c5fd; margin-bottom: 10px;">🏆 Top 10 Participantes Mais Ativos</div>
-                  <div class="report-table-container">
-                    <table class="report-table">
-                      <thead>
-                        <tr>
-                          <th style="width: 40px;">#</th>
-                          <th>Membro / Remetente</th>
-                          <th style="text-align: right;">Mensagens</th>
-                          <th style="text-align: right;">% Mês</th>
-                        </tr>
-                      </thead>
-                      <tbody id="rep-quant-top-participantes-body"></tbody>
-                    </table>
-                  </div>
+              <!-- Gráfico Donut de Tipologia & Distribuição Semanal -->
+              <div class="report-split-grid" style="margin-bottom: 16px;">
+                <div class="report-mini-chart-card">
+                  <div style="font-size: 12.5px; font-weight: 700; color: #38bdf8; margin-bottom: 10px;">🍩 Tipologia e Dinâmica das Mensagens</div>
+                  <div id="rep-quant-tipologia-container"></div>
                 </div>
-                <div>
+                <div class="report-mini-chart-card">
                   <div style="font-size: 12.5px; font-weight: 700; color: #c084fc; margin-bottom: 10px;">🗓️ Evolução Semanal do Volume</div>
-                  <div class="report-mini-chart-card">
-                    <div id="rep-quant-semanal-bars"></div>
-                  </div>
+                  <div id="rep-quant-semanal-bars"></div>
+                </div>
+              </div>
+
+              <!-- Tabela Top 10 Participantes -->
+              <div>
+                <div style="font-size: 12.5px; font-weight: 700; color: #93c5fd; margin-bottom: 10px;">🏆 Top 10 Participantes Mais Ativos</div>
+                <div class="report-table-container">
+                  <table class="report-table">
+                    <thead>
+                      <tr>
+                        <th style="width: 40px;">#</th>
+                        <th>Membro / Remetente</th>
+                        <th style="text-align: right;">Mensagens</th>
+                        <th style="text-align: right;">% Mês</th>
+                      </tr>
+                    </thead>
+                    <tbody id="rep-quant-top-participantes-body"></tbody>
+                  </table>
                 </div>
               </div>
             </div>
@@ -3321,7 +3517,8 @@
                   </label>
                   <select id="config-gemini-model" class="custom-select" onchange="aoAlterarCredenciaisConfig()">
                     <option value="claude-3-5-sonnet-20241022" selected>⚡ Claude 3.5 Sonnet (Recomendado / Rápido e Analítico)</option>
-                    <option value="claude-3-5-haiku-20241022">💨 Claude 3.5 Haiku (Ultra Rápido / Econômico)</option>
+                    <option value="claude-3-7-sonnet-20250219">🚀 Claude 3.7 Sonnet (Alta Performance / Raciocínio Híbrido)</option>
+                    <option value="claude-3-haiku-20240307">💨 Claude 3 Haiku (Ultra Rápido / Econômico)</option>
                     <option value="claude-3-opus-20240229">🧠 Claude 3 Opus (Raciocínio Profundo)</option>
                   </select>
                 </div>
@@ -4697,7 +4894,11 @@
     function carregarConfiguracaoLLM() {
       // Tenta carregar chave da Anthropic (com fallback para chave anterior caso exista)
       const savedKey = localStorage.getItem(STORAGE_KEY_API) || localStorage.getItem('zap_gemini_api_key') || '';
-      const savedModel = localStorage.getItem(STORAGE_KEY_MODEL) || 'claude-3-5-sonnet-20241022';
+      let savedModel = localStorage.getItem(STORAGE_KEY_MODEL) || 'claude-3-5-sonnet-20241022';
+      if (savedModel === 'claude-3-5-haiku-20241022') {
+        savedModel = 'claude-3-5-sonnet-20241022';
+        localStorage.setItem(STORAGE_KEY_MODEL, savedModel);
+      }
       const isValidated = localStorage.getItem(STORAGE_KEY_VALIDATED) === 'true';
       const savedCollapsedPref = localStorage.getItem(STORAGE_KEY_COLLAPSED);
 
@@ -4856,6 +5057,27 @@
       showToast("Preferências de API salvas com sucesso no navegador!");
     }
 
+    function atualizarDropdownsModelos(modelos, modeloSelecionado) {
+      if (!modelos || !Array.isArray(modelos) || modelos.length === 0) return;
+      const selectIds = ['select-gemini-model', 'config-gemini-model'];
+      selectIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerHTML = '';
+        modelos.forEach(m => {
+          const opt = document.createElement('option');
+          opt.value = m.id;
+          const icone = m.tipo === 'leve' ? '💨 ' : (m.tipo === 'balanceado' ? '⚡ ' : '🧠 ');
+          opt.textContent = `${icone}${m.nome || m.id}`;
+          if (m.id === modeloSelecionado) opt.selected = true;
+          el.appendChild(opt);
+        });
+      });
+      if (modeloSelecionado) {
+        localStorage.setItem(STORAGE_KEY_MODEL, modeloSelecionado);
+      }
+    }
+
     async function testarChaveGemini() {
       const inputKey = document.getElementById('input-gemini-api-key');
       const selectModel = document.getElementById('select-gemini-model');
@@ -4885,9 +5107,16 @@
         });
         const json = await res.json();
 
+        if (json.available_models && json.available_models.length > 0) {
+          atualizarDropdownsModelos(json.available_models, json.model || model);
+        }
+
+        const modelEfetivo = json.model || model;
+
         if (json.success) {
           localStorage.setItem(STORAGE_KEY_VALIDATED, 'true');
-          atualizarBadgesBYOK(apiKey, true, model);
+          localStorage.setItem(STORAGE_KEY_MODEL, modelEfetivo);
+          atualizarBadgesBYOK(apiKey, true, modelEfetivo);
           showToast("API Key da Anthropic validada com sucesso!");
           appendLog(`[Anthropic / Claude] ${json.message}`);
 
@@ -4897,7 +5126,7 @@
           }, 400);
         } else {
           localStorage.setItem(STORAGE_KEY_VALIDATED, 'false');
-          atualizarBadgesBYOK(apiKey, false, model);
+          atualizarBadgesBYOK(apiKey, false, modelEfetivo);
           showToast(json.message || "Falha ao validar API Key.");
           appendLog(`[Anthropic / Claude - Erro] ${json.message}`);
         }
@@ -4943,14 +5172,21 @@
         });
         const json = await res.json();
 
+        if (json.available_models && json.available_models.length > 0) {
+          atualizarDropdownsModelos(json.available_models, json.model || model);
+        }
+
+        const modelEfetivo = json.model || model;
+
         if (json.success) {
           localStorage.setItem(STORAGE_KEY_VALIDATED, 'true');
-          atualizarBadgesBYOK(apiKey, true, model);
+          localStorage.setItem(STORAGE_KEY_MODEL, modelEfetivo);
+          atualizarBadgesBYOK(apiKey, true, modelEfetivo);
           showToast("API Key da Anthropic validada com sucesso!");
           appendLog(`[Anthropic / Claude] ${json.message}`);
         } else {
           localStorage.setItem(STORAGE_KEY_VALIDATED, 'false');
-          atualizarBadgesBYOK(apiKey, false, model);
+          atualizarBadgesBYOK(apiKey, false, modelEfetivo);
           showToast(json.message || "Falha ao validar API Key.");
           appendLog(`[Anthropic / Claude - Erro] ${json.message}`);
         }
@@ -5555,6 +5791,9 @@
       if (elEngPico) elEngPico.innerText = eng.dia_pico || '-';
       if (elEngPicoSub) elEngPicoSub.innerText = `${(eng.dia_pico_volume || 0).toLocaleString('pt-BR')} msgs (Turno: ${eng.periodo_predominante || '-'})`;
 
+      // Gráfico Principal de Evolução Diária (Timeline)
+      renderizarGraficoTimeline(eng.evolucao_diaria, eng);
+
       // Barras dias da semana
       const elDiasSemana = document.getElementById('rep-eng-dias-semana-bars');
       if (elDiasSemana && eng.dias_semana_distribuicao) {
@@ -5591,6 +5830,9 @@
           `;
         }).join('');
       }
+
+      // Gráfico de Distribuição Horária (24h)
+      renderizarGraficoHorario24h(eng.distribuicao_horaria);
 
       // 2. PONTOS DE ATENÇÃO
       const elBadgeAtencao = document.getElementById('rep-atencao-badge-container');
@@ -5649,6 +5891,9 @@
       if (elQuantTamMedio) elQuantTamMedio.innerText = `${String(quant.tamanho_medio_caracteres || 0).replace('.', ',')} carac.`;
       if (elQuantAnexos) elQuantAnexos.innerText = (quant.tipos_mensagens?.anexos_midia || 0).toLocaleString('pt-BR');
       if (elQuantAnexosSub) elQuantAnexosSub.innerText = `${quant.tipos_mensagens?.percentual_anexos || 0}% do volume do mês`;
+
+      // Gráfico Donut de Tipologia de Mensagens
+      renderizarGraficoTipologiaDonut(quant.tipos_mensagens, quant.total_geral_mes);
 
       // Top participantes
       const elTopPartBody = document.getElementById('rep-quant-top-participantes-body');
@@ -5710,6 +5955,258 @@
       if (elExecTexto) {
         elExecTexto.innerHTML = renderizarMarkdownSimples(resumo.texto_padrao || "Sem resumo disponível.");
       }
+    }
+
+    // -------------------------------------------------------------
+    // Funções de Renderização de Gráficos Analíticos
+    // -------------------------------------------------------------
+    function renderizarGraficoTimeline(evolucaoDiaria, eng) {
+      const container = document.getElementById('rep-eng-timeline-container');
+      const statsEl = document.getElementById('rep-eng-timeline-stats');
+      if (!container) return;
+
+      if (!evolucaoDiaria || evolucaoDiaria.length === 0) {
+        container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;font-size:12px;">Sem dados de linha do tempo diária.</div>';
+        if (statsEl) statsEl.innerText = '';
+        return;
+      }
+
+      const maxVal = Math.max(...evolucaoDiaria.map(d => d.total), 1);
+      const totalMsgs = eng?.total_mensagens || evolucaoDiaria.reduce((acc, d) => acc + d.total, 0);
+      const mediaDiaria = (totalMsgs / Math.max(evolucaoDiaria.length, 1)).toFixed(1).replace('.', ',');
+
+      if (statsEl) {
+        statsEl.innerHTML = `Média: <span style="color:#38bdf8;">${mediaDiaria} msgs/dia</span> &bull; Pico: <span style="color:#f472b6;">${(eng?.dia_pico_volume || 0).toLocaleString('pt-BR')} msgs</span>`;
+      }
+
+      const width = 800;
+      const height = 210;
+      const padL = 45;
+      const padR = 25;
+      const padT = 20;
+      const padB = 35;
+      const plotW = width - padL - padR;
+      const plotH = height - padT - padB;
+      const numPontos = evolucaoDiaria.length;
+
+      const getX = (idx) => padL + (idx / Math.max(numPontos - 1, 1)) * plotW;
+      const getY = (val) => padT + plotH - (val / maxVal) * plotH;
+
+      // Linhas de grade horizontal
+      const gridSteps = 4;
+      let gridLines = '';
+      for (let s = 0; s <= gridSteps; s++) {
+        const val = Math.round((maxVal / gridSteps) * s);
+        const y = getY(val);
+        gridLines += `
+          <line x1="${padL}" y1="${y}" x2="${width - padR}" y2="${y}" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="1" />
+          <text x="${padL - 8}" y="${y + 3.5}" fill="#64748b" font-size="10" text-anchor="end" font-family="sans-serif">${val}</text>
+        `;
+      }
+
+      // Pontos e Caminho SVG
+      const pts = evolucaoDiaria.map((d, i) => ({ x: getX(i), y: getY(d.total), data: d }));
+      let lineD = `M ${pts[0].x} ${pts[0].y}`;
+      for (let i = 1; i < pts.length; i++) {
+        const prev = pts[i - 1];
+        const curr = pts[i];
+        const cpX = (prev.x + curr.x) / 2;
+        lineD += ` C ${cpX} ${prev.y}, ${cpX} ${curr.y}, ${curr.x} ${curr.y}`;
+      }
+
+      const areaD = `${lineD} L ${pts[pts.length - 1].x} ${padT + plotH} L ${pts[0].x} ${padT + plotH} Z`;
+
+      // Labels do Eixo X
+      const stepLabel = numPontos > 20 ? 4 : numPontos > 10 ? 2 : 1;
+      let xLabels = '';
+      pts.forEach((p, idx) => {
+        if (idx % stepLabel === 0 || idx === numPontos - 1) {
+          xLabels += `
+            <text x="${p.x}" y="${height - 10}" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="sans-serif">${p.data.dia_label || p.data.dia_numero}</text>
+            <line x1="${p.x}" y1="${padT + plotH}" x2="${p.x}" y2="${padT + plotH + 4}" stroke="#334155" stroke-width="1" />
+          `;
+        }
+      });
+
+      // Marcadores circulares interativos
+      let dotsHtml = '';
+      pts.forEach((p, idx) => {
+        dotsHtml += `
+          <circle class="report-chart-dot" cx="${p.x}" cy="${p.y}" r="${numPontos > 25 ? 3.5 : 4.5}" 
+            data-dia="${p.data.dia_label || p.data.dia}" 
+            data-total="${p.data.total}" 
+            data-idx="${idx}" />
+        `;
+      });
+
+      container.innerHTML = `
+        <svg class="report-chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="repTimelineGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.38"/>
+              <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.0"/>
+            </linearGradient>
+          </defs>
+          ${gridLines}
+          <path d="${areaD}" fill="url(#repTimelineGrad)" />
+          <path d="${lineD}" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          ${xLabels}
+          ${dotsHtml}
+        </svg>
+        <div id="rep-timeline-tooltip" class="report-chart-tooltip"></div>
+      `;
+
+      const tooltip = container.querySelector('#rep-timeline-tooltip');
+      const dots = container.querySelectorAll('.report-chart-dot');
+      dots.forEach(dot => {
+        dot.addEventListener('mouseenter', () => {
+          const dia = dot.getAttribute('data-dia');
+          const total = parseInt(dot.getAttribute('data-total') || '0', 10);
+          const rect = container.getBoundingClientRect();
+          const dotRect = dot.getBoundingClientRect();
+          const left = dotRect.left - rect.left + dotRect.width / 2;
+          const top = dotRect.top - rect.top;
+
+          if (tooltip) {
+            tooltip.innerHTML = `📅 <b>Dia ${dia}</b>: <span style="color:#38bdf8;font-weight:700;">${total.toLocaleString('pt-BR')}</span> msg(s)`;
+            tooltip.style.left = `${left}px`;
+            tooltip.style.top = `${top}px`;
+            tooltip.style.opacity = '1';
+            tooltip.style.transform = 'translate(-50%, -125%)';
+          }
+        });
+
+        dot.addEventListener('mouseleave', () => {
+          if (tooltip) tooltip.style.opacity = '0';
+        });
+      });
+    }
+
+    function renderizarGraficoHorario24h(distribuicaoHoraria) {
+      const container = document.getElementById('rep-eng-horario-container');
+      if (!container) return;
+
+      if (!distribuicaoHoraria || distribuicaoHoraria.length === 0) {
+        container.innerHTML = '<div style="color:#64748b;font-size:12px;margin:auto;">Sem dados de distribuição horária.</div>';
+        return;
+      }
+
+      const maxH = Math.max(...distribuicaoHoraria.map(h => h.total), 1);
+      const ordenado = [...distribuicaoHoraria].sort((a, b) => b.total - a.total);
+      const topHoras = new Set(ordenado.slice(0, 3).filter(h => h.total > 0).map(h => h.hora));
+
+      container.innerHTML = distribuicaoHoraria.map(item => {
+        const pct = Math.max(Math.round((item.total / maxH) * 100), item.total > 0 ? 8 : 2);
+        const isPeak = topHoras.has(item.hora);
+        const showLabel = item.hora % 4 === 0 || item.hora === 23;
+        const peakClass = isPeak ? 'peak' : '';
+
+        return `
+          <div class="report-horario-col" data-hora="${item.label}" data-total="${item.total}">
+            <div class="report-horario-bar-wrapper">
+              <div class="report-horario-bar ${peakClass}" style="height: ${pct}%;"></div>
+            </div>
+            <span class="report-horario-label" style="${isPeak ? 'color:#f472b6;font-weight:700;' : ''}">${showLabel ? item.label : '&middot;'}</span>
+          </div>
+        `;
+      }).join('') + '<div id="rep-horario-tooltip" class="report-chart-tooltip"></div>';
+
+      const tooltip = container.querySelector('#rep-horario-tooltip');
+      const cols = container.querySelectorAll('.report-horario-col');
+      cols.forEach(col => {
+        col.addEventListener('mouseenter', () => {
+          const hora = col.getAttribute('data-hora');
+          const total = parseInt(col.getAttribute('data-total') || '0', 10);
+          const rect = container.getBoundingClientRect();
+          const colRect = col.getBoundingClientRect();
+          const left = colRect.left - rect.left + colRect.width / 2;
+          const top = colRect.top - rect.top;
+
+          if (tooltip) {
+            tooltip.innerHTML = `⏰ <b>${hora} - ${hora.replace('h','')}:59</b>: <span style="color:#38bdf8;font-weight:700;">${total.toLocaleString('pt-BR')}</span> msgs`;
+            tooltip.style.left = `${left}px`;
+            tooltip.style.top = `${top}px`;
+            tooltip.style.opacity = '1';
+            tooltip.style.transform = 'translate(-50%, -115%)';
+          }
+        });
+
+        col.addEventListener('mouseleave', () => {
+          if (tooltip) tooltip.style.opacity = '0';
+        });
+      });
+    }
+
+    function renderizarGraficoTipologiaDonut(tipos, totalGeral) {
+      const container = document.getElementById('rep-quant-tipologia-container');
+      if (!container) return;
+
+      const txtPuro = tipos?.texto_puro || 0;
+      const anexos = tipos?.anexos_midia || 0;
+      const replies = tipos?.replies_citacoes || 0;
+      const total = totalGeral || (txtPuro + anexos + replies) || 1;
+
+      const pctTxt = tipos?.percentual_texto_puro ?? Math.round((txtPuro / total) * 100);
+      const pctReplies = tipos?.percentual_replies ?? Math.round((replies / total) * 100);
+      const pctAnexos = tipos?.percentual_anexos ?? Math.round((anexos / total) * 100);
+
+      // SVG Donut: perímetro 2 * PI * r (r=45 => circ ≈ 282.74)
+      const r = 45;
+      const circ = 2 * Math.PI * r;
+      
+      const lenTxt = (pctTxt / 100) * circ;
+      const lenReplies = (pctReplies / 100) * circ;
+      const lenAnexos = (pctAnexos / 100) * circ;
+
+      const offTxt = 0;
+      const offReplies = -lenTxt;
+      const offAnexos = -(lenTxt + lenReplies);
+
+      container.innerHTML = `
+        <div class="report-donut-layout">
+          <div class="report-donut-svg-wrapper">
+            <svg width="130" height="130" viewBox="0 0 120 120" style="transform: rotate(-90deg);">
+              <circle cx="60" cy="60" r="${r}" fill="none" stroke="#1e293b" stroke-width="16" />
+              <circle cx="60" cy="60" r="${r}" fill="none" stroke="#38bdf8" stroke-width="16"
+                stroke-dasharray="${lenTxt} ${circ - lenTxt}" stroke-dashoffset="${offTxt}"
+                style="transition: stroke-dasharray 0.6s ease;" />
+              <circle cx="60" cy="60" r="${r}" fill="none" stroke="#a855f7" stroke-width="16"
+                stroke-dasharray="${lenReplies} ${circ - lenReplies}" stroke-dashoffset="${offReplies}"
+                style="transition: stroke-dasharray 0.6s ease;" />
+              <circle cx="60" cy="60" r="${r}" fill="none" stroke="#34d399" stroke-width="16"
+                stroke-dasharray="${lenAnexos} ${circ - lenAnexos}" stroke-dashoffset="${offAnexos}"
+                style="transition: stroke-dasharray 0.6s ease;" />
+            </svg>
+            <div class="report-donut-center-info">
+              <span class="report-donut-center-val">${total.toLocaleString('pt-BR')}</span>
+              <span class="report-donut-center-lbl">Msgs</span>
+            </div>
+          </div>
+          <div class="report-donut-legend">
+            <div class="report-donut-legend-item">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#38bdf8;"></span>
+                <span style="color:#cbd5e1;font-weight:500;">💬 Texto Direto</span>
+              </div>
+              <div style="font-weight:700;color:#38bdf8;">${txtPuro.toLocaleString('pt-BR')} <span style="font-size:11px;color:#94a3b8;font-weight:400;">(${pctTxt}%)</span></div>
+            </div>
+            <div class="report-donut-legend-item">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#a855f7;"></span>
+                <span style="color:#cbd5e1;font-weight:500;">↩️ Respostas / Threads</span>
+              </div>
+              <div style="font-weight:700;color:#c084fc;">${replies.toLocaleString('pt-BR')} <span style="font-size:11px;color:#94a3b8;font-weight:400;">(${pctReplies}%)</span></div>
+            </div>
+            <div class="report-donut-legend-item">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#34d399;"></span>
+                <span style="color:#cbd5e1;font-weight:500;">📎 Mídias & Anexos</span>
+              </div>
+              <div style="font-weight:700;color:#34d399;">${anexos.toLocaleString('pt-BR')} <span style="font-size:11px;color:#94a3b8;font-weight:400;">(${pctAnexos}%)</span></div>
+            </div>
+          </div>
+        </div>
+      `;
     }
 
     async function gerarResumoExecutivoIA() {

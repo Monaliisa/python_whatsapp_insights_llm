@@ -24,14 +24,18 @@ def verificar_status_sessao() -> bool:
     if not os.path.exists(default_dir):
         return False
 
-    # Verifica se existem pastas típicas de armazenamento do Chromium (IndexedDB / Local Storage)
+    # 1. Verifica se existem pastas do IndexedDB pertencentes ao WhatsApp Web
     indexed_db = os.path.join(default_dir, "IndexedDB")
-    local_storage = os.path.join(default_dir, "Local Storage")
-    
-    if os.path.exists(indexed_db) and os.path.isdir(indexed_db) and os.listdir(indexed_db):
-        return True
-    if os.path.exists(local_storage) and os.path.isdir(local_storage) and os.listdir(local_storage):
-        return True
+    if os.path.exists(indexed_db) and os.path.isdir(indexed_db):
+        for item in os.listdir(indexed_db):
+            if "whatsapp" in item.lower():
+                return True
+
+    # 2. Verifica se existem registros no Local Storage (leveldb com dados gravados)
+    local_storage_leveldb = os.path.join(default_dir, "Local Storage", "leveldb")
+    if os.path.exists(local_storage_leveldb) and os.path.isdir(local_storage_leveldb):
+        if len(os.listdir(local_storage_leveldb)) >= 2:
+            return True
 
     return False
 
@@ -217,9 +221,9 @@ def sincronizar_grupos_whatsapp(headless: bool = False, timeout_segundos: int = 
             args=["--start-maximized"],
             no_viewport=True,
         )
-        contexto.on("page", lambda p: p.close())
+        pagina = contexto.pages[0] if contexto.pages else contexto.new_page()
+        contexto.on("page", lambda p: p.close() if p != pagina else None)
         try:
-            pagina = contexto.pages[0] if contexto.pages else contexto.new_page()
             pagina.add_init_script("window.open = function() { return null; };")
             pagina.goto("https://web.whatsapp.com")
 
@@ -255,24 +259,33 @@ def iniciar_coletor(timeout_segundos: int = 300) -> bool:
         print("=" * 55)
         print("Iniciando o navegador Chromium...")
         
-        contexto = p.chromium.launch_persistent_context(
-            user_data_dir=caminho_sessao,
-            headless=False,
-            args=["--start-maximized"],
-            no_viewport=True
-        )
-        
-        contexto.on("page", lambda p: p.close())
         try:
-            pagina = contexto.pages[0] if contexto.pages else contexto.new_page()
+            contexto = p.chromium.launch_persistent_context(
+                user_data_dir=caminho_sessao,
+                headless=False,
+                args=["--start-maximized"],
+                no_viewport=True
+            )
+        except Exception as err_launch:
+            msg = str(err_launch)
+            if "Executable doesn't exist" in msg or "playwright install" in msg:
+                print("\n[ERRO CRÍTICO] Os navegadores do Playwright não estão instalados.")
+                print("Execute no terminal: python -m playwright install chromium\n")
+            else:
+                print(f"\n[ERRO] Falha ao iniciar o Chromium: {err_launch}")
+            return False
+        
+        pagina = contexto.pages[0] if contexto.pages else contexto.new_page()
+        contexto.on("page", lambda p: p.close() if p != pagina else None)
+        try:
             pagina.add_init_script("window.open = function() { return null; };")
             
             print("Acessando https://web.whatsapp.com ...")
             pagina.goto("https://web.whatsapp.com")
             
-            seletores_painel_conectado = "#pane-side, div[contenteditable='true'][data-tab='3'], header[data-testid='chatlist-header']"
+            seletores_painel_conectado = "#pane-side, div[contenteditable='true'][data-tab='3'], header[data-testid='chatlist-header'], div[data-testid='chat-list']"
 
-            print("Aguardando carregamento da interface...")
+            print("Aguardando carregamento da interface do WhatsApp Web...")
 
             conectado = False
             # Verifica se já está conectado de imediato
@@ -288,7 +301,7 @@ def iniciar_coletor(timeout_segundos: int = 300) -> bool:
                 print("\n" + "-" * 55)
                 print("[ATENÇÃO] Por favor, aponte a câmera do seu celular e")
                 print("escanie o QR Code na tela para autenticar.")
-                print(f"O navegador permanecerá aberto aguardando a sincronização (até {timeout_segundos}s)...")
+                print(f"O navegador permanecerá aberto aguardando a leitura do QR Code (até {timeout_segundos}s)...")
                 print("-" * 55 + "\n")
 
                 # Aguarda a conclusão da autenticação até o timeout configurado

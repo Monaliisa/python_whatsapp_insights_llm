@@ -26,9 +26,16 @@ MODELOS_DISPONIVEIS = [
         "recomendado": True,
     },
     {
-        "id": "claude-3-5-haiku-20241022",
-        "nome": "Claude 3.5 Haiku",
-        "descricao": "Velocidade ultra rápida e ótimo custo-benefício para respostas dinâmicas.",
+        "id": "claude-3-7-sonnet-20250219",
+        "nome": "Claude 3.7 Sonnet",
+        "descricao": "Modelo mais avançado da família Claude com alta precisão e capacidades híbridas de raciocínio.",
+        "tipo": "avancado",
+        "recomendado": False,
+    },
+    {
+        "id": "claude-3-haiku-20240307",
+        "nome": "Claude 3 Haiku",
+        "descricao": "Velocidade ultra rápida, excelente custo-benefício e ampla disponibilidade.",
         "tipo": "leve",
         "recomendado": False,
     },
@@ -172,6 +179,70 @@ class AnthropicService:
         self.model = model or "claude-3-5-sonnet-20241022"
 
     @classmethod
+    def listar_modelos_conta(cls, api_key: str) -> list[dict[str, Any]]:
+        """Consulta a API da Anthropic para obter os modelos ativos e acessíveis para esta chave."""
+        chave = api_key.strip()
+        if not chave:
+            return list(MODELOS_DISPONIVEIS)
+
+        try:
+            import anthropic
+
+            client = anthropic.Anthropic(api_key=chave)
+            page = client.models.list(limit=50)
+            modelos = []
+            for item in page.data:
+                mid = getattr(item, "id", "")
+                dname = getattr(item, "display_name", mid) or mid
+                if mid:
+                    modelos.append({
+                        "id": mid,
+                        "nome": dname,
+                        "descricao": f"Modelo ativo na sua conta Anthropic ({mid})",
+                        "tipo": "balanceado" if "sonnet" in mid.lower() else ("leve" if "haiku" in mid.lower() else "avancado"),
+                        "recomendado": "sonnet" in mid.lower(),
+                    })
+            if modelos:
+                return modelos
+        except Exception:
+            pass
+
+        # Fallback HTTP REST caso o SDK não retorne
+        try:
+            import json
+            import urllib.request
+
+            req = urllib.request.Request(
+                "https://api.anthropic.com/v1/models",
+                headers={
+                    "x-api-key": chave,
+                    "anthropic-version": "2023-06-01",
+                },
+                method="GET",
+            )
+            with urllib.request.urlopen(req, timeout=10) as res:
+                if res.status == 200:
+                    data = json.loads(res.read().decode("utf-8"))
+                    modelos = []
+                    for item in data.get("data", []):
+                        mid = item.get("id", "")
+                        dname = item.get("display_name", mid) or mid
+                        if mid:
+                            modelos.append({
+                                "id": mid,
+                                "nome": dname,
+                                "descricao": f"Modelo ativo na sua conta Anthropic ({mid})",
+                                "tipo": "balanceado" if "sonnet" in mid.lower() else ("leve" if "haiku" in mid.lower() else "avancado"),
+                                "recomendado": "sonnet" in mid.lower(),
+                            })
+                    if modelos:
+                        return modelos
+        except Exception:
+            pass
+
+        return list(MODELOS_DISPONIVEIS)
+
+    @classmethod
     def listar_modelos(cls) -> list[dict[str, Any]]:
         """Retorna a lista de modelos recomendados e suas características."""
         return list(MODELOS_DISPONIVEIS)
@@ -181,29 +252,50 @@ class AnthropicService:
         """Retorna a lista estruturada de análises úteis para popular a interface."""
         return list(ANALISES_PRE_PROGRAMADAS.values())
 
-    def validar_api_key(self, api_key: str | None = None, model: str | None = None) -> tuple[bool, str]:
+    def validar_api_key(
+        self,
+        api_key: str | None = None,
+        model: str | None = None,
+    ) -> tuple[bool, str, list[dict[str, Any]], str]:
         """
-        Testa a validade da API Key informada fazendo uma chamada de teste mínima na API da Anthropic.
-        Retorna (sucesso: bool, mensagem_ou_erro: str).
+        Testa a validade da API Key informada fazendo uma chamada de teste com descoberta dinâmica de modelos.
+        Retorna (sucesso: bool, mensagem: str, modelos_disponiveis: list, modelo_resolvido: str).
         """
         chave = (api_key or self.api_key or os.getenv("ANTHROPIC_API_KEY", "")).strip()
         modelo_alvo = (model or self.model or "claude-3-5-sonnet-20241022").strip()
 
         if not chave:
-            return False, "Nenhuma API Key informada. Forneça sua chave da Anthropic (iniciada com 'sk-ant-')."
+            return False, "Nenhuma API Key informada. Forneça sua chave da Anthropic (iniciada com 'sk-ant-').", [], modelo_alvo
+
+        # 1. Tenta listar modelos disponíveis diretamente da conta
+        modelos_conta = self.listar_modelos_conta(chave)
+        ids_disponiveis = [m["id"] for m in modelos_conta if "id" in m]
+
+        # Se o modelo alvo não estiver disponível na conta, seleciona automaticamente o melhor disponível
+        if ids_disponiveis and modelo_alvo not in ids_disponiveis:
+            candidatos_sonnet = [i for i in ids_disponiveis if "sonnet" in i.lower()]
+            candidatos_haiku = [i for i in ids_disponiveis if "haiku" in i.lower()]
+            candidatos_opus = [i for i in ids_disponiveis if "opus" in i.lower()]
+            if candidatos_sonnet:
+                modelo_alvo = candidatos_sonnet[0]
+            elif candidatos_haiku:
+                modelo_alvo = candidatos_haiku[0]
+            elif candidatos_opus:
+                modelo_alvo = candidatos_opus[0]
+            else:
+                modelo_alvo = ids_disponiveis[0]
 
         try:
             import anthropic
 
             client = anthropic.Anthropic(api_key=chave)
-            # Chamada curta de validação de autenticação e permissão
-            response = client.messages.create(
+            client.messages.create(
                 model=modelo_alvo,
                 max_tokens=10,
                 messages=[{"role": "user", "content": "Responda apenas 'OK'."}],
             )
 
-            return True, f"Chave validada com sucesso via modelo '{modelo_alvo}'! Conexão ativa com a Anthropic."
+            return True, f"Chave validada com sucesso via modelo '{modelo_alvo}'! Conexão ativa com a Anthropic.", modelos_conta, modelo_alvo
 
         except ImportError:
             # Fallback HTTP REST nativo caso a biblioteca 'anthropic' ainda não esteja instalada
@@ -231,29 +323,50 @@ class AnthropicService:
             try:
                 with urllib.request.urlopen(req, timeout=15) as res:
                     if res.status == 200:
-                        return True, f"Chave validada com sucesso via modelo '{modelo_alvo}'!"
-                    return False, f"Resposta inesperada da API da Anthropic: HTTP {res.status}"
+                        return True, f"Chave validada com sucesso via modelo '{modelo_alvo}'!", modelos_conta, modelo_alvo
+                    return False, f"Resposta inesperada da API da Anthropic: HTTP {res.status}", modelos_conta, modelo_alvo
             except urllib.error.HTTPError as http_err:
                 if http_err.code in (401, 403):
-                    return False, "API Key da Anthropic inválida ou não autorizada. Verifique a chave digitada no console da Anthropic."
+                    return False, "API Key da Anthropic inválida ou não autorizada. Verifique a chave digitada no console da Anthropic.", [], modelo_alvo
                 if http_err.code == 404:
-                    return False, f"Modelo '{modelo_alvo}' não encontrado ou indisponível na sua conta da Anthropic."
+                    return False, f"Modelo '{modelo_alvo}' não encontrado na sua conta. Modelos disponíveis: {', '.join(ids_disponiveis[:5])}", modelos_conta, modelo_alvo
                 if http_err.code == 429:
-                    return False, "Limite de taxa/cota excedido na Anthropic (HTTP 429). Verifique seu saldo ou limite no console."
+                    return False, "Limite de taxa/cota excedido na Anthropic (HTTP 429). Verifique seu saldo ou limite no console.", modelos_conta, modelo_alvo
                 corpo_erro = http_err.read().decode("utf-8", errors="ignore")
-                return False, f"Erro HTTP {http_err.code} da Anthropic: {http_err.reason} ({corpo_erro[:150]})"
+                return False, f"Erro HTTP {http_err.code} da Anthropic: {http_err.reason} ({corpo_erro[:150]})", modelos_conta, modelo_alvo
             except Exception as e:
-                return False, f"Falha de conexão com a API da Anthropic: {e}"
+                return False, f"Falha de conexão com a API da Anthropic: {e}", modelos_conta, modelo_alvo
 
         except Exception as exc:
             msg = str(exc)
-            if "authentication_error" in msg.lower() or "401" in msg or "invalid_api_key" in msg.lower():
-                return False, "API Key da Anthropic inválida. Verifique sua chave no Console da Anthropic."
-            if "rate_limit_error" in msg.lower() or "429" in msg:
-                return False, "Limite de cota ou taxa excedido na Anthropic (HTTP 429)."
             if "not_found_error" in msg.lower() or "404" in msg:
-                return False, f"Modelo '{modelo_alvo}' não disponível para sua conta Anthropic."
-            return False, f"Erro ao comunicar com a Anthropic: {msg}"
+                # Tenta fallback para outros modelos da conta
+                try:
+                    import anthropic
+                    client = anthropic.Anthropic(api_key=chave)
+                    for alt_model in ids_disponiveis:
+                        if alt_model == modelo_alvo:
+                            continue
+                        try:
+                            client.messages.create(
+                                model=alt_model,
+                                max_tokens=10,
+                                messages=[{"role": "user", "content": "Responda apenas 'OK'."}],
+                            )
+                            return True, f"Chave validada com sucesso via modelo alternativo '{alt_model}' disponível na sua conta.", modelos_conta, alt_model
+                        except Exception:
+                            continue
+                except Exception:
+                    pass
+
+                disp_str = ", ".join(ids_disponiveis[:6]) if ids_disponiveis else "nenhum modelo identificado"
+                return False, f"Modelo '{modelo_alvo}' não disponível. Modelos encontrados na sua conta: {disp_str}", modelos_conta, modelo_alvo
+
+            if "authentication_error" in msg.lower() or "401" in msg or "invalid_api_key" in msg.lower():
+                return False, "API Key da Anthropic inválida. Verifique sua chave no Console da Anthropic.", [], modelo_alvo
+            if "rate_limit_error" in msg.lower() or "429" in msg:
+                return False, "Limite de cota ou taxa excedido na Anthropic (HTTP 429).", modelos_conta, modelo_alvo
+            return False, f"Erro ao comunicar com a Anthropic: {msg}", modelos_conta, modelo_alvo
 
     def gerar_insights_chat(
         self,
@@ -315,13 +428,35 @@ class AnthropicService:
             import anthropic
 
             client = anthropic.Anthropic(api_key=chave)
-            response = client.messages.create(
-                model=modelo_alvo,
-                max_tokens=4096,
-                temperature=0.4,
-                system=SYSTEM_PROMPT_BASE,
-                messages=mensagens_api,
-            )
+            try:
+                response = client.messages.create(
+                    model=modelo_alvo,
+                    max_tokens=4096,
+                    system=SYSTEM_PROMPT_BASE,
+                    messages=mensagens_api,
+                )
+            except Exception as e:
+                # Se o modelo não estiver disponível na conta, tenta outro modelo ativo
+                if "not_found_error" in str(e).lower() or "404" in str(e):
+                    modelos_conta = self.listar_modelos_conta(chave)
+                    ids_disp = [m["id"] for m in modelos_conta if "id" in m and m["id"] != modelo_alvo]
+                    response = None
+                    for alt_id in ids_disp:
+                        try:
+                            response = client.messages.create(
+                                model=alt_id,
+                                max_tokens=4096,
+                                system=SYSTEM_PROMPT_BASE,
+                                messages=mensagens_api,
+                            )
+                            logger.info(f"Fallback bem-sucedido para o modelo '{alt_id}'")
+                            break
+                        except Exception:
+                            continue
+                    if response is None:
+                        raise e
+                else:
+                    raise e
 
             # Extrai o texto da resposta
             partes_texto = []
