@@ -2038,6 +2038,37 @@
       background: #111e38;
     }
 
+    /* Destaque para o Top 3 Participantes */
+    .report-table tr.top-1 td {
+      background: rgba(245, 158, 11, 0.12);
+    }
+    .report-table tr.top-1:hover td {
+      background: rgba(245, 158, 11, 0.18);
+    }
+    .report-table tr.top-1 td:first-child {
+      border-left: 3px solid #f59e0b;
+    }
+
+    .report-table tr.top-2 td {
+      background: rgba(148, 163, 184, 0.10);
+    }
+    .report-table tr.top-2:hover td {
+      background: rgba(148, 163, 184, 0.16);
+    }
+    .report-table tr.top-2 td:first-child {
+      border-left: 3px solid #94a3b8;
+    }
+
+    .report-table tr.top-3 td {
+      background: rgba(234, 88, 12, 0.10);
+    }
+    .report-table tr.top-3:hover td {
+      background: rgba(234, 88, 12, 0.16);
+    }
+    .report-table tr.top-3 td:first-child {
+      border-left: 3px solid #f97316;
+    }
+
     .report-executive-card {
       background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9));
       border-color: rgba(99, 102, 241, 0.35);
@@ -2110,6 +2141,35 @@
       }
       .report-kpi-value, .report-section-title, h1, h2, h3, h4 {
         color: #000000 !important;
+      }
+      .report-table {
+        color: #000000 !important;
+      }
+      .report-table th {
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+        border-bottom: 2px solid #cbd5e1 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .report-table td {
+        color: #0f172a !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+      }
+      .report-table tr.top-1 td {
+        background: #fef3c7 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .report-table tr.top-2 td {
+        background: #f1f5f9 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .report-table tr.top-3 td {
+        background: #ffedd5 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
     }
   </style>
@@ -5594,12 +5654,34 @@
       const elTopPartBody = document.getElementById('rep-quant-top-participantes-body');
       if (elTopPartBody && quant.top_participantes) {
         elTopPartBody.innerHTML = quant.top_participantes.map((p, idx) => {
+          let rowClass = '';
+          let rankBadge = `${idx + 1}`;
+          let nameStyle = 'font-weight: 600; color: #f1f5f9;';
+          let countColor = '#38bdf8';
+
+          if (idx === 0) {
+            rowClass = 'class="top-1"';
+            rankBadge = '<span style="color: #fbbf24; font-weight: 700;">🥇 1</span>';
+            nameStyle = 'font-weight: 700; color: #fef08a;';
+            countColor = '#fbbf24';
+          } else if (idx === 1) {
+            rowClass = 'class="top-2"';
+            rankBadge = '<span style="color: #cbd5e1; font-weight: 700;">🥈 2</span>';
+            nameStyle = 'font-weight: 700; color: #f8fafc;';
+            countColor = '#93c5fd';
+          } else if (idx === 2) {
+            rowClass = 'class="top-3"';
+            rankBadge = '<span style="color: #fb923c; font-weight: 700;">🥉 3</span>';
+            nameStyle = 'font-weight: 700; color: #fed7aa;';
+            countColor = '#fb923c';
+          }
+
           return `
-            <tr>
-              <td style="font-weight: 700; color: #94a3b8;">${idx + 1}</td>
-              <td style="font-weight: 600; color: #f1f5f9;">@${p.remetente}</td>
-              <td style="text-align: right; color: #38bdf8; font-weight: 700;">${p.total_mensagens.toLocaleString('pt-BR')}</td>
-              <td style="text-align: right; color: #94a3b8;">${String(p.percentual).replace('.', ',')}%</td>
+            <tr ${rowClass}>
+              <td style="font-weight: 700; color: #94a3b8;">${rankBadge}</td>
+              <td style="${nameStyle}">@${p.remetente}</td>
+              <td style="text-align: right; color: ${countColor}; font-weight: 700;">${p.total_mensagens.toLocaleString('pt-BR')}</td>
+              <td style="text-align: right; color: #94a3b8; font-weight: ${idx < 3 ? '600' : '400'};">${String(p.percentual).replace('.', ',')}%</td>
             </tr>
           `;
         }).join('');
