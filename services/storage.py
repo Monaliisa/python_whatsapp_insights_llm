@@ -1569,6 +1569,61 @@ def import_from_json_data(
     return (len(messages), grupo_identificado)
 
 
+def import_from_txt_data(
+    txt_content: str,
+    nome_grupo: str = "Conversa WhatsApp Importada",
+    db_path: str | None = None,
+) -> tuple[int, str]:
+    """
+    Importa mensagens a partir do conteúdo de um arquivo .txt ou .zip exportado do WhatsApp.
+    Preserva dados cumulativamente sem sobrescrever mensagens anteriores.
+    Retorna uma tupla (total_importado, nome_do_grupo).
+    """
+    if not txt_content.strip():
+        return (0, "")
+
+    from services.parser_txt import parse_whatsapp_txt
+
+    messages = parse_whatsapp_txt(txt_content, nome_grupo_default=nome_grupo)
+    if not messages:
+        return (0, "")
+
+    grupo_identificado = nome_grupo or "Conversa WhatsApp Importada"
+    for m in messages:
+        m["grupo_nome"] = grupo_identificado
+        m["grupo_id"] = gerar_grupo_id(grupo_identificado)
+
+    novas = save_messages(messages, db_path=db_path)
+    total_acumulado = count_messages(db_path=db_path, grupo_nome=grupo_identificado)
+
+    record_coleta_historico(
+        {
+            "grupo_id": gerar_grupo_id(grupo_identificado),
+            "grupo_nome": grupo_identificado,
+            "comunidade_nome": "",
+            "unidade_tempo": "arquivo",
+            "valor": len(messages),
+            "tipo_filtro": "importacao_txt",
+            "total_extraido": len(messages),
+            "total_acumulado": total_acumulado,
+            "status": "Concluído (Importação TXT WhatsApp)",
+            "detalhes": {"arquivo_tipo": "TXT_WHATSAPP", "novas_mensagens": novas},
+        },
+        db_path=db_path,
+    )
+
+    try:
+        create_backup(
+            tag="importacao_txt",
+            description=f"Backup gerado após importação TXT do grupo '{grupo_identificado}' ({len(messages)} msgs)",
+            db_path=db_path,
+        )
+    except Exception as e:
+        print(f"[AVISO] Falha ao criar backup pós-importação TXT: {e}")
+
+    return (len(messages), grupo_identificado)
+
+
 def get_message_date_bounds(db_path: str | None = None) -> dict:
     """
     Retorna os limites de datas (mínima e máxima) e timestamps das mensagens no banco local.

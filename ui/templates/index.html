@@ -4641,7 +4641,7 @@
     // -------------------------------------------------------------
     async function iniciarColeta() {
       let grupo = obterGrupoSelecionado();
-      if (grupoAtivoGlobal && (grupoAtivoGlobal.nome || grupoAtivoGlobal.id)) {
+      if (!grupo && grupoAtivoGlobal && (grupoAtivoGlobal.nome || grupoAtivoGlobal.id)) {
         grupo = grupoAtivoGlobal.nome || grupoAtivoGlobal.id;
       }
       if (!grupo) {

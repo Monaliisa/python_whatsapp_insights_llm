@@ -37,43 +37,43 @@ def abrir_chat_por_nome(pagina, nome, nome_alternativo=None):
     """
     Localiza e abre um chat no WhatsApp Web utilizando a caixa de pesquisa interna
     e comparação inteligente de strings (tolerante a acentuação, pipes e variações).
+    Prioriza sempre correspondência exata de título antes de buscas parciais.
     """
     candidatos_brutos = []
     
-    # Se o usuário passou "Grupo | Comunidade", a prioridade número 1 é o nome real do grupo (antes do pipe)
-    for valor in [nome]:
+    # Prioridade 1 é SEMPRE o nome completo original fornecido
+    for valor in [nome, nome_alternativo]:
         if not valor or not valor.strip():
             continue
         v = valor.strip()
+        candidatos_brutos.append(v)
+        
+        # Se contiver delimitadores (pipe ou hífen), adiciona também partes secundárias
         if "|" in v:
             partes = [p.strip() for p in v.split("|") if p.strip()]
             if partes:
-                # O nome do grupo geralmente é a primeira parte antes do pipe
                 candidatos_brutos.append(partes[0])
-                candidatos_brutos.append(v)
                 candidatos_brutos.append(" ".join(partes))
-        else:
-            candidatos_brutos.append(v)
-            if "-" in v:
-                partes = [p.strip() for p in v.split("-") if p.strip()]
-                if partes:
-                    candidatos_brutos.append(partes[0])
-                    candidatos_brutos.append(v)
+        elif "-" in v:
+            partes = [p.strip() for p in v.split("-") if p.strip()]
+            if partes:
+                candidatos_brutos.append(partes[0])
+                candidatos_brutos.append(" ".join(partes))
 
-    # Remove duplicatas preservando a ordem
+    # Remove duplicatas preservando a ordem de prioridade
     candidatos = list(dict.fromkeys(candidatos_brutos))
-    print(f"Candidatos para busca de grupo: {candidatos}")
+    print(f"[Busca] Candidatos ordenados para busca do grupo: {candidatos}")
 
-    # 1. Verifica se o chat desejado já está aberto no painel principal (#main)
+    # 1. Verifica se o chat desejado já está aberto no painel principal (#main) com match exato
     try:
-        header_title = pagina.locator("#main header span[title], #main header div[title]").first
+        header_title = pagina.locator("#main header span[title], #main header div[title], #main header h2").first
         if header_title.count() > 0:
             current_chat = header_title.get_attribute("title") or header_title.inner_text() or ""
             current_norm = normalizar_texto_busca(current_chat)
             for c in candidatos:
                 c_norm = normalizar_texto_busca(c)
-                if c_norm and (c_norm == current_norm or c_norm in current_norm or current_norm in c_norm):
-                    print(f"Chat já está atualmente aberto no painel: '{current_chat}'")
+                if c_norm and c_norm == current_norm:
+                    print(f"[Busca] Chat com correspondência exata já está aberto no painel: '{current_chat}'")
                     return True
     except Exception:
         pass
@@ -94,7 +94,7 @@ def abrir_chat_por_nome(pagina, nome, nome_alternativo=None):
         if not termo_norm:
             continue
 
-        print(f"Pesquisando grupo via campo de busca: '{termo}'...")
+        print(f"[Busca] Pesquisando grupo no WhatsApp Web: '{termo}'...")
 
         # 2. Localiza e foca a caixa de pesquisa do WhatsApp Web
         search_elem = None
@@ -110,135 +110,153 @@ def abrir_chat_por_nome(pagina, nome, nome_alternativo=None):
         if search_elem:
             try:
                 search_elem.click()
-                time.sleep(0.4)
+                time.sleep(0.3)
                 # Limpa qualquer busca anterior
                 pagina.keyboard.press("Control+A")
                 pagina.keyboard.press("Backspace")
                 time.sleep(0.2)
-                # No WhatsApp Web (div contenteditable), keyboard.type é obrigatório para disparar eventos do React
-                pagina.keyboard.type(termo, delay=40)
+                # Digita termo na caixa de busca
+                pagina.keyboard.type(termo, delay=35)
                 time.sleep(2.0)  # Aguarda o WhatsApp filtrar e renderizar os resultados
             except Exception as e:
-                print(f"Aviso: falha ao interagir com search_elem: {e}")
+                print(f"[Busca - Aviso] Falha ao interagir com campo de busca: {e}")
                 try:
-                    pagina.keyboard.type(termo, delay=40)
+                    pagina.keyboard.type(termo, delay=35)
                     time.sleep(2.0)
                 except Exception:
                     pass
 
-        # 3. Varre os itens de resultado de busca e painel lateral
-        seletores_itens = [
-            "#pane-side span[title]",
-            "div[role='gridcell'] span[title]",
-            "div[role='listitem'] span[title]",
-            "#pane-side div[role='gridcell']",
-            "#pane-side div[role='listitem']",
-        ]
-
-        encontrou = False
-        for sel in seletores_itens:
-            try:
-                locators = pagina.locator(sel)
-                total = locators.count()
-                for i in range(total):
-                    item = locators.nth(i)
-                    if not item.is_visible():
-                        continue
-                    titulo = item.get_attribute("title") or item.inner_text() or ""
-                    titulo_norm = normalizar_texto_busca(titulo)
-
-                    if not titulo_norm:
-                        continue
-
-                    # Casamento exato ou por substring normalizada
-                    if (
-                        termo_norm == titulo_norm
-                        or termo_norm in titulo_norm
-                        or titulo_norm in termo_norm
-                    ):
-                        print(f"Chat correspondente encontrado: '{titulo}' (termo: '{termo}'). Clicando...")
-                        try:
-                            # Tenta clicar no elemento encontrado ou container ancestral
-                            item.click(timeout=6000, force=True)
-                        except Exception:
-                            try:
-                                item.locator("xpath=ancestor-or-self::div[@role='listitem' or @role='row' or @tabindex='-1'][1]").click(timeout=6000, force=True)
-                            except Exception:
-                                item.locator("..").click(timeout=6000)
-
-                        # Tenta confirmar via Enter caso a caixa de busca ainda esteja ativa
-                        try:
-                            pagina.keyboard.press("Enter")
-                        except Exception:
-                            pass
-
-                        time.sleep(2.0)
-
-                        # Verifica se o painel #main carregou
-                        try:
-                            pagina.wait_for_selector("#main", timeout=12000)
-                            print(f"Sucesso: conversa '{titulo}' aberta no painel principal.")
-                            encontrou = True
-                            break
-                        except Exception:
-                            pass
-                if encontrou:
-                    break
-            except Exception:
-                pass
-
-        if encontrou:
-            # NUNCA pressionar Escape aqui, pois no WhatsApp Web o Escape fecha o chat ativo!
-            # Foca no contêiner de mensagens com segurança (sem disparar cliques com mouse no centro do chat)
-            try:
-                pagina.evaluate("""
-                    () => {
-                        const panel = document.querySelector("#main div[data-testid='conversation-panel-messages']") ||
-                                      document.querySelector("#main div[tabindex='-1']") ||
-                                      document.querySelector("#main header");
-                        if (panel) panel.focus();
+        # 3. Coleta os itens de resultado de forma estruturada (extraindo estritamente o título)
+        # Executa no navegador para extrair título real e índice de cada linha sem ler mensagens de prévia
+        itens_encontrados = pagina.evaluate("""
+            () => {
+                const results = [];
+                const rows = document.querySelectorAll("#pane-side div[role='listitem'], #pane-side div[role='gridcell'], #pane-side div[data-testid='cell-frame-container']");
+                
+                rows.forEach((row, index) => {
+                    let titleEl = row.querySelector("div[data-testid='cell-frame-title'] span[title], span[data-testid='chat-title'], div._ak8q span[title]");
+                    if (!titleEl) {
+                        const allSpans = row.querySelectorAll("span[title]");
+                        if (allSpans && allSpans.length > 0) {
+                            titleEl = allSpans[0];
+                        }
                     }
-                """)
+                    if (titleEl) {
+                        const rawTitle = (titleEl.getAttribute("title") || titleEl.innerText || "").trim();
+                        const cleanTitle = rawTitle.replace(/[\\u200E\\u200F\\u202A-\\u202E]/g, "").trim();
+                        if (cleanTitle) {
+                            results.push({
+                                index: index,
+                                title: cleanTitle
+                            });
+                        }
+                    }
+                });
+                return results;
+            }
+        """)
+
+        # Estratégia em 2 etapas:
+        # Etapa 1: Busca correspondência EXATA de título com qualquer candidato
+        target_index = None
+        target_title = None
+
+        for item in itens_encontrados:
+            t_norm = normalizar_texto_busca(item.get("title", ""))
+            for c in candidatos:
+                if t_norm == normalizar_texto_busca(c):
+                    target_index = item["index"]
+                    target_title = item["title"]
+                    print(f"[Busca] Correspondência EXATA encontrada no resultado #{target_index}: '{target_title}'")
+                    break
+            if target_index is not None:
+                break
+
+        # Etapa 2: Se não houver correspondência exata, aceita correspondência onde o título contém o termo
+        if target_index is None:
+            for item in itens_encontrados:
+                t_norm = normalizar_texto_busca(item.get("title", ""))
+                if termo_norm in t_norm:
+                    target_index = item["index"]
+                    target_title = item["title"]
+                    print(f"[Busca] Correspondência por substring encontrada no resultado #{target_index}: '{target_title}'")
+                    break
+
+        # 4. Clica no item identificado
+        if target_index is not None:
+            try:
+                rows_locator = pagina.locator("#pane-side div[role='listitem'], #pane-side div[role='gridcell'], #pane-side div[data-testid='cell-frame-container']")
+                alvo = rows_locator.nth(target_index)
+                if alvo.is_visible():
+                    alvo.click(timeout=6000, force=True)
+                else:
+                    pagina.keyboard.press("Enter")
+            except Exception as e:
+                print(f"[Busca - Aviso] Falha ao clicar no elemento do card: {e}")
+                try:
+                    pagina.keyboard.press("Enter")
+                except Exception:
+                    pass
+
+            time.sleep(2.0)
+
+            # Verifica se o painel #main carregou
+            try:
+                pagina.wait_for_selector("#main", timeout=12000)
+                print(f"[Busca] Sucesso: conversa '{target_title}' aberta no painel principal.")
+                
+                # Foca no contêiner de mensagens com segurança
+                try:
+                    pagina.evaluate("""
+                        () => {
+                            const panel = document.querySelector("#main div[data-testid='conversation-panel-messages']") ||
+                                          document.querySelector("#main div[tabindex='-1']") ||
+                                          document.querySelector("#main header");
+                            if (panel) panel.focus();
+                        }
+                    """)
+                except Exception:
+                    pass
+                return True
             except Exception:
                 pass
-            return True
 
-        # Se não encontrou com este candidato, limpa a caixa de pesquisa antes de tentar o próximo termo
+        # Se não encontrou neste candidato, limpa a caixa de pesquisa antes do próximo
         try:
             pagina.keyboard.press("Escape")
-            time.sleep(0.5)
+            time.sleep(0.4)
         except Exception:
             pass
 
-    # 4. Fallback: Varredura por rolagem no painel lateral
-    print("Tentando fallback por rolagem direta na lista de conversas...")
+    # 5. Fallback: Varredura por rolagem direta na lista de conversas
+    print("[Busca] Tentando fallback por rolagem direta na lista de conversas...")
     try:
-        for _ in range(3):
-            items = pagina.query_selector_all("#pane-side span[title]")
-            for it in items:
-                try:
-                    title = (it.get_attribute("title") or "").strip()
-                    title_norm = normalizar_texto_busca(title)
-                    for c in candidatos:
-                        c_norm = normalizar_texto_busca(c)
-                        if c_norm and (c_norm == title_norm or c_norm in title_norm or title_norm in c_norm):
-                            print(f"Chat localizado no fallback: '{title}'. Clicando...")
-                            it.click()
-                            time.sleep(2.0)
-                            pagina.wait_for_selector("#main", timeout=10000)
-                            return True
-                except Exception:
-                    pass
-            # Rola um pouco a lista lateral para carregar mais itens
+        for _ in range(4):
+            cards = pagina.query_selector_all("#pane-side div[role='listitem'], #pane-side div[role='gridcell']")
+            for card in cards:
+                title_el = card.query_selector("div[data-testid='cell-frame-title'] span[title], span[title]")
+                if not title_el:
+                    continue
+                title = (title_el.get_attribute("title") or title_el.inner_text() or "").strip()
+                title_norm = normalizar_texto_busca(title)
+                for c in candidatos:
+                    c_norm = normalizar_texto_busca(c)
+                    if c_norm and (c_norm == title_norm or c_norm in title_norm):
+                        print(f"[Busca] Chat localizado no fallback: '{title}'. Clicando...")
+                        card.click()
+                        time.sleep(2.0)
+                        pagina.wait_for_selector("#main", timeout=10000)
+                        return True
+            # Rola a lista lateral para carregar mais conversas
             pagina.evaluate("""
                 let pane = document.querySelector("#pane-side");
                 if (pane) pane.scrollTop += 500;
             """)
-            time.sleep(1.0)
+            time.sleep(0.8)
     except Exception as e:
-        print(f"Erro durante o fallback de rolagem: {e}")
+        print(f"[Busca] Erro durante o fallback de rolagem: {e}")
 
-    print("Nenhum chat localizado para os candidatos fornecidos.")
+    print("[Busca] Nenhum chat localizado para os candidatos fornecidos.")
     return False
 
 
@@ -632,17 +650,23 @@ def extrair_dados_comunidade(
 
             atingiu_limite = False
             tentativas_sem_novos_dados = 0
+            max_tentativas = 35
             seletor_baloes = "#main div[data-id], #main div.message-in, #main div.message-out, #main div[data-pre-plain-text]"
 
-            while not atingiu_limite and tentativas_sem_novos_dados < 12:
+            while not atingiu_limite and tentativas_sem_novos_dados < max_tentativas:
                 baloes_visiveis = pagina.query_selector_all(seletor_baloes)
                 total_antes = len(mensagens_coletadas)
+                data_mais_antiga_rodada = None
 
                 # Raspagem imediata dos balões presentes no DOM atual
                 for balao in baloes_visiveis:
                     dados = extrair_dados_balao(balao)
                     if not dados:
                         continue
+
+                    # Rastreia a data da mensagem mais antiga nesta rodada
+                    if data_mais_antiga_rodada is None or dados["data_hora"] < data_mais_antiga_rodada:
+                        data_mais_antiga_rodada = dados["data_hora"]
 
                     # Interrupção temporal: verifica se atingiu mensagens anteriores à janela
                     if dados["data_hora"] < data_limite:
@@ -653,34 +677,59 @@ def extrair_dados_comunidade(
                     # Adiciona ao dicionário (se já existir, atualiza sem duplicar)
                     mensagens_coletadas[dados["id"]] = dados
 
+                if atingiu_limite:
+                    break
+
                 # Verifica progresso de novas mensagens coletadas
-                if len(mensagens_coletadas) == total_antes:
+                novas_nesta_rodada = len(mensagens_coletadas) - total_antes
+                if novas_nesta_rodada == 0:
                     tentativas_sem_novos_dados += 1
+                    if tentativas_sem_novos_dados % 3 == 0:
+                        print(f"[Aguardando histórico...] Tentativa {tentativas_sem_novos_dados}/{max_tentativas} aguardando carregamento do WhatsApp...")
                 else:
                     tentativas_sem_novos_dados = 0
+                    msg_antiga_txt = data_mais_antiga_rodada.strftime("%d/%m/%Y %H:%M") if data_mais_antiga_rodada else "-"
+                    print(f">> Total coletado: {len(mensagens_coletadas)} msgs | Mais antiga lida: {msg_antiga_txt} | Meta: até {data_limite.strftime('%d/%m/%Y %H:%M')}")
 
-                # Executa a rolagem para cima com manipulação segura direta do container (sem mouse/teclado para evitar foco em links)
+                # Executa a rolagem para cima com detecção dinâmica do container ativo e disparo de eventos
                 pagina.evaluate("""
-                    () => {
-                        // 1. Remove href e target de qualquer link residual
+                    (tentativa) => {
+                        // 1. Desativa links para evitar navegações acidentais
                         document.querySelectorAll('#main a').forEach(a => {
                             a.removeAttribute('href');
                             a.removeAttribute('target');
                             a.style.pointerEvents = 'none';
                         });
 
-                        // 2. Rola o container de mensagens para o topo
-                        const container = document.querySelector("#main div[data-testid='conversation-panel-messages']") ||
-                                          document.querySelector("#main div[tabindex='-1']") || 
-                                          document.querySelector("div[data-tab='8']") ||
-                                          document.querySelector("#main .copyable-area > div:nth-child(2)") ||
-                                          document.querySelector("#main .copyable-area > div") ||
-                                          document.querySelector("#main [role='application']");
-                        if (container) {
-                            container.scrollTop = 0;
+                        // 2. Localiza dinamicamente o elemento com barra de rolagem vertical ativa
+                        function getScrollElement() {
+                            const candidates = Array.from(document.querySelectorAll('#main div, #main [role="application"], #main [data-testid="conversation-panel-messages"]'));
+                            for (const el of candidates) {
+                                const style = window.getComputedStyle(el);
+                                if ((style.overflowY === 'auto' || style.overflowY === 'scroll') && el.scrollHeight > el.clientHeight) {
+                                    return el;
+                                }
+                            }
+                            return document.querySelector("#main div[data-testid='conversation-panel-messages']") ||
+                                   document.querySelector("#main div[tabindex='-1']") || 
+                                   document.querySelector("div[data-tab='8']") ||
+                                   document.querySelector("#main .copyable-area > div:nth-child(2)") ||
+                                   document.querySelector("#main [role='application']");
                         }
 
-                        // 3. Traz a mensagem mais ao topo para a visualização
+                        const container = getScrollElement();
+                        if (container) {
+                            // Se estiver estagnado há mais de 3 tentativas, faz um pequeno jitter (desce e sobe) para forçar o listener do React
+                            if (tentativa > 2 && tentativa % 2 === 0) {
+                                container.scrollTop = 120;
+                            } else {
+                                container.scrollTop = 0;
+                            }
+                            // Dispara evento nativo de scroll
+                            container.dispatchEvent(new Event('scroll', { bubbles: true }));
+                        }
+
+                        // 3. Rola a primeira mensagem visível para a visualização
                         const firstMsg = document.querySelector("#main div[data-id], #main div.message-in, #main div.message-out");
                         if (firstMsg) {
                             try {
@@ -688,8 +737,15 @@ def extrair_dados_comunidade(
                             } catch (e) {}
                         }
                     }
-                """)
-                time.sleep(1.8)  # Tempo para renderização e requisição de histórico
+                """, tentativas_sem_novos_dados)
+
+                # Simula pressão suave de PageUp / ArrowUp para acordar o virtual scroll do WhatsApp
+                try:
+                    pagina.keyboard.press("PageUp")
+                except Exception:
+                    pass
+
+                time.sleep(1.5)  # Intervalo ideal para renderização e requisição de lotes
 
             # Ordenação cronológica das mensagens extraídas
             lista_final = sorted(mensagens_coletadas.values(), key=lambda x: x["data_hora"])

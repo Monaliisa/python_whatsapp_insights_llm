@@ -47,6 +47,7 @@ from services.storage import (
     get_persistence_stats,
     import_from_csv_data,
     import_from_json_data,
+    import_from_txt_data,
     init_db,
     list_backups,
     list_coletas_historico,
@@ -310,10 +311,22 @@ async def import_data(req: ImportRequest):
             fmt = "json"
         elif req.filename.lower().endswith(".csv"):
             fmt = "csv"
+        elif req.filename.lower().endswith(".txt"):
+            fmt = "txt"
 
     try:
         if fmt == "json":
             count, grupo_nome = import_from_json_data(content, db_path=get_db_path())
+        elif fmt == "txt":
+            # Tenta inferir o nome do grupo a partir do nome do arquivo (ex: "Conversa do WhatsApp com NomeDoGrupo.txt")
+            grupo_nome_sugerido = "Conversa WhatsApp Importada"
+            if req.filename:
+                fn_clean = re.sub(r"\.txt$", "", req.filename, flags=re.IGNORECASE)
+                fn_clean = re.sub(r"^Conversa do WhatsApp com\s*", "", fn_clean, flags=re.IGNORECASE)
+                fn_clean = re.sub(r"^WhatsApp Chat with\s*", "", fn_clean, flags=re.IGNORECASE)
+                if fn_clean.strip():
+                    grupo_nome_sugerido = fn_clean.strip()
+            count, grupo_nome = import_from_txt_data(content, nome_grupo=grupo_nome_sugerido, db_path=get_db_path())
         else:
             count, grupo_nome = import_from_csv_data(content, db_path=get_db_path())
 
@@ -730,11 +743,15 @@ async def get_message_detail(message_id: str):
 
 def _run_coleta_thread(req: ColetaRequest):
     state.is_busy = True
-    active_group = detect_active_group_from_db(get_db_path())
-    if active_group and (active_group.get("nome") or active_group.get("id")):
-        grupo = active_group.get("nome") or active_group.get("id")
+    grupo_solicitado = req.grupo.strip() if req.grupo else ""
+    if grupo_solicitado:
+        grupo = grupo_solicitado
     else:
-        grupo = req.grupo.strip() or NOME_DO_GRUPO
+        active_group = detect_active_group_from_db(get_db_path())
+        if active_group and (active_group.get("nome") or active_group.get("id")):
+            grupo = active_group.get("nome") or active_group.get("id")
+        else:
+            grupo = NOME_DO_GRUPO
     unidade_tempo = req.unidade_tempo.lower().strip() if req.unidade_tempo else "dias"
     valor = int(req.valor) if req.valor else 7
 
