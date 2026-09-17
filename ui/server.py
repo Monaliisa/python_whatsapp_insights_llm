@@ -20,6 +20,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 
+from services.database import (
+    get_database_url,
+    init_database_tables,
+    is_postgres,
+    test_db_connection,
+)
 from services.coletor import (
     desconectar_sessao,
     iniciar_coletor,
@@ -217,11 +223,17 @@ class ReportSummaryRequest(BaseModel):
 def startup_event():
     setup_environment()
     init_db(get_db_path())
+    try:
+        init_database_tables()
+    except Exception as e:
+        print(f"[AVISO] Falha ao inicializar tabelas ORM: {e}")
+        
+    db_type = "PostgreSQL (Neon)" if is_postgres() else "SQLite (Local)"
     detected = detect_active_group_from_db(get_db_path())
     if detected:
-        state.add_log(f"Interface inicializada. Grupo ativo carregado do banco local: '{detected['nome']}' ({detected['total_messages']} mensagens).")
+        state.add_log(f"Interface inicializada com banco {db_type}. Grupo ativo: '{detected['nome']}' ({detected['total_messages']} mensagens).")
     else:
-        state.add_log("Interface Web inicializada com sucesso. Banco de mensagens pronto.")
+        state.add_log(f"Interface Web inicializada com sucesso. Banco de dados ({db_type}) pronto.")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -230,6 +242,21 @@ async def serve_index():
     if not index_path.exists():
         raise HTTPException(status_code=404, detail="Template index.html não encontrado.")
     return HTMLResponse(content=index_path.read_text(encoding="utf-8"))
+
+
+@app.get("/api/database/status")
+async def get_db_status_endpoint():
+    """Retorna o status da conexão com o banco de dados (Neon PostgreSQL ou SQLite)."""
+    conn_info = test_db_connection()
+    url = get_database_url()
+    sanitized_url = url.split("@")[-1] if "@" in url else url
+    return {
+        "success": conn_info.get("success", False),
+        "db_type": "PostgreSQL (Neon)" if is_postgres() else "SQLite (Local)",
+        "is_cloud": is_postgres(),
+        "database_target": sanitized_url,
+        "details": conn_info,
+    }
 
 
 @app.get("/api/status")
@@ -247,6 +274,8 @@ async def get_status():
         "session_status": "connected" if has_session else "disconnected",
         "db_path": db_path,
         "db_exists": os.path.exists(db_path),
+        "db_type": "PostgreSQL (Neon)" if is_postgres() else "SQLite (Local)",
+        "is_cloud_db": is_postgres(),
         "message_count": total_messages,
         "has_data": total_messages > 0,
         "default_grupo": NOME_DO_GRUPO,
