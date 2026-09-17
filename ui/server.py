@@ -33,7 +33,10 @@ from services.storage import (
     create_backup,
     create_new_consulta_db,
     delete_backup,
+    delete_catalog_group,
+    delete_catalog_groups,
     delete_consulta,
+    delete_group_messages,
     detect_active_group_from_db,
     export_to_csv,
     export_to_json,
@@ -158,6 +161,10 @@ class ColetaRequest(BaseModel):
 class SelectGroupRequest(BaseModel):
     grupo_id: str | None = None
     grupo_nome: str | None = None
+
+
+class DeleteCatalogGroupsBatchRequest(BaseModel):
+    group_ids: list[str]
 
 
 class ExportRequest(BaseModel):
@@ -478,6 +485,27 @@ async def get_historico_grupos():
         return {"success": False, "error": str(exc), "data": []}
 
 
+@app.delete("/api/historico/grupos/{identifier:path}")
+async def delete_historico_grupo(identifier: str):
+    """Remove todas as mensagens e coletas de um grupo específico do banco messages.db."""
+    clean_id = identifier.strip()
+    if not clean_id:
+        return {"success": False, "message": "Identificador do grupo não informado."}
+    try:
+        total = delete_group_messages(clean_id, db_path=get_db_path())
+        state.add_log(f"[Histórico] 🗑️ {total} mensagens do grupo '{clean_id}' excluídas do banco ativo.")
+        return {
+            "success": True,
+            "deleted_messages": total,
+            "message": f"{total} mensagens do grupo '{clean_id}' foram excluídas com sucesso.",
+            "app_state": get_app_state(),
+        }
+    except Exception as exc:
+        err = f"Falha ao excluir mensagens do grupo: {exc}"
+        state.add_log(f"[Histórico - Erro] {err}")
+        return {"success": False, "error": err}
+
+
 @app.get("/api/backups")
 async def get_backups_list():
     """Retorna a lista de todos os snapshots de backup salvos em data/backups/."""
@@ -680,6 +708,49 @@ async def get_grupos():
         }
     except Exception as exc:
         return {"success": False, "error": str(exc), "data": [], "details": []}
+
+
+@app.delete("/api/grupos/{identifier:path}")
+async def delete_grupo_catalog(identifier: str):
+    """Exclui um grupo individual do arquivo data/groups_catalog.json."""
+    clean_id = identifier.strip()
+    if not clean_id:
+        return {"success": False, "message": "Identificador do grupo não informado."}
+    try:
+        removido = delete_catalog_group(clean_id)
+        if removido:
+            state.add_log(f"[Catálogo] 🗑️ Grupo '{clean_id}' excluído do catálogo com sucesso.")
+            return {
+                "success": True,
+                "message": f"Grupo '{clean_id}' excluído do catálogo.",
+                "count": len(load_catalog_groups()),
+            }
+        else:
+            return {"success": False, "message": f"Grupo '{clean_id}' não encontrado no catálogo."}
+    except Exception as exc:
+        err = f"Falha ao excluir grupo do catálogo: {exc}"
+        state.add_log(f"[Catálogo - Erro] {err}")
+        return {"success": False, "error": err}
+
+
+@app.post("/api/grupos/excluir-lote")
+async def delete_grupos_catalog_batch(req: DeleteCatalogGroupsBatchRequest):
+    """Exclui múltiplos grupos selecionados do arquivo data/groups_catalog.json em lote."""
+    if not req.group_ids:
+        return {"success": False, "message": "Nenhum grupo informado para exclusão em lote."}
+    try:
+        removidos = delete_catalog_groups(req.group_ids)
+        state.add_log(f"[Catálogo] 🗑️ {removidos} grupos removidos do catálogo em lote.")
+        return {
+            "success": True,
+            "removed_count": removidos,
+            "message": f"{removidos} grupo(s) removido(s) do catálogo com sucesso.",
+            "count": len(load_catalog_groups()),
+        }
+    except Exception as exc:
+        err = f"Falha ao excluir grupos em lote do catálogo: {exc}"
+        state.add_log(f"[Catálogo - Erro] {err}")
+        return {"success": False, "message": err, "error": err}
 
 
 def _run_sincronizar_grupos_thread():

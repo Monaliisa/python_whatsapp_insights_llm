@@ -222,6 +222,67 @@ def get_catalog_group_names() -> list[str]:
     return [g["nome"] for g in grupos if g.get("nome")]
 
 
+def delete_catalog_group(identifier: str) -> bool:
+    """
+    Remove um grupo do arquivo data/groups_catalog.json buscando por id ou nome.
+    Retorna True se o grupo foi encontrado e removido, False caso contrário.
+    """
+    catalog_path = get_groups_catalog_path()
+    if not catalog_path.exists():
+        return False
+
+    grupos = load_catalog_groups()
+    id_clean = str(identifier).strip().lower()
+    novos_grupos = [
+        g for g in grupos
+        if str(g.get("id") or "").strip().lower() != id_clean
+        and str(g.get("nome") or "").strip().lower() != id_clean
+    ]
+
+    if len(novos_grupos) == len(grupos):
+        return False
+
+    try:
+        with open(catalog_path, "w", encoding="utf-8") as f:
+            json.dump(novos_grupos, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception as e:
+        print(f"[ERRO] Falha ao atualizar groups_catalog.json após exclusão: {e}")
+        return False
+
+
+def delete_catalog_groups(identifiers: list[str]) -> int:
+    """
+    Remove múltiplos grupos do arquivo data/groups_catalog.json em lote.
+    Retorna a quantidade de grupos removidos.
+    """
+    catalog_path = get_groups_catalog_path()
+    if not catalog_path.exists() or not identifiers:
+        return 0
+
+    grupos = load_catalog_groups()
+    ids_set = {str(i).strip().lower() for i in identifiers if i and str(i).strip()}
+    if not ids_set:
+        return 0
+
+    novos_grupos = [
+        g for g in grupos
+        if str(g.get("id") or "").strip().lower() not in ids_set
+        and str(g.get("nome") or "").strip().lower() not in ids_set
+    ]
+
+    removidos = len(grupos) - len(novos_grupos)
+    if removidos > 0:
+        try:
+            with open(catalog_path, "w", encoding="utf-8") as f:
+                json.dump(novos_grupos, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"[ERRO] Falha ao atualizar groups_catalog.json após exclusão em lote: {e}")
+            return 0
+
+    return removidos
+
+
 # =====================================================================
 # 4. BANCO DE DADOS DE MENSAGENS (data/messages.db) - GRUPO ATIVO
 # =====================================================================
@@ -409,6 +470,66 @@ def reset_messages_db(db_path: str | None = None) -> None:
     conn.close()
 
     clear_active_group()
+
+
+def delete_group_messages(grupo_id_ou_nome: str, db_path: str | None = None) -> int:
+    """
+    Remove todas as mensagens e registros de coleta associados a um grupo específico
+    do banco de dados SQLite (messages.db ou banco especificado).
+    Se o grupo excluído for o grupo ativo atual, atualiza o app_state.
+    Retorna o total de mensagens deletadas.
+    """
+    if db_path is None:
+        db_path = get_db_path()
+    init_db(db_path)
+
+    ident = (grupo_id_ou_nome or "").strip()
+    if not ident:
+        return 0
+
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+
+    # Conta quantas mensagens serão deletadas
+    cur.execute(
+        "SELECT COUNT(*) FROM messages WHERE grupo_id = ? OR grupo_nome = ? OR LOWER(grupo_nome) = LOWER(?)",
+        (ident, ident, ident),
+    )
+    total_msgs = cur.fetchone()[0]
+
+    # Deleta mensagens
+    cur.execute(
+        "DELETE FROM messages WHERE grupo_id = ? OR grupo_nome = ? OR LOWER(grupo_nome) = LOWER(?)",
+        (ident, ident, ident),
+    )
+
+    # Deleta histórico de coletas correspondente
+    cur.execute(
+        "DELETE FROM coletas_historico WHERE grupo_id = ? OR grupo_nome = ? OR LOWER(grupo_nome) = LOWER(?)",
+        (ident, ident, ident),
+    )
+
+    conn.commit()
+    conn.close()
+
+    # Se era o grupo ativo, ajusta o app_state
+    app_state = get_app_state()
+    active_gid = (app_state.get("active_group_id") or "").strip().lower()
+    active_gnome = (app_state.get("active_group_name") or "").strip().lower()
+    ident_lower = ident.lower()
+
+    if ident_lower in (active_gid, active_gnome):
+        detected = detect_active_group_from_db(db_path)
+        if detected:
+            set_active_group(
+                group_id=detected.get("id"),
+                group_name=detected.get("nome"),
+                total_messages=detected.get("total_messages", 0),
+            )
+        else:
+            clear_active_group()
+
+    return total_msgs
 
 
 def record_coleta_historico(

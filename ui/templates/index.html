@@ -2830,10 +2830,16 @@
                     <div class="group-helper-bar">
                       <span id="status-grupos-count" style="color: var(--text-dim); font-size: 11.5px;">Aguardando
                         catálogo...</span>
-                      <button type="button" id="btn-sync-grupos" class="group-sync-link"
-                        onclick="sincronizarGruposWeb()" title="Escanear grupos do WhatsApp Web">
-                        <span>🔄 Atualizar grupos</span>
-                      </button>
+                      <div style="display: flex; gap: 10px; align-items: center;">
+                        <button type="button" id="btn-sync-grupos" class="group-sync-link"
+                          onclick="sincronizarGruposWeb()" title="Escanear grupos do WhatsApp Web">
+                          <span>🔄 Atualizar</span>
+                        </button>
+                        <button type="button" id="btn-gerenciar-grupos" class="group-sync-link" style="color: #f87171;"
+                          onclick="abrirModalGerenciarGrupos()" title="Gerenciar e excluir grupos catalogados">
+                          <span>⚙️ Gerenciar / Excluir</span>
+                        </button>
+                      </div>
                     </div>
 
                     <div class="info-callout">
@@ -4016,6 +4022,63 @@
     </div>
   </div>
 
+  <!-- =============================================================
+       MODAL DIALOG: GERENCIAR E EXCLUIR GRUPOS DO CATÁLOGO
+       ============================================================= -->
+  <div id="modal-gerenciar-grupos" class="modal-backdrop" onclick="fecharModalGerenciarGrupos(event)">
+    <div class="modal-dialog" style="max-width: 680px; max-height: 85vh; display: flex; flex-direction: column;" onclick="event.stopPropagation()">
+      <div class="modal-header" style="border-bottom-color: rgba(248, 113, 113, 0.3);">
+        <div class="modal-title" style="color: #fca5a5;">
+          <span>⚙️ Gerenciar Catálogo de Grupos</span>
+        </div>
+        <button class="modal-close" onclick="fecharModalGerenciarGrupos()">✕</button>
+      </div>
+
+      <div class="modal-body" style="gap: 14px; overflow-y: hidden; display: flex; flex-direction: column; flex: 1; padding: 18px 20px;">
+        <div style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">
+          Exclua grupos indesejados da lista de seleção. Você pode remover um grupo individualmente ou selecionar múltiplos para exclusão em lote.
+        </div>
+
+        <!-- Barra de busca e ações em lote -->
+        <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 200px;">
+            <input type="text" id="input-busca-grupos-modal" placeholder="🔍 Filtrar grupos por nome..." oninput="filtrarGruposModal()" style="font-size: 13px; padding: 7px 10px; width: 100%;">
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span id="lbl-grupos-selecionados-count" style="font-size: 12px; color: #94a3b8; font-weight: 500;">0 selecionados</span>
+            <button type="button" id="btn-excluir-grupos-lote" class="danger" style="padding: 6px 12px; font-size: 12.5px;" onclick="excluirGruposSelecionadosLote()" disabled>
+              <span>🗑️ Excluir Selecionados</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabela com scroll -->
+        <div style="flex: 1; overflow-y: auto; max-height: 380px; border: 1px solid var(--border-color); border-radius: 8px; background: rgba(15, 23, 42, 0.6);">
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+            <thead style="position: sticky; top: 0; background: #1e293b; z-index: 2; border-bottom: 1px solid var(--border-color);">
+              <tr>
+                <th style="padding: 10px; width: 40px; text-align: center;">
+                  <input type="checkbox" id="chk-selecionar-todos-grupos" onchange="alternarSelecionarTodosGrupos(this.checked)" title="Selecionar todos visíveis">
+                </th>
+                <th style="padding: 10px; color: #94a3b8; font-weight: 600;">Nome do Grupo</th>
+                <th style="padding: 10px; color: #94a3b8; font-weight: 600; width: 140px;">Atualizado em</th>
+                <th style="padding: 10px; color: #94a3b8; font-weight: 600; width: 80px; text-align: center;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-grupos-catalogo">
+              <!-- Renderizado via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="justify-content: space-between; align-items: center;">
+        <span id="lbl-total-grupos-catalogo" style="font-size: 12px; color: #64748b;">0 grupos no catálogo</span>
+        <button type="button" class="secondary" onclick="fecharModalGerenciarGrupos()">Concluído</button>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST DE NOTIFICAÇÃO -->
   <div id="toast" class="toast">Mensagem</div>
 
@@ -4590,6 +4653,255 @@
     }
 
     // -------------------------------------------------------------
+    // Gerenciamento e Exclusão do Catálogo de Grupos
+    // -------------------------------------------------------------
+    let catalogoGruposCache = [];
+    let gruposSelecionadosParaExclusao = new Set();
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    async function abrirModalGerenciarGrupos() {
+      const modal = document.getElementById('modal-gerenciar-grupos');
+      const inputBusca = document.getElementById('input-busca-grupos-modal');
+      if (inputBusca) inputBusca.value = '';
+      gruposSelecionadosParaExclusao.clear();
+      
+      const chkTodos = document.getElementById('chk-selecionar-todos-grupos');
+      if (chkTodos) {
+        chkTodos.checked = false;
+        chkTodos.indeterminate = false;
+      }
+
+      atualizarBotaoExcluirLote();
+
+      try {
+        const res = await fetch('/api/grupos');
+        const json = await res.json();
+        if (json.success && Array.isArray(json.details)) {
+          catalogoGruposCache = json.details;
+        } else {
+          catalogoGruposCache = [];
+        }
+        renderizarTabelaGruposModal();
+        if (modal) modal.classList.add('active');
+      } catch (err) {
+        showToast("Erro ao carregar lista de grupos do catálogo.");
+      }
+    }
+
+    function fecharModalGerenciarGrupos(event) {
+      if (event && event.target && event.target.closest && event.target.closest('.modal-dialog')) {
+        return;
+      }
+      const modal = document.getElementById('modal-gerenciar-grupos');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function filtrarGruposModal() {
+      renderizarTabelaGruposModal();
+    }
+
+    function obterGruposFiltradosModal() {
+      const termo = (document.getElementById('input-busca-grupos-modal')?.value || '').toLowerCase().trim();
+      if (!termo) return catalogoGruposCache;
+      return catalogoGruposCache.filter(g => {
+        const nome = (g.nome || '').toLowerCase();
+        const com = (g.comunidade || '').toLowerCase();
+        const gid = (g.id || '').toLowerCase();
+        return nome.includes(termo) || com.includes(termo) || gid.includes(termo);
+      });
+    }
+
+    function renderizarTabelaGruposModal() {
+      const tbody = document.getElementById('tbody-grupos-catalogo');
+      const lblTotal = document.getElementById('lbl-total-grupos-catalogo');
+      if (!tbody) return;
+
+      const gruposFiltrados = obterGruposFiltradosModal();
+
+      if (lblTotal) {
+        lblTotal.innerText = `${catalogoGruposCache.length} grupo(s) no total (${gruposFiltrados.length} visíveis)`;
+      }
+
+      if (gruposFiltrados.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" style="text-align: center; color: #64748b; padding: 24px;">
+              ${catalogoGruposCache.length === 0 ? 'Nenhum grupo catalogado no momento.' : 'Nenhum grupo encontrado com este filtro.'}
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = gruposFiltrados.map(g => {
+        const gid = g.id || g.nome;
+        const isChecked = gruposSelecionadosParaExclusao.has(gid);
+        let dataFmt = '-';
+        if (g.atualizado_em) {
+          try {
+            const dt = new Date(g.atualizado_em);
+            dataFmt = dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          } catch(e) {
+            dataFmt = g.atualizado_em;
+          }
+        }
+
+        const comBadge = g.comunidade ? `<span style="display: block; font-size: 11px; color: #38bdf8;">📂 ${escapeHtml(g.comunidade)}</span>` : '';
+
+        return `
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <td style="padding: 10px; text-align: center;">
+              <input type="checkbox" value="${escapeHtml(gid)}" ${isChecked ? 'checked' : ''} onchange="aoAlternarSelecaoGrupo('${escapeHtml(gid)}', this.checked)">
+            </td>
+            <td style="padding: 10px; color: #f1f5f9; font-weight: 500;">
+              👥 ${escapeHtml(g.nome || gid)}
+              ${comBadge}
+            </td>
+            <td style="padding: 10px; color: #94a3b8; font-size: 11.5px;">
+              ${dataFmt}
+            </td>
+            <td style="padding: 10px; text-align: center;">
+              <button type="button" class="btn danger btn-sm" style="padding: 4px 8px; font-size: 11px;" onclick="excluirGrupoIndividual('${escapeHtml(gid)}', '${escapeHtml(g.nome || gid)}')">
+                <span>🗑️</span>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      atualizarCheckboxSelecionarTodos();
+      atualizarBotaoExcluirLote();
+    }
+
+    function aoAlternarSelecaoGrupo(groupId, isChecked) {
+      if (isChecked) {
+        gruposSelecionadosParaExclusao.add(groupId);
+      } else {
+        gruposSelecionadosParaExclusao.delete(groupId);
+      }
+      atualizarCheckboxSelecionarTodos();
+      atualizarBotaoExcluirLote();
+    }
+
+    function alternarSelecionarTodosGrupos(checked) {
+      const visiveis = obterGruposFiltradosModal();
+      visiveis.forEach(g => {
+        const gid = g.id || g.nome;
+        if (checked) {
+          gruposSelecionadosParaExclusao.add(gid);
+        } else {
+          gruposSelecionadosParaExclusao.delete(gid);
+        }
+      });
+      renderizarTabelaGruposModal();
+    }
+
+    function atualizarCheckboxSelecionarTodos() {
+      const chkTodos = document.getElementById('chk-selecionar-todos-grupos');
+      if (!chkTodos) return;
+      const visiveis = obterGruposFiltradosModal();
+      if (visiveis.length === 0) {
+        chkTodos.checked = false;
+        chkTodos.indeterminate = false;
+        return;
+      }
+      const selecionadosVisiveis = visiveis.filter(g => gruposSelecionadosParaExclusao.has(g.id || g.nome));
+      if (selecionadosVisiveis.length === 0) {
+        chkTodos.checked = false;
+        chkTodos.indeterminate = false;
+      } else if (selecionadosVisiveis.length === visiveis.length) {
+        chkTodos.checked = true;
+        chkTodos.indeterminate = false;
+      } else {
+        chkTodos.checked = false;
+        chkTodos.indeterminate = true;
+      }
+    }
+
+    function atualizarBotaoExcluirLote() {
+      const btn = document.getElementById('btn-excluir-grupos-lote');
+      const lbl = document.getElementById('lbl-grupos-selecionados-count');
+      const count = gruposSelecionadosParaExclusao.size;
+
+      if (lbl) {
+        lbl.innerText = `${count} selecionado(s)`;
+      }
+      if (btn) {
+        btn.disabled = count === 0;
+      }
+    }
+
+    async function excluirGrupoIndividual(groupId, groupName) {
+      const nomeExibicao = groupName || groupId;
+      if (!confirm(`Deseja realmente remover o grupo "${nomeExibicao}" do catálogo de grupos?`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/grupos/${encodeURIComponent(groupId)}`, {
+          method: 'DELETE'
+        });
+        const json = await res.json().catch(() => ({}));
+        if (res.ok && json.success) {
+          showToast(`Grupo "${nomeExibicao}" excluído do catálogo.`);
+          catalogoGruposCache = catalogoGruposCache.filter(g => (g.id || g.nome) !== groupId && g.nome !== groupId);
+          gruposSelecionadosParaExclusao.delete(groupId);
+          renderizarTabelaGruposModal();
+          await carregarGrupos();
+        } else {
+          const msgErro = json.message || json.error || json.detail || `Erro no servidor (${res.status}). Reinicie o servidor para aplicar as novas rotas.`;
+          showToast(msgErro);
+        }
+      } catch (err) {
+        showToast("Erro de comunicação com o servidor ao excluir grupo.");
+      }
+    }
+
+    async function excluirGruposSelecionadosLote() {
+      const count = gruposSelecionadosParaExclusao.size;
+      if (count === 0) return;
+
+      if (!confirm(`Deseja realmente excluir os ${count} grupo(s) selecionado(s) do catálogo?`)) {
+        return;
+      }
+
+      const ids = Array.from(gruposSelecionadosParaExclusao);
+      try {
+        const res = await fetch('/api/grupos/excluir-lote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ group_ids: ids })
+        });
+        const json = await res.json().catch(() => ({}));
+        if (res.ok && json.success) {
+          showToast(`${json.removed_count || count} grupo(s) excluído(s) do catálogo com sucesso.`);
+          gruposSelecionadosParaExclusao.clear();
+          const resNovos = await fetch('/api/grupos');
+          const jsonNovos = await resNovos.json().catch(() => ({}));
+          if (jsonNovos.success && Array.isArray(jsonNovos.details)) {
+            catalogoGruposCache = jsonNovos.details;
+          }
+          renderizarTabelaGruposModal();
+          await carregarGrupos();
+        } else {
+          const msgErro = json.message || json.error || json.detail || `Erro no servidor (${res.status}). Reinicie o servidor para carregar a nova rota de exclusão.`;
+          showToast(msgErro);
+        }
+      } catch (err) {
+        showToast("Erro de comunicação com o servidor ao excluir grupos em lote.");
+      }
+    }
+
+    // -------------------------------------------------------------
     // Ações de Sessão do WhatsApp
     // -------------------------------------------------------------
     async function conectarWhatsApp() {
@@ -4885,10 +5197,7 @@
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        const modal = document.getElementById('modal-backdrop');
-        if (modal.classList.contains('active')) {
-          modal.classList.remove('active');
-        }
+        document.querySelectorAll('.modal-backdrop.active').forEach(m => m.classList.remove('active'));
       }
     });
 
