@@ -943,6 +943,7 @@ async def export_csv(req: ExportRequest):
         return {"success": False, "error": str(exc)}
 
 
+@app.get("/api/exportar/csv")
 @app.get("/api/exportar/download")
 async def download_csv(grupo_id: str | None = None, grupo_nome: str | None = None):
     destino = str(DEFAULT_EXPORT_PATH)

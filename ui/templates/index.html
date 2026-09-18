@@ -3472,59 +3472,56 @@
         </div>
 
         <!-- =========================================================
-             TELA 7: HISTÓRICO & CONSULTAS INDEPENDENTES
+             TELA 7: HISTÓRICO & SESSÕES DE ANÁLISE (WEB-FIRST)
              ========================================================= -->
         <div id="page-historico" class="page">
           <div class="page-header">
-            <h1 class="page-title">🕒 Histórico de Consultas & Bases de Dados</h1>
-            <p class="page-subtitle">Cada consulta realizada é um banco de dados independente e isolado (.db). Escolha qual consulta deseja analisar, baixe os arquivos ou guarde cópias seguras.</p>
+            <h1 class="page-title">🕒 Histórico de Coletas & Sessões de Análise</h1>
+            <p class="page-subtitle">Gerencie as extrações realizadas, alterne entre conversas salvas na base e baixe relatórios ou dados brutos diretamente pelo navegador.</p>
           </div>
 
           <!-- CARDS RESUMO DO HISTÓRICO -->
           <div class="grid-3" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
             <div class="card" style="padding: 16px;">
-              <div style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Consultas Independentes</div>
+              <div style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Sessões Registradas</div>
               <div id="hist-kpi-total-consultas" style="font-size: 24px; font-weight: 800; color: #38bdf8; margin: 6px 0;">0</div>
-              <div style="font-size: 11px; color: #64748b;">Bancos de dados (.db) salvos</div>
+              <div style="font-size: 11px; color: #64748b;">Consultas disponíveis na base</div>
             </div>
 
             <div class="card" style="padding: 16px;">
-              <div style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Consulta Ativa Agora</div>
+              <div style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Sessão Ativa Agora</div>
               <div id="hist-kpi-consulta-ativa" style="font-size: 16px; font-weight: 800; color: #34d399; margin: 10px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Nenhuma ativa</div>
-              <div id="hist-kpi-consulta-ativa-sub" style="font-size: 11px; color: #64748b;">Pronta para análise no Dashboard</div>
+              <div id="hist-kpi-consulta-ativa-sub" style="font-size: 11px; color: #64748b;">Carregada no Dashboard e IA</div>
             </div>
 
             <div class="card" style="padding: 16px;">
-              <div style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Total de Mensagens Guardadas</div>
+              <div style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Total de Mensagens</div>
               <div id="hist-kpi-total-msgs" style="font-size: 24px; font-weight: 800; color: #f59e0b; margin: 6px 0;">0</div>
               <div style="font-size: 11px; color: #64748b;">Somatório das conversas salvas</div>
             </div>
 
             <div class="card" style="padding: 16px;">
-              <div style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Espaço em Disco</div>
-              <div id="hist-kpi-backups-size" style="font-size: 20px; font-weight: 800; color: #a78bfa; margin: 8px 0;">0 KB</div>
-              <div style="font-size: 11px; color: #64748b;">Ocupado pelos arquivos de consulta</div>
+              <div style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Ambiente de Persistência</div>
+              <div id="hist-kpi-backups-size" style="font-size: 16px; font-weight: 800; color: #a78bfa; margin: 10px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Conectando...</div>
+              <div id="hist-kpi-banco-sub" style="font-size: 11px; color: #64748b;">Provedor de banco de dados</div>
             </div>
           </div>
 
-          <!-- SEÇÃO 1: CONSULTAS SALVAS (BANCOS INDEPENDENTES) -->
+          <!-- SEÇÃO 1: CONSULTAS E SESSÕES SALVAS -->
           <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
               <div class="card-title" style="margin-bottom: 0;">
                 <span>📁</span>
-                <span>Minhas Consultas Salvas (Bancos de Dados Independentes)</span>
+                <span>Minhas Sessões de Análise & Extrações</span>
               </div>
               <div class="btn-group">
-                <button type="button" class="btn secondary btn-sm" onclick="abrirPastaConsultasLocal()">
-                  <span>📂 Abrir Pasta no Computador</span>
-                </button>
                 <button type="button" class="btn secondary btn-sm" onclick="carregarHistorico()">
                   <span>🔄 Atualizar Lista</span>
                 </button>
               </div>
             </div>
             <p style="font-size: 13px; color: #94a3b8; margin-bottom: 14px;">
-              Cada consulta abaixo é um arquivo de banco de dados (.db) próprio, 100% isolado. Clique em <b>Abrir Consulta</b> para carregar os dados no Dashboard e na Inteligência Artificial.
+              Cada sessão abaixo preserva as mensagens extraídas com integridade. Clique em <b>Abrir no Dashboard</b> para analisar os dados, gerar gráficos ou consultar o Claude AI.
             </p>
 
             <div style="overflow-x: auto; border: 1px solid var(--border-color-light); border-radius: 8px;">
@@ -3533,40 +3530,37 @@
                   <tr>
                     <th>Status</th>
                     <th>Grupo / Conversa</th>
-                    <th>Data da Consulta</th>
+                    <th>Data da Coleta</th>
                     <th>Mensagens</th>
                     <th>Período Coletado</th>
-                    <th>Tamanho</th>
+                    <th>Armazenamento</th>
                     <th style="text-align: right;">Ações</th>
                   </tr>
                 </thead>
                 <tbody id="tabela-consultas-corpo">
                   <tr>
-                    <td colspan="7" style="text-align: center; color: #64748b; padding: 24px;">Carregando consultas salvas...</td>
+                    <td colspan="7" style="text-align: center; color: #64748b; padding: 24px;">Carregando sessões salvas...</td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </div>
 
-          <!-- SEÇÃO 2: CÓPIAS DE SEGURANÇA (BACKUPS) -->
+          <!-- SEÇÃO 2: CÓPIAS DE SEGURANÇA E SNAPSHOTS -->
           <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
               <div class="card-title" style="margin-bottom: 0;">
                 <span>🛡️</span>
-                <span>Cópias de Segurança & Snapshots</span>
+                <span>Cópias de Segurança & Snapshots de Auditoria</span>
               </div>
               <div class="btn-group">
                 <button type="button" class="btn success btn-sm" onclick="abrirModalCriarBackup()">
-                  <span>➕ Salvar Cópia da Base Ativa</span>
-                </button>
-                <button type="button" class="btn secondary btn-sm" onclick="abrirPastaBackupsLocal()">
-                  <span>📂 Pasta de Backups</span>
+                  <span>➕ Salvar Snapshot da Base Ativa</span>
                 </button>
               </div>
             </div>
             <p style="font-size: 13px; color: #94a3b8; margin-bottom: 14px;">
-              Gere cópias de segurança congeladas para arquivamento ou recuperação de emergência.
+              Gere snapshots congelados da base ativa para auditoria ou arquivamento seguro.
             </p>
 
             <div style="overflow-x: auto; border: 1px solid var(--border-color-light); border-radius: 8px;">
@@ -3574,17 +3568,16 @@
                 <thead>
                   <tr>
                     <th>Data e Hora</th>
-                    <th>Arquivo</th>
+                    <th>Identificador</th>
                     <th>Tipo</th>
                     <th>Lembrete</th>
                     <th>Mensagens</th>
-                    <th>Tamanho</th>
                     <th style="text-align: right;">Ações</th>
                   </tr>
                 </thead>
                 <tbody id="tabela-backups-corpo">
                   <tr>
-                    <td colspan="7" style="text-align: center; color: #64748b; padding: 24px;">Nenhuma cópia de segurança salva ainda.</td>
+                    <td colspan="6" style="text-align: center; color: #64748b; padding: 24px;">Nenhuma cópia de segurança salva ainda.</td>
                   </tr>
                 </tbody>
               </table>
@@ -6809,8 +6802,12 @@
                 : '-';
 
               const btnAbrir = isAtivo
-                ? `<button type="button" class="btn secondary btn-sm" disabled style="opacity: 0.6;"><span>✓ Em Análise</span></button>`
-                : `<button type="button" class="btn btn-sm" onclick="ativarConsultaArquivo('${c.filename}')" title="Carregar este banco para análise no Dashboard e IA"><span>📂 Abrir Consulta</span></button>`;
+                ? `<button type="button" class="btn secondary btn-sm" disabled style="opacity: 0.7;"><span>✓ Ativa</span></button>`
+                : `<button type="button" class="btn btn-sm" onclick="ativarConsultaArquivo('${c.filename}')" title="Carregar este banco para análise no Dashboard e IA"><span>📂 Abrir</span></button>`;
+
+              const armazBadge = c.is_cloud
+                ? `<span style="color: #34d399; font-weight: 600;">☁️ Neon</span>`
+                : `<span style="color: #a78bfa; font-weight: 600;">${c.tamanho_formatado || 'SQLite'}</span>`;
 
               return `
                 <tr style="${isAtivo ? 'background: rgba(37, 99, 235, 0.12);' : ''}">
@@ -6822,13 +6819,13 @@
                   <td style="color: #cbd5e1; white-space: nowrap;">${c.modificado_em}</td>
                   <td style="color: #38bdf8; font-weight: 700;">${(c.total_mensagens || 0).toLocaleString('pt-BR')} msgs</td>
                   <td style="color: #94a3b8; font-size: 12px;">${periodoStr}</td>
-                  <td style="color: #a78bfa; font-weight: 600;">${c.tamanho_formatado}</td>
+                  <td>${armazBadge}</td>
                   <td style="text-align: right; white-space: nowrap;">
                     ${btnAbrir}
-                    <button type="button" class="btn secondary btn-sm" onclick="baixarConsultaArquivo('${c.filename}')" title="Baixar arquivo SQLite .db desta consulta">
-                      <span>📥 Baixar</span>
+                    <button type="button" class="btn secondary btn-sm" onclick="baixarConsultaCSV('${c.filename}')" title="Baixar mensagens em CSV">
+                      <span>📥 CSV</span>
                     </button>
-                    <button type="button" class="btn danger btn-sm" onclick="excluirConsultaArquivo('${c.filename}')" title="Excluir este banco de consulta">
+                    <button type="button" class="btn danger btn-sm" onclick="excluirConsultaArquivo('${c.filename}')" title="Excluir esta sessão">
                       <span>🗑️</span>
                     </button>
                   </td>
@@ -6839,7 +6836,7 @@
             tbody.innerHTML = `
               <tr>
                 <td colspan="7" style="text-align: center; color: #64748b; padding: 28px;">
-                  Nenhuma consulta salva ainda. Vá até <b>"3. Coletar mensagens"</b> para realizar sua primeira busca independente.
+                  Nenhuma sessão salva ainda. Vá até <b>"3. Extração"</b> para realizar sua primeira consulta.
                 </td>
               </tr>
             `;
@@ -6850,9 +6847,13 @@
       }
     }
 
+    function baixarConsultaCSV(filename) {
+      window.location.href = `/api/exportar/csv?download=true`;
+    }
+
     async function ativarConsultaArquivo(filename) {
       try {
-        showToast("Carregando consulta...");
+        showToast("Carregando sessão...");
         const res = await fetch('/api/consultas/ativar', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -6860,20 +6861,19 @@
         });
         const json = await res.json();
         if (json.success) {
-          showToast(`Consulta '${filename}' aberta para análise!`);
+          showToast(`Sessão aberta para análise!`);
           await carregarEstatisticas();
           await carregarMensagensTabela(1);
           await carregarHistorico();
           
-          // Redireciona para o Dashboard (Visão Geral / Auditoria)
-          const itemDashboard = document.getElementById('drawer-item-auditoria');
+          const itemDashboard = document.getElementById('drawer-item-visualizacao');
           if (itemDashboard) itemDashboard.click();
         } else {
-          showToast(json.error || "Falha ao ativar consulta.");
+          showToast(json.error || "Falha ao ativar sessão.");
         }
       } catch (err) {
         showToast("Erro ao comunicar com o servidor.");
-        console.error("Erro ao ativar consulta:", err);
+        console.error("Erro ao ativar sessão:", err);
       }
     }
 
@@ -6882,7 +6882,7 @@
     }
 
     async function excluirConsultaArquivo(filename) {
-      if (!confirm(`Deseja realmente excluir a consulta independente '${filename}'?\n\nO arquivo de banco de dados (.db) será removido.`)) {
+      if (!confirm(`Deseja realmente excluir esta sessão de análise?\n\nAs mensagens vinculadas serão removidas.`)) {
         return;
       }
       try {
@@ -6895,25 +6895,11 @@
           await carregarHistorico();
           await carregarEstatisticas();
         } else {
-          showToast(json.message || "Erro ao excluir consulta.");
+          showToast(json.message || "Erro ao excluir sessão.");
         }
       } catch (err) {
-        showToast("Erro ao excluir consulta.");
-        console.error("Erro ao excluir consulta:", err);
-      }
-    }
-
-    async function abrirPastaConsultasLocal() {
-      try {
-        const res = await fetch('/api/consultas/abrir-pasta', { method: 'POST' });
-        const json = await res.json();
-        if (json.success) {
-          showToast("Pasta de consultas aberta no seu computador!");
-        } else {
-          showToast("Não foi possível abrir a pasta automaticamente.");
-        }
-      } catch (err) {
-        console.error("Erro ao abrir pasta de consultas:", err);
+        showToast("Erro ao excluir sessão.");
+        console.error("Erro ao excluir sessão:", err);
       }
     }
 
@@ -6925,9 +6911,28 @@
           const s = json.data;
           const elMsgs = document.getElementById('hist-kpi-total-msgs');
           const elBackupsSize = document.getElementById('hist-kpi-backups-size');
+          const elBancoSub = document.getElementById('hist-kpi-banco-sub');
 
           if (elMsgs) elMsgs.innerText = (s.total_messages_all || 0).toLocaleString('pt-BR');
-          if (elBackupsSize) elBackupsSize.innerText = `${s.db_size_formatted || '0 KB'} (${s.total_groups_count || 0} grupos)`;
+
+          // Consulta status do banco
+          try {
+            const dbRes = await fetch('/api/database/status');
+            const dbJson = await dbRes.json();
+            if (elBackupsSize) {
+              if (dbJson.is_cloud) {
+                elBackupsSize.innerText = '☁️ Neon (PostgreSQL)';
+                elBackupsSize.style.color = '#34d399';
+                if (elBancoSub) elBancoSub.innerText = 'Banco em nuvem ativo';
+              } else {
+                elBackupsSize.innerText = '💾 SQLite (Local)';
+                elBackupsSize.style.color = '#a78bfa';
+                if (elBancoSub) elBancoSub.innerText = `${s.db_size_formatted || '0 KB'} em disco`;
+              }
+            }
+          } catch (e) {
+            if (elBackupsSize) elBackupsSize.innerText = `${s.db_size_formatted || '0 KB'}`;
+          }
 
           const drawerBadge = document.getElementById('drawer-historico-badge');
           if (drawerBadge) {
