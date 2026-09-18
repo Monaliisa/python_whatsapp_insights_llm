@@ -2988,12 +2988,37 @@
           <!-- CONTAINER DO RELATÓRIO CARREGADO -->
           <div id="relatorio-conteudo-area">
 
-            <!-- 1. SEÇÃO ENGAJAMENTO -->
+            <!-- 1. SEÇÃO RESUMO EXECUTIVO CONSOLIDADO -->
+            <div class="report-section-card report-executive-card">
+              <div class="report-section-header">
+                <div>
+                  <div class="report-section-title" style="color: #e0e7ff;">
+                    <span>📝</span> 1. Resumo Executivo Consolidado
+                  </div>
+                  <div class="report-section-subtitle" style="color: #a5b4fc;">Visão geral executiva com diagnósticos estratégicos e recomendações práticas geradas por IA.</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <button type="button" id="btn-gerar-resumo-llm" class="btn" onclick="gerarResumoExecutivoIA()" title="Gerar resumo aprofundado com Anthropic (Claude)">
+                    <span>✨ Gerar Resumo com Claude AI</span>
+                  </button>
+                  <button type="button" class="secondary" onclick="copiarResumoExecutivo()" title="Copiar texto do resumo para a área de transferência">
+                    <span>📋 Copiar Resumo</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Caixa de Conteúdo do Resumo Executivo -->
+              <div id="rep-executivo-container" class="report-executive-content">
+                <div id="rep-executivo-texto">Carregando resumo executivo...</div>
+              </div>
+            </div>
+
+            <!-- 2. SEÇÃO ENGAJAMENTO -->
             <div class="report-section-card">
               <div class="report-section-header">
                 <div>
                   <div class="report-section-title">
-                    <span>📈</span> 1. Engajamento da Comunidade
+                    <span>📈</span> 2. Engajamento da Comunidade
                   </div>
                   <div class="report-section-subtitle">Principais índices de participação, intensidade das trocas e dinamicidade dos membros.</div>
                 </div>
@@ -3066,12 +3091,12 @@
               </div>
             </div>
 
-            <!-- 2. SEÇÃO PONTOS DE ATENÇÃO -->
+            <!-- 3. SEÇÃO PONTOS DE ATENÇÃO -->
             <div class="report-section-card">
               <div class="report-section-header">
                 <div>
                   <div class="report-section-title">
-                    <span>⚠️</span> 2. Pontos de Atenção & Monitoramento
+                    <span>⚠️</span> 3. Pontos de Atenção & Monitoramento
                   </div>
                   <div class="report-section-subtitle">Mapeamento de riscos, gargalos pedagógicos, dúvidas recorrentes e termômetro de clima.</div>
                 </div>
@@ -3109,12 +3134,12 @@
               </div>
             </div>
 
-            <!-- 3. SEÇÃO ANÁLISES QUANTITATIVAS -->
+            <!-- 4. SEÇÃO ANÁLISES QUANTITATIVAS -->
             <div class="report-section-card">
               <div class="report-section-header">
                 <div>
                   <div class="report-section-title">
-                    <span>📊</span> 3. Análises Quantitativas & Métricas
+                    <span>📊</span> 4. Análises Quantitativas & Métricas
                   </div>
                   <div class="report-section-subtitle">Dados numéricos, tipologia de mensagens, distribuição semanal e ranking de participação.</div>
                 </div>
@@ -3161,31 +3186,6 @@
                     <tbody id="rep-quant-top-participantes-body"></tbody>
                   </table>
                 </div>
-              </div>
-            </div>
-
-            <!-- 4. SEÇÃO RESUMO EXECUTIVO -->
-            <div class="report-section-card report-executive-card">
-              <div class="report-section-header">
-                <div>
-                  <div class="report-section-title" style="color: #e0e7ff;">
-                    <span>📝</span> 4. Resumo Executivo Consolidado
-                  </div>
-                  <div class="report-section-subtitle" style="color: #a5b4fc;">Visão geral consolidada ao final com diagnósticos estratégicos e recomendações práticas.</div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                  <button type="button" id="btn-gerar-resumo-llm" class="btn" onclick="gerarResumoExecutivoIA()" title="Gerar resumo aprofundado com Anthropic (Claude)">
-                    <span>✨ Gerar Resumo com Claude AI</span>
-                  </button>
-                  <button type="button" class="secondary" onclick="copiarResumoExecutivo()" title="Copiar texto do resumo para a área de transferência">
-                    <span>📋 Copiar Resumo</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Caixa de Conteúdo do Resumo Executivo -->
-              <div id="rep-executivo-container" class="report-executive-content">
-                <div id="rep-executivo-texto">Carregando resumo executivo...</div>
               </div>
             </div>
 
