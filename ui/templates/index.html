@@ -2626,59 +2626,82 @@
              ========================================================= -->
         <div id="page-resumo" class="page active">
           <div class="page-header">
-            <h1 class="page-title">📄 Visão geral da aplicação</h1>
-            <p class="page-subtitle">Entenda como a ferramenta funciona e o que esperar de cada etapa do fluxo.</p>
+            <h1 class="page-title">📄 Visão Geral da Aplicação</h1>
+            <p class="page-subtitle">Entenda a arquitetura, o fluxo de dados e todos os recursos disponíveis no ZapInsights Hub.</p>
           </div>
 
+          <!-- Banner de Boas-vindas -->
           <div class="card"
-            style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(15, 23, 42, 0.6)); border-color: rgba(59, 130, 246, 0.3);">
-            <h2 style="font-size: 16px; color: #93c5fd; margin-bottom: 8px;">Bem-vindo ao ZapInsights Hub!</h2>
-            <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6;">
-              Esta aplicação foi desenvolvida para coletar, armazenar incrementalmente e extrair inteligência
-              qualitativa de grupos de estudo e comunidades do WhatsApp. Todo o processamento respeita a privacidade
-              local-first, mantendo os dados salvos com segurança no seu próprio computador.
+            style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(15, 23, 42, 0.7)); border-color: rgba(59, 130, 246, 0.35);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+              <span style="font-size: 20px;">⚡</span>
+              <h2 style="font-size: 16px; color: #93c5fd; margin: 0; font-weight: 700;">Bem-vindo ao ZapInsights Hub!</h2>
+            </div>
+            <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6; margin: 0;">
+              O <b>ZapInsights Hub</b> é uma plataforma <b>Local-First</b> de inteligência analítica para comunidades e grupos do WhatsApp. 
+              Com arquitetura desacoplada e foco em privacidade absoluta, a ferramenta realiza coleta automatizada via Playwright, 
+              importação flexível de múltiplos formatos, armazenamento incremental persistente em SQLite e geração de relatórios e insights avançados com <b>Anthropic (Claude)</b>.
             </p>
           </div>
 
+          <!-- Grid Principal com Fluxo e Diferenciais -->
           <div class="grid-2">
+            <!-- Card 1: Fluxo de Trabalho (6 Etapas) -->
             <div class="card">
-              <div class="card-title">🚀 Como a aplicação funciona</div>
-              <div
-                style="display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
-                <div><b>1. Conexão segura:</b> Você conecta sua sessão pelo QR Code do WhatsApp Web em um navegador
-                  local isolado.</div>
-                <div><b>2. Extração flexível:</b> Colete mensagens de grupos definindo filtros de tempo (dias ou meses)
-                  ou importe dados prévios via CSV/JSON.</div>
-                <div><b>3. Armazenamento persistente:</b> As mensagens são salvas e deduplicadas em um banco local
-                  SQLite, permitindo coletas cumulativas.</div>
-                <div><b>4. Visualização e auditoria:</b> Consulte as mensagens em tabela com pesquisa dinâmica e modal
-                  de detalhes.</div>
-                <div><b>5. Insights via IA:</b> Analise conversas com a <b>Anthropic (Claude)</b> utilizando sua
-                  própria chave de API configurada no navegador ou no servidor, sem intermediários.</div>
+              <div class="card-title" style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
+                <span>🚀</span> Fluxo Completo de Trabalho
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 14px; font-size: 13.5px; color: #cbd5e1; line-height: 1.55;">
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                  <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 4px; margin-top: 2px;">1</span>
+                  <div><b>Resumo & Arquitetura:</b> Conheça a visão geral do sistema, as diretrizes de privacidade e o guia de uso rápido.</div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                  <span style="background: rgba(37, 211, 102, 0.15); color: #25d366; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 4px; margin-top: 2px;">2</span>
+                  <div><b>Conectar ao WhatsApp:</b> Autenticação via QR Code no navegador isolado com <i>Playwright</i> e persistência de sessão (login único).</div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                  <span style="background: rgba(234, 179, 8, 0.15); color: #facc15; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 4px; margin-top: 2px;">3</span>
+                  <div><b>Extração & Importação:</b> Colete grupos ao vivo com paginação reversa por período (dias ou mês específico) ou importe arquivos nativos <code>.txt</code> (WhatsApp), <code>.zip</code>, <code>.csv</code> e <code>.json</code>.</div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                  <span style="background: rgba(168, 85, 247, 0.15); color: #c084fc; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 4px; margin-top: 2px;">4</span>
+                  <div><b>Visualização & Auditoria:</b> Explore mensagens em tabela dinâmica, aplique filtros avançados (texto, período, autor, mídia) e exporte em <b>CSV, JSON, Markdown, HTML ou TXT</b>.</div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                  <span style="background: rgba(244, 63, 94, 0.15); color: #fb7185; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 4px; margin-top: 2px;">5</span>
+                  <div><b>Gerar Insights com IA:</b> Chat interativo e análises pré-programadas em 1 clique com a família <b>Anthropic (Claude 3.5 Sonnet, Haiku e Opus)</b> filtradas por contexto de tempo.</div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                  <span style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 4px; margin-top: 2px;">6</span>
+                  <div><b>Relatórios & Dashboard:</b> Painel consolidado com métricas de engajamento, matriz de dúvidas, gráficos de volumetria, palavras-chave e <b>Resumo Executivo com IA</b> pronto para impressão/PDF.</div>
+                </div>
               </div>
             </div>
 
+            <!-- Card 2: Diferenciais e Capacidades do Sistema -->
             <div class="card">
-              <div class="card-title">✨ O que esperar da ferramenta</div>
-              <div
-                style="display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
-                <div>🔒 <b>Privacidade total:</b> Seus dados e mensagens ficam restritos ao banco local, sem envio a
-                  servidores de terceiros.</div>
-                <div>⚡ <b>Sem perda de histórico:</b> A persistência incremental garante que coletas futuras apenas
-                  complementem as existentes.</div>
-                <div>🔑 <b>Controle de API:</b> Sua chave de API da Anthropic fica gravada no seu navegador ou via variável de ambiente, dando a
-                  você controle direto de custos e cotas.</div>
-                <div>📊 <b>Exportação imediata:</b> Faça o download integral do banco de dados nos formatos CSV e JSON
-                  com um clique.</div>
+              <div class="card-title" style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
+                <span>✨</span> Diferenciais & Recursos do Sistema
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 14px; font-size: 13.5px; color: #cbd5e1; line-height: 1.55;">
+                <div>
+                  🔒 <b>Privacidade Local-First:</b> Todos os dados, mensagens e relatórios ficam gravados no seu banco local SQLite (<code>data/</code>), sem envio de mensagens para servidores de terceiros.
+                </div>
+                <div>
+                  ⚡ <b>Armazenamento Incremental:</b> O banco de dados deduplica mensagens automaticamente. Novas extrações complementam o histórico sem perda de dados prévios.
+                </div>
+                <div>
+                  🔑 <b>Filosofia BYOK (Anthropic):</b> Sua chave de API da Anthropic permanece salva de forma segura no seu navegador ou em arquivo <code>.env</code> local, dando a você controle direto de custos e limites.
+                </div>
+                <div>
+                  👥 <b>Gestão Multi-Grupos & Backups:</b> Alterne rapidamente entre grupos armazenados e utilize o sistema de backups automáticos e manuais (em <code>.db</code> e <code>.json</code>) com restauração pontual.
+                </div>
+                <div>
+                  📊 <b>Exportação Versátil:</b> Exporte os dados brutos filtrados ou completos em 5 formatos diferentes (CSV, JSON, MD, HTML, TXT) e gere relatórios executivos em PDF com um clique.
+                </div>
               </div>
             </div>
-          </div>
-
-
-          <div class="card" style="margin-top: auto; background: #090e1a; border-style: dashed;">
-            <p style="font-size: 13px; color: #94a3b8; text-align: center;">
-              💡 <i>Dica: Para começar, clique em <b>"2. Conectar ao WhatsApp"</b> no menu lateral à esquerda.</i>
-            </p>
           </div>
         </div>
 
@@ -5665,7 +5688,7 @@
         const json = await res.json();
 
         if (json.success) {
-          // Limpa histórico de chat do Gemini salvo no localStorage
+          // Limpa histórico de chat salvo no localStorage
           try {
             localStorage.removeItem(getStorageChatKey());
             chatHistoryGlobal = [];
@@ -5984,7 +6007,7 @@
       bubble.innerHTML = `
         <div class="chat-avatar">✨</div>
         <div class="chat-bubble-content" style="display: flex; align-items: center; gap: 8px; color: #93c5fd;">
-          <span style="font-size: 13px;">⏳ Analisando mensagens e gerando resposta com o Google Gemini...</span>
+          <span style="font-size: 13px;">⏳ Analisando mensagens e gerando resposta com Claude AI...</span>
         </div>
       `;
       container.appendChild(bubble);
@@ -6037,7 +6060,7 @@
       }
       exibirIndicadorDigitando();
 
-      appendLog(`[Gemini / Chat] Enviando solicitação para o modelo '${model}'...`);
+      appendLog(`[Anthropic / Chat] Enviando solicitação para o modelo '${model}'...`);
 
       try {
         const res = await fetch('/api/llm/chat', {
@@ -6061,17 +6084,17 @@
           adicionarMensagemAoDom('assistant', json.response);
           chatHistoryGlobal.push({ role: 'assistant', content: json.response });
           salvarHistoricoChat();
-          appendLog(`[Gemini / Chat] ✅ Resposta recebida (${json.total_messages} msgs analisadas).`);
+          appendLog(`[Anthropic / Chat] ✅ Resposta recebida (${json.total_messages} msgs analisadas).`);
         } else {
           const msgErro = json.message || "Não foi possível obter resposta da IA.";
           adicionarMensagemAoDom('assistant', `⚠️ **Erro ao gerar resposta:** ${msgErro}`);
-          appendLog(`[Gemini / Chat - Erro] ${msgErro}`);
+          appendLog(`[Anthropic / Chat - Erro] ${msgErro}`);
           showToast(msgErro);
         }
       } catch (err) {
         removerIndicadorDigitando();
         adicionarMensagemAoDom('assistant', `❌ **Erro de conexão com o servidor local:** ${err}`);
-        appendLog(`[Gemini / Chat - Erro] Falha na requisição: ${err}`);
+        appendLog(`[Anthropic / Chat - Erro] Falha na requisição: ${err}`);
         showToast("Erro ao conectar com o servidor local.");
       } finally {
         if (btnSend) {
@@ -6102,7 +6125,7 @@
       localStorage.removeItem(getStorageChatKey());
       carregarHistoricoChat();
       showToast("Histórico do chat limpo com sucesso.");
-      appendLog("[Gemini / Chat] Histórico da conversa resetado pelo usuário.");
+      appendLog("[Anthropic / Chat] Histórico da conversa resetado pelo usuário.");
     }
 
     function toggleColunaAnalises() {
@@ -6665,13 +6688,13 @@
       try {
         if (btnGerar) {
           btnGerar.disabled = true;
-          btnGerar.innerHTML = '<span>⏳ Analisando e gerando resumo com Gemini...</span>';
+          btnGerar.innerHTML = '<span>⏳ Analisando e gerando resumo com Claude AI...</span>';
         }
         if (elExecTexto) {
-          elExecTexto.innerHTML = '<div style="display: flex; align-items: center; gap: 8px; color: #93c5fd; padding: 14px 0;"><span>⏳</span> Conectando ao Google Gemini e gerando análise executiva aprofundada...</div>';
+          elExecTexto.innerHTML = '<div style="display: flex; align-items: center; gap: 8px; color: #93c5fd; padding: 14px 0;"><span>⏳</span> Conectando à Anthropic (Claude) e gerando análise executiva aprofundada...</div>';
         }
 
-        appendLog(`[Relatórios / Gemini] Solicitando geração de Resumo Executivo para ${relatorioMesSelecionado} via modelo '${model}'...`);
+        appendLog(`[Relatórios / Anthropic] Solicitando geração de Resumo Executivo para ${relatorioMesSelecionado} via modelo '${model}'...`);
 
         const res = await fetch('/api/relatorios/gerar-resumo', {
           method: 'POST',
@@ -6688,7 +6711,7 @@
           if (elExecTexto) {
             elExecTexto.innerHTML = `
               <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
-                <span class="byok-badge active">✨ Gerado pelo Google Gemini (${model})</span>
+                <span class="byok-badge active">✨ Gerado pela Anthropic (${model})</span>
               </div>
               ${renderizarMarkdownSimples(json.resumo)}
             `;
@@ -6696,14 +6719,14 @@
           if (relatorioAtualDados && relatorioAtualDados.resumo_executivo) {
             relatorioAtualDados.resumo_executivo.texto_padrao = json.resumo;
           }
-          appendLog(`[Relatórios / Gemini] ✅ Resumo Executivo gerado com sucesso.`);
-          showToast("Resumo Executivo gerado com sucesso pelo Gemini!");
+          appendLog(`[Relatórios / Anthropic] ✅ Resumo Executivo gerado com sucesso.`);
+          showToast("Resumo Executivo gerado com sucesso pelo Claude!");
         } else {
           const err = json.message || "Erro desconhecido ao gerar resumo.";
           if (elExecTexto) {
             elExecTexto.innerHTML = `<div style="color: #f87171;">⚠️ Falha ao gerar resumo: ${err}</div>`;
           }
-          appendLog(`[Relatórios / Gemini - Erro] ${err}`);
+          appendLog(`[Relatórios / Anthropic - Erro] ${err}`);
           showToast(err);
         }
       } catch (err) {
@@ -6715,7 +6738,7 @@
       } finally {
         if (btnGerar) {
           btnGerar.disabled = false;
-          btnGerar.innerHTML = '<span>✨ Gerar Resumo com Gemini AI</span>';
+          btnGerar.innerHTML = '<span>✨ Gerar Resumo com Claude AI</span>';
         }
       }
     }
