@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import io
 import json
 import os
@@ -192,8 +193,9 @@ class ExportRequest(BaseModel):
 
 class ImportRequest(BaseModel):
     content: str
-    format: str = "csv"  # 'csv' ou 'json'
+    format: str = "csv"  # 'csv', 'json', 'txt' ou 'zip'
     filename: str | None = None
+    nome_grupo: str | None = None
 
 
 class ValidateLLMKeyRequest(BaseModel):
@@ -370,37 +372,57 @@ async def import_data(req: ImportRequest):
     if state.is_busy:
         return {"success": False, "message": "Existe outra tarefa em andamento. Aguarde."}
 
-    content = req.content.strip()
-    if not content:
+    content_str = req.content.strip()
+    if not content_str:
         return {"success": False, "message": "Nenhum conteúdo fornecido para importação."}
 
     fmt = req.format.lower().strip()
     if req.filename:
-        if req.filename.lower().endswith(".json"):
+        fn_lower = req.filename.lower()
+        if fn_lower.endswith(".json"):
             fmt = "json"
-        elif req.filename.lower().endswith(".csv"):
+        elif fn_lower.endswith(".csv"):
             fmt = "csv"
-        elif req.filename.lower().endswith(".txt"):
+        elif fn_lower.endswith(".zip"):
+            fmt = "zip"
+        elif fn_lower.endswith(".txt"):
             fmt = "txt"
+
+    # Inferência do nome do grupo
+    grupo_nome_sugerido = (req.nome_grupo or "").strip()
+    if not grupo_nome_sugerido:
+        grupo_nome_sugerido = "Conversa WhatsApp Importada"
+        if req.filename:
+            fn_clean = re.sub(r"\.(txt|zip|csv|json)$", "", req.filename, flags=re.IGNORECASE)
+            fn_clean = re.sub(r"^Conversa do WhatsApp (com|-)\s*", "", fn_clean, flags=re.IGNORECASE)
+            fn_clean = re.sub(r"^WhatsApp Chat (with|-)\s*", "", fn_clean, flags=re.IGNORECASE)
+            if fn_clean.strip():
+                grupo_nome_sugerido = fn_clean.strip()
 
     try:
         if fmt == "json":
-            count, grupo_nome = import_from_json_data(content, db_path=get_db_path())
-        elif fmt == "txt":
-            # Tenta inferir o nome do grupo a partir do nome do arquivo (ex: "Conversa do WhatsApp com NomeDoGrupo.txt")
-            grupo_nome_sugerido = "Conversa WhatsApp Importada"
-            if req.filename:
-                fn_clean = re.sub(r"\.txt$", "", req.filename, flags=re.IGNORECASE)
-                fn_clean = re.sub(r"^Conversa do WhatsApp com\s*", "", fn_clean, flags=re.IGNORECASE)
-                fn_clean = re.sub(r"^WhatsApp Chat with\s*", "", fn_clean, flags=re.IGNORECASE)
-                if fn_clean.strip():
-                    grupo_nome_sugerido = fn_clean.strip()
-            count, grupo_nome = import_from_txt_data(content, nome_grupo=grupo_nome_sugerido, db_path=get_db_path())
+            count, grupo_nome = import_from_json_data(content_str, db_path=get_db_path())
+        elif fmt in ("txt", "zip"):
+            payload_data: str | bytes = content_str
+            # Se vier codificado em base64 (típico de .zip ou leitura DataURL)
+            if "," in content_str and ("data:" in content_str[:40] or ";base64" in content_str[:40]):
+                try:
+                    payload_data = base64.b64decode(content_str.split(",", 1)[1])
+                except Exception:
+                    payload_data = content_str
+            elif fmt == "zip":
+                try:
+                    payload_data = base64.b64decode(content_str)
+                except Exception:
+                    payload_data = content_str
+
+            count, grupo_nome = import_from_txt_data(payload_data, nome_grupo=grupo_nome_sugerido, db_path=get_db_path())
         else:
-            count, grupo_nome = import_from_csv_data(content, db_path=get_db_path())
+            count, grupo_nome = import_from_csv_data(content_str, db_path=get_db_path())
 
         nome_arq = f" '{req.filename}'" if req.filename else ""
-        msg = f"Importação concluída com sucesso! {count} mensagens processadas e preservadas a partir de{nome_arq}."
+        tipo_descr = " (Exportação WhatsApp)" if fmt in ("txt", "zip") else ""
+        msg = f"Importação concluída com sucesso! {count} mensagens processadas e preservadas a partir de{nome_arq}{tipo_descr}."
         if grupo_nome:
             msg += f" Grupo ativo fixado: '{grupo_nome}'."
         state.add_log(f"[Importação] {msg}")

@@ -13,7 +13,7 @@ from typing import BinaryIO, List, Optional, Tuple, Union
 # Suporta:
 # 1. [14:20, 12/08/2026] Autor: Mensagem (ou [12/08/2026, 14:20])
 # 2. 12/08/2026 14:20 - Autor: Mensagem (ou 12/08/2026, 14:20 - Autor: Mensagem)
-# 3. Formatos de 12h com AM/PM e segundos
+# 3. Formatos de 12h com AM/PM, segundos e múltiplos tipos de travessão (- / – / —)
 
 PATTERN_BRACKETS = re.compile(
     r"^\["
@@ -30,7 +30,7 @@ PATTERN_DASH = re.compile(
     r"(\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4})"
     r"[,\s]+"
     r"(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AaPp][Mm])?)"
-    r"\s*-\s*"
+    r"\s*[-–—]\s*"
     r"(?:([^:]+?):\s*(.*)|(.*))$",
     re.DOTALL,
 )
@@ -233,7 +233,12 @@ def parse_whatsapp_txt(
         if not linha_limpa and not mensagem_atual:
             continue
 
-        match = PATTERN_BRACKETS.match(linha_limpa) or PATTERN_DASH.match(linha_limpa)
+        # Sanitiza marcas de direção e controle Unicode comuns no WhatsApp (\u200e, \u200f, \ufeff)
+        linha_normalizada = re.sub(r"^[\u200e\u200f\ufeff\s]+", "", linha_limpa)
+        # Substitui espaços especiais (narrow no-break space) por espaços normais
+        linha_normalizada = re.sub(r"[\u202f\u00a0]", " ", linha_normalizada)
+
+        match = PATTERN_BRACKETS.match(linha_normalizada) or PATTERN_DASH.match(linha_normalizada)
         if match:
             g1, g2, autor, texto, sistema_txt = match.groups()
             dt = _parse_datetime(g1, g2)
@@ -246,8 +251,8 @@ def parse_whatsapp_txt(
                 if not autor:
                     continue
 
-                autor = autor.strip()
-                texto_msg = (texto or "").strip()
+                autor = re.sub(r"[\u200e\u200f\ufeff]", "", autor).strip()
+                texto_msg = re.sub(r"^[\u200e\u200f\ufeff]+", "", (texto or "")).strip()
 
                 if any(ind in texto_msg.lower() for ind in SISTEMA_INDICATORS) and not autor:
                     continue

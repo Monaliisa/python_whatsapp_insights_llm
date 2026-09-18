@@ -1728,7 +1728,7 @@ def import_from_json_data(
 
 
 def import_from_txt_data(
-    txt_content: str,
+    txt_content: str | bytes,
     nome_grupo: str = "Conversa WhatsApp Importada",
     db_path: str | None = None,
 ) -> tuple[int, str]:
@@ -1737,7 +1737,11 @@ def import_from_txt_data(
     Preserva dados cumulativamente sem sobrescrever mensagens anteriores.
     Retorna uma tupla (total_importado, nome_do_grupo).
     """
-    if not txt_content.strip():
+    if txt_content is None:
+        return (0, "")
+    if isinstance(txt_content, str) and not txt_content.strip():
+        return (0, "")
+    if isinstance(txt_content, bytes) and len(txt_content) == 0:
         return (0, "")
 
     from services.parser_txt import parse_whatsapp_txt
@@ -1754,6 +1758,19 @@ def import_from_txt_data(
     novas = save_messages(messages, db_path=db_path)
     total_acumulado = count_messages(db_path=db_path, grupo_nome=grupo_identificado)
 
+    # Atualiza o catálogo de grupos
+    catalogo = load_catalog_groups()
+    if not any(g.get("nome") == grupo_identificado for g in catalogo):
+        catalogo.append({"id": gerar_grupo_id(grupo_identificado), "nome": grupo_identificado})
+        save_catalog_groups(catalogo)
+
+    # Fixa como grupo ativo
+    set_active_group(
+        gerar_grupo_id(grupo_identificado),
+        grupo_identificado,
+        total_messages=total_acumulado,
+    )
+
     record_coleta_historico(
         {
             "grupo_id": gerar_grupo_id(grupo_identificado),
@@ -1764,8 +1781,8 @@ def import_from_txt_data(
             "tipo_filtro": "importacao_txt",
             "total_extraido": len(messages),
             "total_acumulado": total_acumulado,
-            "status": "Concluído (Importação TXT WhatsApp)",
-            "detalhes": {"arquivo_tipo": "TXT_WHATSAPP", "novas_mensagens": novas},
+            "status": "Concluído (Importação WhatsApp)",
+            "detalhes": {"arquivo_tipo": "WHATSAPP_EXPORT", "novas_mensagens": novas},
         },
         db_path=db_path,
     )
@@ -1773,7 +1790,7 @@ def import_from_txt_data(
     try:
         create_backup(
             tag="importacao_txt",
-            description=f"Backup gerado após importação TXT do grupo '{grupo_identificado}' ({len(messages)} msgs)",
+            description=f"Backup gerado após importação do grupo '{grupo_identificado}' ({len(messages)} msgs)",
             db_path=db_path,
         )
     except Exception as e:

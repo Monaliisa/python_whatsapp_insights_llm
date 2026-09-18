@@ -2620,7 +2620,7 @@
           <!-- Banner Explicativo sobre os Dois Caminhos Equivalentes -->
           <div id="extraction-intro-banner" class="extraction-intro-banner">
             💡 <b>Ambas as opções abaixo satisfazem a extração:</b> Você pode tanto <b>coletar ao vivo</b> do WhatsApp
-            Web via automação quanto <b>importar um arquivo</b> (CSV ou JSON). Qualquer um dos caminhos carrega as
+            Web via automação quanto <b>importar um arquivo</b> (exportação nativa do WhatsApp em <code>.txt</code> ou <code>.zip</code>, ou arquivo <code>.csv</code> / <code>.json</code>). Qualquer um dos caminhos carrega as
             mensagens para o banco SQLite local (<code>messages.db</code>), liberando imediatamente a visualização e os
             módulos de inteligência artificial.
           </div>
@@ -2705,25 +2705,24 @@
               <div class="badge-ou-circle">OU</div>
             </div>
 
-            <!-- OPÇÃO 2: IMPORTAÇÃO DE ARQUIVO (CSV / JSON) -->
+            <!-- OPÇÃO 2: IMPORTAÇÃO DE ARQUIVO (WHATSAPP / CSV / JSON) -->
             <div id="card-importacao" class="pathway-card">
               <div>
                 <div class="pathway-header">
                   <span class="pathway-badge pathway-badge-import">Opção 2</span>
-                  <h3 class="pathway-title">📥 Importação de arquivo</h3>
+                  <h3 class="pathway-title">📥 Importação de arquivo (WhatsApp / CSV / JSON)</h3>
                 </div>
                 <p class="pathway-desc">
-                  Carrega mensagens instantaneamente a partir de um arquivo <b>CSV</b> ou <b>JSON</b> exportado
-                  previamente, sem necessidade de abrir o navegador.
+                  Carrega mensagens instantaneamente a partir de um arquivo <b>exportado pelo WhatsApp (.txt ou .zip)</b> ou de um <b>CSV / JSON</b> prévio, sem necessidade de abrir o navegador.
                 </p>
 
                 <div style="margin-bottom: 16px;">
                   <label
                     style="display: block; font-size: 13px; font-weight: 600; color: #cbd5e1; margin-bottom: 8px;">Selecione
                     o arquivo local:</label>
-                  <input type="file" id="file-import-input" accept=".csv,.json" style="width: 100%;">
+                  <input type="file" id="file-import-input" accept=".txt,.zip,.csv,.json" style="width: 100%;">
                   <small style="color: #64748b; font-size: 11px; display: block; margin-top: 4px;">
-                    Suporta arquivos .csv (separador ';') ou .json com registros de conversas.
+                    Suporta arquivos exportados pelo WhatsApp (<code>.txt</code> ou <code>.zip</code> com mídia), além de backups em <code>.csv</code> e <code>.json</code>.
                   </small>
                 </div>
 
@@ -4756,21 +4755,27 @@
     }
 
     // -------------------------------------------------------------
-    // Importação de Arquivo (CSV / JSON)
+    // Importação de Arquivo (WhatsApp .txt / .zip, CSV, JSON)
     // -------------------------------------------------------------
     async function importarArquivo() {
       const fileInput = document.getElementById('file-import-input');
       if (!fileInput.files || fileInput.files.length === 0) {
-        showToast("Por favor, selecione um arquivo CSV ou JSON primeiro.");
+        showToast("Por favor, selecione um arquivo (.txt, .zip, .csv ou .json) primeiro.");
         return;
       }
 
       const file = fileInput.files[0];
       const filename = file.name;
-      const format = filename.toLowerCase().endsWith('.json') ? 'json' : 'csv';
+      const fnLower = filename.toLowerCase();
 
+      let format = 'csv';
+      if (fnLower.endsWith('.json')) format = 'json';
+      else if (fnLower.endsWith('.txt')) format = 'txt';
+      else if (fnLower.endsWith('.zip')) format = 'zip';
+
+      const tamanhoKb = (file.size / 1024).toFixed(1);
       setBusy(true);
-      appendLog(`[Importação] Lendo arquivo '${filename}'...`);
+      appendLog(`[Importação] Lendo arquivo '${filename}' (${tamanhoKb} KB)...`);
 
       const reader = new FileReader();
       reader.onload = async function (e) {
@@ -4803,11 +4808,15 @@
       };
 
       reader.onerror = function () {
-        showToast("Erro ao ler arquivo local.");
+        showToast("Erro ao ler o arquivo local.");
         setBusy(false);
       };
 
-      reader.readAsText(file, "UTF-8");
+      if (format === 'zip') {
+        reader.readAsDataURL(file);
+      } else {
+        reader.readAsText(file, "UTF-8");
+      }
     }
 
     // -------------------------------------------------------------
