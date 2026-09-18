@@ -1745,9 +1745,80 @@ def import_from_txt_data(
     return (len(messages), grupo_identificado)
 
 
-def get_message_date_bounds(db_path: str | None = None) -> dict:
+def load_catalog_groups_with_stats(db_path: str | None = None) -> list[dict]:
     """
-    Retorna os limites de datas (mínima e máxima) e timestamps das mensagens no banco local.
+    Retorna a lista de grupos catalogados enriquecida com a contagem de mensagens
+    e datas persistidas no banco de dados SQLite/Neon.
+    Também inclui grupos presentes no banco de dados que ainda não constem no catálogo.
+    """
+    if db_path is None:
+        db_path = get_db_path()
+    init_db(db_path)
+
+    catalog = load_catalog_groups()
+    stats_db = list_grupos_historico(db_path)
+    mapa_stats = {
+        (s.get("grupo_nome") or "").strip().lower(): s for s in stats_db if s.get("grupo_nome")
+    }
+    for s in stats_db:
+        gid = (s.get("grupo_id") or "").strip().lower()
+        if gid:
+            mapa_stats[gid] = s
+
+    resultado = []
+    nomes_processados = set()
+
+    for item in catalog:
+        nome = (item.get("nome") or "").strip()
+        gid = (item.get("id") or gerar_grupo_id(nome)).strip()
+        chave_nome = nome.lower()
+        chave_id = gid.lower()
+
+        stat = mapa_stats.get(chave_nome) or mapa_stats.get(chave_id)
+        total_msgs = stat.get("total_mensagens", 0) if stat else 0
+        ult_data = stat.get("ultima_data", "-") if stat else "-"
+        prim_data = stat.get("primeira_data", "-") if stat else "-"
+
+        resultado.append({
+            "id": gid,
+            "nome": nome,
+            "comunidade": item.get("comunidade") or "",
+            "total_mensagens": total_msgs,
+            "primeira_data": prim_data,
+            "ultima_data": ult_data,
+            "atualizado_em": item.get("atualizado_em") or "",
+        })
+        nomes_processados.add(chave_nome)
+        nomes_processados.add(chave_id)
+
+    # Adiciona grupos do banco de dados que ainda não estavam no catálogo JSON
+    for s in stats_db:
+        gnome = (s.get("grupo_nome") or "").strip()
+        gid = (s.get("grupo_id") or gerar_grupo_id(gnome)).strip()
+        if gnome.lower() not in nomes_processados and gid.lower() not in nomes_processados:
+            resultado.append({
+                "id": gid,
+                "nome": gnome,
+                "comunidade": "",
+                "total_mensagens": s.get("total_mensagens", 0),
+                "primeira_data": s.get("primeira_data", "-"),
+                "ultima_data": s.get("ultima_data", "-"),
+                "atualizado_em": s.get("ultima_coleta", "-"),
+            })
+            nomes_processados.add(gnome.lower())
+            nomes_processados.add(gid.lower())
+
+    return sorted(resultado, key=lambda g: (g["total_mensagens"] > 0, g["nome"].lower()), reverse=True)
+
+
+def get_message_date_bounds(
+    db_path: str | None = None,
+    grupo_id: str | None = None,
+    grupo_nome: str | None = None,
+) -> dict:
+    """
+    Retorna os limites de datas (mínima e máxima) e timestamps das mensagens no banco local,
+    filtrando opcionalmente pelo grupo especificado ou grupo ativo.
     Útil para configurar sliders de range temporal e estatísticas para a LLM.
     """
     if db_path is None:
@@ -1764,21 +1835,43 @@ def get_message_date_bounds(db_path: str | None = None) -> dict:
             "grupo_nome": "",
         }
 
+    # Se nenhum filtro for passado, tenta usar o grupo ativo do app_state
+    if not grupo_id and not grupo_nome:
+        app_state = get_app_state()
+        grupo_id = app_state.get("active_group_id")
+        grupo_nome = app_state.get("active_group_name")
+
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
 
+    where_clauses = ["data_hora_ts IS NOT NULL AND data_hora_ts > 0"]
+    params: list[Any] = []
+
+    if grupo_id or grupo_nome:
+        filtros_grp = []
+        if grupo_id:
+            filtros_grp.append("grupo_id = ?")
+            params.append(grupo_id)
+        if grupo_nome:
+            filtros_grp.append("grupo_nome = ?")
+            params.append(grupo_nome)
+        where_clauses.append(f"({' OR '.join(filtros_grp)})")
+
+    where_sql = " WHERE " + " AND ".join(where_clauses)
+
     cur.execute(
-        """
+        f"""
         SELECT 
             COUNT(*),
             MIN(data_hora_ts),
             MAX(data_hora_ts),
-            (SELECT data_hora FROM messages WHERE data_hora_ts = (SELECT MIN(data_hora_ts) FROM messages WHERE data_hora_ts > 0) LIMIT 1),
-            (SELECT data_hora FROM messages WHERE data_hora_ts = (SELECT MAX(data_hora_ts) FROM messages WHERE data_hora_ts > 0) LIMIT 1),
-            (SELECT grupo_nome FROM messages WHERE grupo_nome IS NOT NULL AND grupo_nome != '' LIMIT 1)
+            MIN(data_hora),
+            MAX(data_hora),
+            COALESCE(MAX(grupo_nome), '')
         FROM messages
-        WHERE data_hora_ts IS NOT NULL AND data_hora_ts > 0
-        """
+        {where_sql}
+        """,
+        params,
     )
     row = cur.fetchone()
     conn.close()
@@ -1792,14 +1885,14 @@ def get_message_date_bounds(db_path: str | None = None) -> dict:
             "max_ts": 0.0,
             "min_date": "",
             "max_date": "",
-            "grupo_nome": "",
+            "grupo_nome": grupo_nome or "",
         }
 
     min_ts = float(row[1]) if row[1] is not None else 0.0
     max_ts = float(row[2]) if row[2] is not None else 0.0
     min_date = str(row[3]) if row[3] else ""
     max_date = str(row[4]) if row[4] else ""
-    grupo_nome = str(row[5]) if row[5] else ""
+    gnome_res = str(row[5]) if row[5] else (grupo_nome or "")
 
     return {
         "has_data": True,
@@ -1808,7 +1901,7 @@ def get_message_date_bounds(db_path: str | None = None) -> dict:
         "max_ts": max_ts,
         "min_date": min_date,
         "max_date": max_date,
-        "grupo_nome": grupo_nome,
+        "grupo_nome": gnome_res,
     }
 
 
@@ -1817,10 +1910,12 @@ def fetch_messages_for_llm_range(
     end_ts: float | None = None,
     limit: int = 1500,
     db_path: str | None = None,
+    grupo_id: str | None = None,
+    grupo_nome: str | None = None,
 ) -> list[dict]:
     """
     Recupera mensagens dentro de um range temporal [start_ts, end_ts] ordenadas cronologicamente
-    para alimentação do contexto da LLM.
+    para alimentação do contexto da LLM, isolando pelo grupo ativo.
     """
     if db_path is None:
         db_path = get_db_path()
@@ -1828,16 +1923,32 @@ def fetch_messages_for_llm_range(
     if not Path(db_path).exists():
         return []
 
+    # Se nenhum filtro for passado, tenta usar o grupo ativo do app_state
+    if not grupo_id and not grupo_nome:
+        app_state = get_app_state()
+        grupo_id = app_state.get("active_group_id")
+        grupo_nome = app_state.get("active_group_name")
+
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
     query = """
-        SELECT id, data_hora, data_hora_ts, remetente, texto, is_reply, reply_author, reply_text, has_attachments
+        SELECT id, data_hora, data_hora_ts, remetente, texto, is_reply, reply_author, reply_text, has_attachments, grupo_nome
         FROM messages
         WHERE 1=1
     """
     params: list[Any] = []
+
+    if grupo_id or grupo_nome:
+        filtros_grp = []
+        if grupo_id:
+            filtros_grp.append("grupo_id = ?")
+            params.append(grupo_id)
+        if grupo_nome:
+            filtros_grp.append("grupo_nome = ?")
+            params.append(grupo_nome)
+        query += f" AND ({' OR '.join(filtros_grp)})"
 
     if start_ts is not None and start_ts > 0:
         query += " AND data_hora_ts >= ?"

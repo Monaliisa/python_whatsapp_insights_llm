@@ -2783,9 +2783,9 @@
               </div>
 
               <div>
-                <button type="button" id="btn-mudar-grupo" class="btn-mudar-grupo" onclick="abrirModalTrocaGrupo()"
-                  title="Limpar base de mensagens do banco local e escolher ou coletar outro grupo">
-                  <span>🔄 Mudar de grupo</span>
+                <button type="button" id="btn-mudar-grupo" class="btn-mudar-grupo" onclick="focarSeletorGrupo()"
+                  title="Alternar contexto para outro grupo catalogado">
+                  <span>🔄 Alternar grupo</span>
                 </button>
               </div>
             </div>
@@ -4402,45 +4402,21 @@
       const count = Number(messageCount) || 0;
       sidebarMessagesCount.innerText = count.toLocaleString('pt-BR');
 
-      const isGrupoAtivo = Boolean(activeGroup && (activeGroup.nome || activeGroup.id) && count > 0);
+      const isGrupoAtivo = Boolean(activeGroup && (activeGroup.nome || activeGroup.id));
       grupoAtivoGlobal = isGrupoAtivo ? activeGroup : null;
       grupoAtivoMensagensGlobal = count;
 
       if (isGrupoAtivo) {
         if (bannerAtivo) bannerAtivo.style.display = 'flex';
         if (nomeAtivoDisplay) nomeAtivoDisplay.innerText = activeGroup.nome || activeGroup.id;
-        if (msgsAtivoDisplay) msgsAtivoDisplay.innerText = `${count.toLocaleString('pt-BR')} mensagem(ns) deste grupo carregadas no banco`;
+        if (msgsAtivoDisplay) {
+          msgsAtivoDisplay.innerText = count > 0
+            ? `${count.toLocaleString('pt-BR')} mensagem(ns) deste grupo salvas no banco`
+            : `0 mensagens salvas para este grupo (pronto para coletar ou importar)`;
+        }
         if (idAtivoBadge) idAtivoBadge.innerText = activeGroup.id ? `[ID: ${activeGroup.id}]` : '';
 
-        // Se houver grupo ativo: oculta/bloqueia as opções de importação e o divisor OU
-        if (introBanner) introBanner.style.display = 'none';
-        if (dividerOu) dividerOu.style.display = 'none';
-        if (cardImportacao) cardImportacao.style.display = 'none';
-        if (pathwaysContainer) pathwaysContainer.classList.add('has-active-group');
-        if (fileImportInput) fileImportInput.disabled = true;
-        if (btnImportar) btnImportar.disabled = true;
-
-        // Desativa dropdown de grupo, oculta sync e ajusta textos para Coleta Incremental
-        if (selectGrupo) selectGrupo.disabled = true;
-        if (containerGrupoManual) containerGrupoManual.style.display = 'none';
-        if (btnSyncGrupos) btnSyncGrupos.style.display = 'none';
-        if (statusGruposCount) statusGruposCount.innerText = `Grupo carregado no banco local: "${activeGroup.nome || activeGroup.id}"`;
-        if (coletaCardBadge) {
-          coletaCardBadge.innerText = 'Coleta Incremental';
-        }
-        if (coletaCardTitle) {
-          coletaCardTitle.innerText = '⚡ Complementar dados do grupo';
-        }
-        if (coletaCardDesc) {
-          coletaCardDesc.innerHTML = `Conecta ao WhatsApp Web para buscar mensagens mais recentes ou de outros períodos do grupo <b>${activeGroup.nome || activeGroup.id}</b>, complementando a base do banco SQLite sem duplicar ou apagar as mensagens já existentes.`;
-        }
-        if (btnColetar) {
-          btnColetar.innerHTML = '<span>⚡ Complementar mensagens no banco</span>';
-        }
-      } else {
-        if (bannerAtivo) bannerAtivo.style.display = 'none';
-
-        // Sem grupo ativo: exibe opções de importação e divisor OU
+        // Mantém opções de coleta e importação visíveis e habilitadas para complementar o grupo
         if (introBanner) introBanner.style.display = 'block';
         if (dividerOu) dividerOu.style.display = 'flex';
         if (cardImportacao) cardImportacao.style.display = 'flex';
@@ -4448,7 +4424,35 @@
         if (fileImportInput) fileImportInput.disabled = false;
         if (btnImportar) btnImportar.disabled = false;
 
-        // Reativa dropdown de grupo e textos normais
+        // Mantém dropdown de grupo e sincronização sempre ativos para alternância rápida
+        if (selectGrupo) selectGrupo.disabled = false;
+        if (btnSyncGrupos) btnSyncGrupos.style.display = 'inline-flex';
+        if (statusGruposCount) statusGruposCount.innerText = `Grupo ativo selecionado: "${activeGroup.nome || activeGroup.id}"`;
+
+        if (coletaCardBadge) {
+          coletaCardBadge.innerText = count > 0 ? 'Coleta Incremental' : 'Opção 1';
+        }
+        if (coletaCardTitle) {
+          coletaCardTitle.innerText = count > 0 ? '⚡ Complementar dados do grupo' : '⚡ Coleta via WhatsApp Web';
+        }
+        if (coletaCardDesc) {
+          coletaCardDesc.innerHTML = count > 0
+            ? `Conecta ao WhatsApp Web para buscar novas mensagens do grupo <b>${activeGroup.nome || activeGroup.id}</b>, complementando a base sem duplicar ou apagar histórico existente.`
+            : `Conecta ao WhatsApp Web no navegador e extrai as mensagens diretamente do histórico do grupo <b>${activeGroup.nome || activeGroup.id}</b>.`;
+        }
+        if (btnColetar) {
+          btnColetar.innerHTML = count > 0 ? '<span>⚡ Complementar mensagens no banco</span>' : '<span>⚡ Iniciar coleta de mensagens</span>';
+        }
+      } else {
+        if (bannerAtivo) bannerAtivo.style.display = 'none';
+
+        if (introBanner) introBanner.style.display = 'block';
+        if (dividerOu) dividerOu.style.display = 'flex';
+        if (cardImportacao) cardImportacao.style.display = 'flex';
+        if (pathwaysContainer) pathwaysContainer.classList.remove('has-active-group');
+        if (fileImportInput) fileImportInput.disabled = false;
+        if (btnImportar) btnImportar.disabled = false;
+
         if (selectGrupo) selectGrupo.disabled = false;
         if (btnSyncGrupos) btnSyncGrupos.style.display = 'inline-flex';
         if (coletaCardBadge) {
@@ -4465,7 +4469,7 @@
         }
       }
 
-      // 3. Alerta do Drawer para Extração e Bloqueio de Visualização / Insights / Relatórios
+      // 3. Alerta do Drawer para Extração e Desbloqueio das abas
       if (count > 0) {
         drawerExtracao.classList.remove('alert-danger');
         drawerExtracaoBadge.style.display = 'inline-block';
@@ -4487,21 +4491,15 @@
         drawerExtracaoBadge.className = 'sidebar-alert-badge';
         drawerExtracaoBadge.innerText = 'Sem dados';
 
-        // Bloqueia Visualização, Insights e Relatórios
-        drawerVisualizacao.classList.add('disabled');
-        if (drawerVisualizacaoLock) drawerVisualizacaoLock.style.display = 'inline-block';
+        // Desbloqueia para permitir visualização de empty states sem forçar redirect abrupto
+        drawerVisualizacao.classList.remove('disabled');
+        if (drawerVisualizacaoLock) drawerVisualizacaoLock.style.display = 'none';
 
-        drawerInsights.classList.add('disabled');
-        if (drawerInsightsLock) drawerInsightsLock.style.display = 'inline-block';
+        drawerInsights.classList.remove('disabled');
+        if (drawerInsightsLock) drawerInsightsLock.style.display = 'none';
 
-        if (drawerRelatorios) drawerRelatorios.classList.add('disabled');
-        if (drawerRelatoriosLock) drawerRelatoriosLock.style.display = 'inline-block';
-
-        // Se estiver em uma tela bloqueada, redireciona para Extração
-        const activePage = document.querySelector('.page.active');
-        if (activePage && (activePage.id === 'page-visualizacao' || activePage.id === 'page-insights' || activePage.id === 'page-relatorios')) {
-          navegarPara('page-extracao');
-        }
+        if (drawerRelatorios) drawerRelatorios.classList.remove('disabled');
+        if (drawerRelatoriosLock) drawerRelatoriosLock.style.display = 'none';
       }
     }
 
@@ -4525,52 +4523,47 @@
     }
 
     // -------------------------------------------------------------
-    // Modal de Confirmação de Troca de Grupo Ativo
+    // Alternância de Grupo Ativo (Zero Data Loss)
     // -------------------------------------------------------------
-    function abrirModalTrocaGrupo() {
-      const modal = document.getElementById('modal-troca-grupo');
-      const nomeDisplay = document.getElementById('modal-troca-grupo-nome');
-      const msgsDisplay = document.getElementById('modal-troca-grupo-msgs');
-
-      const nomeAtivo = (grupoAtivoGlobal && (grupoAtivoGlobal.nome || grupoAtivoGlobal.id)) || document.getElementById('active-group-name-display').innerText;
-      const msgsAtivo = `${grupoAtivoMensagensGlobal.toLocaleString('pt-BR')} mensagem(ns)`;
-
-      if (nomeDisplay) nomeDisplay.innerText = nomeAtivo || '-';
-      if (msgsDisplay) msgsDisplay.innerText = msgsAtivo || '0 mensagens';
-      if (modal) modal.classList.add('active');
-    }
-
-    function fecharModalTrocaGrupo(event) {
-      if (event && event.target !== document.getElementById('modal-troca-grupo') && !event.target.classList.contains('modal-close') && event.target.tagName !== 'BUTTON') {
-        return;
-      }
-      const modal = document.getElementById('modal-troca-grupo');
-      if (modal) modal.classList.remove('active');
-    }
-
-    function irParaExportacaoVisualizacao() {
-      fecharModalTrocaGrupo();
-      navegarPara('page-visualizacao');
-      showToast("Exporte seus dados em CSV ou JSON no canto superior direito antes de mudar de grupo.");
-    }
-
-    async function executarTrocaGrupoConfirmada() {
-      fecharModalTrocaGrupo();
-      await limparGrupoAtivo();
-    }
-
-    async function limparGrupoAtivo() {
+    async function alternarGrupoAtivo(nomeOuId) {
+      if (!nomeOuId || nomeOuId === '__manual__') return;
       try {
-        const res = await fetch('/api/state/clear-group', { method: 'POST' });
+        const res = await fetch('/api/state/select-group', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ grupo_nome: nomeOuId })
+        });
         const json = await res.json();
-        if (json.success) {
-          showToast("Grupo ativo desmarcado e base messages.db limpa.");
-          appendLog("[Grupo] Base da sessão limpa. Pronto para selecionar ou coletar outro grupo.");
-          await carregarStatus();
-          await carregarMensagens();
+        if (json.success && json.active_group) {
+          const total = json.active_group.total_messages || 0;
+          grupoAtivoGlobal = json.active_group;
+          grupoAtivoMensagensGlobal = total;
+          
+          atualizarStatusUI(true, total, json.active_group);
+          appendLog(`[Grupo] Contexto alternado para: "${nomeOuId}" (${total} mensagens salvas).`);
+          showToast(`Grupo ativo: "${nomeOuId}" (${total} mensagens).`);
+
+          // Recarrega telas ativas
+          const activePage = document.querySelector('.page.active');
+          if (activePage && activePage.id === 'page-visualizacao') {
+            await carregarMensagens();
+          } else if (activePage && activePage.id === 'page-relatorios') {
+            await carregarMesesRelatorio();
+          } else if (activePage && activePage.id === 'page-insights') {
+            await carregarRangeDatasLLM();
+          }
         }
       } catch (err) {
-        showToast("Erro ao limpar grupo ativo.");
+        console.error("Erro ao alternar grupo ativo:", err);
+      }
+    }
+
+    function focarSeletorGrupo() {
+      const selectGrupo = document.getElementById('select-grupo');
+      if (selectGrupo) {
+        selectGrupo.focus();
+        selectGrupo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        showToast("Selecione qualquer grupo abaixo para alternar a visualização instantaneamente.");
       }
     }
 
@@ -4585,6 +4578,9 @@
         if (inputManual) inputManual.focus();
       } else {
         containerManual.style.display = 'none';
+        if (selectGrupo.value && (!grupoAtivoGlobal || selectGrupo.value !== (grupoAtivoGlobal.nome || grupoAtivoGlobal.id))) {
+          alternarGrupoAtivo(selectGrupo.value);
+        }
       }
     }
 
@@ -4608,38 +4604,47 @@
 
         const res = await fetch('/api/grupos');
         const json = await res.json();
-        if (json.success && Array.isArray(json.data)) {
-          const grupos = json.data;
+        if (json.success && Array.isArray(json.details || json.data)) {
+          const gruposDetails = json.details || [];
+          catalogoGruposCache = gruposDetails;
 
           let html = '';
-          if (grupos.length === 0 && !defaultGrupo) {
+          if (gruposDetails.length === 0 && !defaultGrupo) {
             html += '<option value="" disabled selected>Nenhum grupo catalogado (clique em Atualizar grupos)</option>';
           } else {
-            html += grupos.map(g => `<option value="${g.replace(/"/g, '&quot;')}">👥 ${g}</option>`).join('');
+            html += gruposDetails.map(g => {
+              const nomeG = (g.nome || g.id || "").trim();
+              return `<option value="${nomeG.replace(/"/g, '&quot;')}">👥 ${nomeG}</option>`;
+            }).join('');
           }
-          if (defaultGrupo && !grupos.includes(defaultGrupo) && defaultGrupo !== '__manual__') {
+          
+          if (defaultGrupo && !gruposDetails.some(g => g.nome === defaultGrupo) && defaultGrupo !== '__manual__') {
             html = `<option value="${defaultGrupo.replace(/"/g, '&quot;')}" selected>👥 ${defaultGrupo} (Grupo Ativo)</option>` + html;
           }
           html += '<option value="__manual__">✏️ Digitar outro grupo manualmente...</option>';
           selectGrupo.innerHTML = html;
 
-          if (defaultGrupo && (grupos.includes(defaultGrupo) || selectGrupo.querySelector(`option[value="${defaultGrupo.replace(/"/g, '&quot;')}"]`))) {
+          const nomesLista = gruposDetails.map(g => g.nome);
+          if (defaultGrupo && (nomesLista.includes(defaultGrupo) || selectGrupo.querySelector(`option[value="${defaultGrupo.replace(/"/g, '&quot;')}"]`))) {
             selectGrupo.value = defaultGrupo;
-          } else if (valorAnterior && (grupos.includes(valorAnterior) || valorAnterior === '__manual__')) {
+          } else if (valorAnterior && (nomesLista.includes(valorAnterior) || valorAnterior === '__manual__')) {
             selectGrupo.value = valorAnterior;
-          } else if (grupos.length > 0) {
-            selectGrupo.value = grupos[0];
+          } else if (gruposDetails.length > 0) {
+            selectGrupo.value = gruposDetails[0].nome;
           }
 
-          aoMudarSelectGrupo();
+          if (selectGrupo.value === '__manual__') {
+            const containerManual = document.getElementById('container-grupo-manual');
+            if (containerManual) containerManual.style.display = 'block';
+          }
 
           if (statusCount) {
             if (grupoAtivoGlobal && (grupoAtivoGlobal.nome || grupoAtivoGlobal.id)) {
-              statusCount.innerText = `Grupo carregado no banco local: "${grupoAtivoGlobal.nome || grupoAtivoGlobal.id}"`;
-            } else if (grupos.length === 0) {
+              statusCount.innerText = `Grupo ativo: "${grupoAtivoGlobal.nome || grupoAtivoGlobal.id}"`;
+            } else if (gruposDetails.length === 0) {
               statusCount.innerText = "Nenhum grupo catalogado.";
             } else {
-              statusCount.innerText = `${grupos.length} grupo(s) catalogado(s)`;
+              statusCount.innerText = `${gruposDetails.length} grupo(s) catalogado(s)`;
             }
           }
         }

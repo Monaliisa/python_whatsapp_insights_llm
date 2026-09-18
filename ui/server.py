@@ -63,6 +63,7 @@ from services.storage import (
     list_consultas,
     list_grupos_historico,
     load_catalog_groups,
+    load_catalog_groups_with_stats,
     record_coleta_historico,
     reset_messages_db,
     restore_backup,
@@ -263,9 +264,24 @@ async def get_db_status_endpoint():
 async def get_status():
     db_path = get_db_path()
     has_session = verificar_status_sessao()
-    total_messages = count_messages(db_path)
-    active_group = detect_active_group_from_db(db_path) if total_messages > 0 else None
     app_state = get_app_state()
+    active_gid = app_state.get("active_group_id")
+    active_gnome = app_state.get("active_group_name")
+
+    total_global = count_messages(db_path)
+    
+    active_group = None
+    if active_gid or active_gnome:
+        total_active_group = count_messages(db_path, grupo_id=active_gid, grupo_nome=active_gnome)
+        active_group = {
+            "id": active_gid or active_gnome,
+            "nome": active_gnome or active_gid,
+            "total_messages": total_active_group,
+        }
+    elif total_global > 0:
+        active_group = detect_active_group_from_db(db_path)
+
+    active_msgs = active_group["total_messages"] if active_group else 0
 
     return {
         "status": "online",
@@ -276,8 +292,9 @@ async def get_status():
         "db_exists": os.path.exists(db_path),
         "db_type": "PostgreSQL (Neon)" if is_postgres() else "SQLite (Local)",
         "is_cloud_db": is_postgres(),
-        "message_count": total_messages,
-        "has_data": total_messages > 0,
+        "message_count": active_msgs,
+        "total_messages_all": total_global,
+        "has_data": active_msgs > 0,
         "default_grupo": NOME_DO_GRUPO,
         "default_export_path": str(DEFAULT_EXPORT_PATH),
         "app_state": app_state,
@@ -293,14 +310,20 @@ async def get_state_endpoint():
 
 @app.post("/api/state/select-group")
 async def select_group_endpoint(req: SelectGroupRequest):
-    """Define o grupo ativo na memória e persiste no app_state.json."""
+    """Define o grupo ativo na memória e persiste no app_state.json sem resetar mensagens."""
     if not req.grupo_nome and not req.grupo_id:
         return {"success": False, "message": "Nome ou ID do grupo não informado."}
 
     total = count_messages(db_path=get_db_path(), grupo_id=req.grupo_id, grupo_nome=req.grupo_nome)
     new_state = set_active_group(group_id=req.grupo_id, group_name=req.grupo_nome, total_messages=total)
-    state.add_log(f"[Grupo] Grupo ativo definido: '{req.grupo_nome or req.grupo_id}' ({total} mensagens registradas).")
-    return {"success": True, "state": new_state}
+    
+    active_data = {
+        "id": req.grupo_id or req.grupo_nome,
+        "nome": req.grupo_nome or req.grupo_id,
+        "total_messages": total,
+    }
+    state.add_log(f"[Grupo] Contexto ativo alterado: '{req.grupo_nome or req.grupo_id}' ({total} mensagens persistidas).")
+    return {"success": True, "state": new_state, "active_group": active_data}
 
 
 @app.post("/api/state/clear-group")
@@ -727,8 +750,8 @@ async def trigger_limpar_tudo():
 @app.get("/api/grupos")
 async def get_grupos():
     try:
-        details = load_catalog_groups()
-        nomes = get_catalog_group_names()
+        details = load_catalog_groups_with_stats(get_db_path())
+        nomes = [g["nome"] for g in details if g.get("nome")]
         return {
             "success": True,
             "count": len(details),
@@ -1073,13 +1096,15 @@ async def validar_chave_llm(req: ValidateLLMKeyRequest):
 
 
 @app.get("/api/llm/range-datas")
-async def get_llm_date_range():
-    """Retorna os limites cronológicos das mensagens do banco local para alimentar o slider duplo."""
+async def get_llm_date_range(grupo_id: str | None = None, grupo_nome: str | None = None):
+    """Retorna os limites cronológicos das mensagens do grupo ativo para alimentar o slider duplo."""
     db_path = get_db_path()
-    bounds = get_message_date_bounds(db_path)
-    active_grp = detect_active_group_from_db(db_path)
-    if active_grp:
-        bounds["grupo_nome"] = active_grp.get("nome") or active_grp.get("id") or bounds.get("grupo_nome")
+    if not grupo_id and not grupo_nome:
+        app_state = get_app_state()
+        grupo_id = app_state.get("active_group_id")
+        grupo_nome = app_state.get("active_group_name")
+    
+    bounds = get_message_date_bounds(db_path, grupo_id=grupo_id, grupo_nome=grupo_nome)
     return {"success": True, "data": bounds}
 
 
@@ -1096,7 +1121,7 @@ async def get_llm_analises_uteis():
 async def processar_chat_llm(req: ChatLLMRequest):
     """
     Executa a inferência de inteligência artificial via Anthropic (Claude) unindo a solicitação
-    do usuário às mensagens do banco SQLite dentro do intervalo de tempo selecionado.
+    do usuário às mensagens do banco SQLite/Neon dentro do intervalo de tempo selecionado para o grupo ativo.
     """
     api_key = req.api_key.strip() or os.getenv("ANTHROPIC_API_KEY", "").strip()
     if not api_key:
@@ -1105,22 +1130,25 @@ async def processar_chat_llm(req: ChatLLMRequest):
     modelo = req.model.strip() or "claude-3-5-sonnet-20241022"
     db_path = get_db_path()
 
-    # Busca o grupo ativo
-    active_grp = detect_active_group_from_db(db_path)
-    grupo_nome = (active_grp.get("nome") or active_grp.get("id")) if active_grp else "Comunidade WhatsApp"
+    app_state = get_app_state()
+    active_gid = app_state.get("active_group_id")
+    active_gnome = app_state.get("active_group_name")
+    grupo_nome = active_gnome or active_gid or "Comunidade WhatsApp"
 
-    # Recupera as mensagens do período no SQLite
+    # Recupera as mensagens do período filtrando pelo grupo ativo
     mensagens = fetch_messages_for_llm_range(
         start_ts=req.start_ts,
         end_ts=req.end_ts,
         limit=1500,
         db_path=db_path,
+        grupo_id=active_gid,
+        grupo_nome=active_gnome,
     )
 
     if not mensagens:
         return {
             "success": False,
-            "message": "Nenhuma mensagem encontrada no período selecionado. Ajuste os limites do slider de datas para incluir mensagens.",
+            "message": "Nenhuma mensagem encontrada para o grupo ativo no período selecionado. Ajuste os limites do slider de datas.",
         }
 
     desc_analise = f" ({req.tipo_analise})" if req.tipo_analise else ""
@@ -1156,18 +1184,26 @@ async def processar_chat_llm(req: ChatLLMRequest):
 
 
 @app.get("/api/relatorios/meses")
-async def get_report_months():
-    """Retorna os meses disponíveis na base de dados para alimentar o seletor de relatórios."""
+async def get_report_months(grupo_id: str | None = None, grupo_nome: str | None = None):
+    """Retorna os meses disponíveis na base de dados para o grupo ativo."""
     db_path = get_db_path()
-    meses = ReportService.listar_meses_disponiveis(db_path)
+    if not grupo_id and not grupo_nome:
+        app_state = get_app_state()
+        grupo_id = app_state.get("active_group_id")
+        grupo_nome = app_state.get("active_group_name")
+    meses = ReportService.listar_meses_disponiveis(db_path, grupo_id=grupo_id, grupo_nome=grupo_nome)
     return {"success": True, "data": meses}
 
 
 @app.get("/api/relatorios/dados")
-async def get_report_data(mes: str | None = None):
-    """Retorna as métricas completas calculadas para o relatório mensal nas 4 seções."""
+async def get_report_data(mes: str | None = None, grupo_id: str | None = None, grupo_nome: str | None = None):
+    """Retorna as métricas completas calculadas para o relatório mensal do grupo ativo."""
     db_path = get_db_path()
-    dados = ReportService.calcular_metricas_mensais(mes=mes, db_path=db_path)
+    if not grupo_id and not grupo_nome:
+        app_state = get_app_state()
+        grupo_id = app_state.get("active_group_id")
+        grupo_nome = app_state.get("active_group_name")
+    dados = ReportService.calcular_metricas_mensais(mes=mes, db_path=db_path, grupo_id=grupo_id, grupo_nome=grupo_nome)
     return {"success": True, "data": dados}
 
 
@@ -1179,12 +1215,16 @@ async def generate_report_summary(req: ReportSummaryRequest):
         return {"success": False, "message": "API Key da Anthropic não fornecida. Configure sua chave no card de configuração."}
 
     db_path = get_db_path()
-    metricas = ReportService.calcular_metricas_mensais(mes=req.mes, db_path=db_path)
+    app_state = get_app_state()
+    active_gid = app_state.get("active_group_id")
+    active_gnome = app_state.get("active_group_name")
+    metricas = ReportService.calcular_metricas_mensais(mes=req.mes, db_path=db_path, grupo_id=active_gid, grupo_nome=active_gnome)
     if not metricas.get("tem_dados"):
         return {"success": False, "message": "Não há mensagens suficientes no mês selecionado para gerar o resumo executivo."}
 
     modelo = req.model.strip() or "claude-3-5-sonnet-20241022"
-    state.add_log(f"[Relatórios / Anthropic] Gerando Resumo Executivo Mensal ({req.mes}) via modelo '{modelo}'...")
+    grupo_label = metricas.get("grupo_nome") or active_gnome or "Grupo"
+    state.add_log(f"[Relatórios / Anthropic] Gerando Resumo Executivo Mensal ({req.mes}) para o grupo '{grupo_label}' via modelo '{modelo}'...")
     sucesso, texto = ReportService.gerar_resumo_executivo_llm(
         api_key=api_key,
         model=modelo,

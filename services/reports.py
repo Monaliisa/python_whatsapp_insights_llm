@@ -19,9 +19,8 @@ from collections import Counter, defaultdict
 from datetime import datetime
 from typing import Any
 
-from services.llm import AnthropicService, GeminiService
 from services.paths import get_db_path
-from services.storage import detect_active_group_from_db
+from services.storage import count_messages, detect_active_group_from_db, get_app_state
 
 logger = logging.getLogger(__name__)
 
@@ -62,26 +61,45 @@ class ReportService:
     """
 
     @classmethod
-    def listar_meses_disponiveis(cls, db_path: str | None = None) -> list[dict[str, Any]]:
+    def listar_meses_disponiveis(
+        cls,
+        db_path: str | None = None,
+        grupo_id: str | None = None,
+        grupo_nome: str | None = None,
+    ) -> list[dict[str, Any]]:
         """
-        Retorna a lista de meses disponíveis na base de dados SQLite com suas contagens.
+        Retorna a lista de meses disponíveis na base de dados SQLite com suas contagens,
+        filtrando opcionalmente pelo grupo ativo.
         Ordenado cronologicamente do mais recente para o mais antigo.
         """
         if db_path is None:
             db_path = get_db_path()
 
+        # Se não informado, busca do app_state
+        if not grupo_id and not grupo_nome:
+            app_state = get_app_state()
+            grupo_id = app_state.get("active_group_id")
+            grupo_nome = app_state.get("active_group_name")
+
         conn = sqlite3.connect(db_path)
         cur = conn.cursor()
 
+        query = "SELECT data_hora_ts, data_hora FROM messages WHERE data_hora_ts > 0"
+        params: list[Any] = []
+        if grupo_id or grupo_nome:
+            filtros = []
+            if grupo_id:
+                filtros.append("grupo_id = ?")
+                params.append(grupo_id)
+            if grupo_nome:
+                filtros.append("grupo_nome = ?")
+                params.append(grupo_nome)
+            query += f" AND ({' OR '.join(filtros)})"
+
+        query += " ORDER BY data_hora_ts DESC"
+
         try:
-            cur.execute(
-                """
-                SELECT data_hora_ts, data_hora
-                FROM messages
-                WHERE data_hora_ts > 0
-                ORDER BY data_hora_ts DESC
-                """
-            )
+            cur.execute(query, params)
             rows = cur.fetchall()
         except sqlite3.OperationalError:
             conn.close()
@@ -117,19 +135,27 @@ class ReportService:
         cls,
         mes: str | None = None,
         db_path: str | None = None,
+        grupo_id: str | None = None,
+        grupo_nome: str | None = None,
     ) -> dict[str, Any]:
         """
-        Calcula as métricas completas para um determinado mês ('YYYY-MM').
+        Calcula as métricas completas para um determinado mês ('YYYY-MM'),
+        isolando as estatísticas para o grupo selecionado.
         Se mes for None, seleciona automaticamente o mês mais recente disponível.
         """
         if db_path is None:
             db_path = get_db_path()
 
-        meses_disp = cls.listar_meses_disponiveis(db_path)
+        if not grupo_id and not grupo_nome:
+            app_state = get_app_state()
+            grupo_id = app_state.get("active_group_id")
+            grupo_nome = app_state.get("active_group_name")
+
+        meses_disp = cls.listar_meses_disponiveis(db_path, grupo_id=grupo_id, grupo_nome=grupo_nome)
         if not meses_disp:
             return {
                 "tem_dados": False,
-                "mensagem": "Nenhuma mensagem encontrada na base de dados.",
+                "mensagem": "Nenhuma mensagem encontrada para este grupo na base de dados.",
                 "meses_disponiveis": [],
             }
 
@@ -159,24 +185,38 @@ class ReportService:
         conn = sqlite3.connect(db_path)
         cur = conn.cursor()
 
-        cur.execute(
-            """
+        query_msgs = """
             SELECT id, data_hora, data_hora_ts, remetente, texto, is_reply,
                    reply_author, reply_text, has_attachments, grupo_nome
             FROM messages
             WHERE data_hora_ts >= ? AND data_hora_ts < ?
-            ORDER BY data_hora_ts ASC
-            """,
-            (ts_inicio, ts_fim),
-        )
+        """
+        params_msgs: list[Any] = [ts_inicio, ts_fim]
+        if grupo_id or grupo_nome:
+            filtros_g = []
+            if grupo_id:
+                filtros_g.append("grupo_id = ?")
+                params_msgs.append(grupo_id)
+            if grupo_nome:
+                filtros_g.append("grupo_nome = ?")
+                params_msgs.append(grupo_nome)
+            query_msgs += f" AND ({' OR '.join(filtros_g)})"
+
+        query_msgs += " ORDER BY data_hora_ts ASC"
+
+        cur.execute(query_msgs, params_msgs)
         rows = cur.fetchall()
 
-        total_historico = cur.execute("SELECT COUNT(*) FROM messages").fetchone()[0]
-        active_group = detect_active_group_from_db(db_path)
-        nome_grupo = (active_group.get("nome") or active_group.get("id")) if active_group else "Comunidade WhatsApp"
+        # Nome do grupo para o relatório
+        nome_grupo = grupo_nome or "Comunidade WhatsApp"
+        if not grupo_nome:
+            active_group = detect_active_group_from_db(db_path)
+            if active_group:
+                nome_grupo = active_group.get("nome") or active_group.get("id") or "Comunidade WhatsApp"
 
         conn.close()
 
+        total_historico = count_messages(db_path, grupo_id=grupo_id, grupo_nome=grupo_nome)
         total_mensagens = len(rows)
         if total_mensagens == 0:
             return {
