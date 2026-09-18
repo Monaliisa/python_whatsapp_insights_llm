@@ -2804,110 +2804,7 @@
             </div>
           </div>
 
-          <!-- 1. CARD DE CONFIGURAÇÃO DA ANTHROPIC (CLAUDE) -->
-          <div id="byok-card" class="byok-config-card">
-            <div class="byok-header-row" onclick="toggleByokConfig()"
-              title="Clique para recolher ou expandir a configuração da API">
-              <div class="byok-title">
-                <span style="font-size: 20px;">🔑</span>
-                <span>Configuração da API (Anthropic Claude)</span>
-              </div>
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <span id="byok-status-badge" class="byok-badge pending">⚠️ Chave não testada</span>
-                <button type="button" id="btn-toggle-byok-card" class="byok-collapse-btn"
-                  title="Recolher ou expandir configuração da API"
-                  onclick="event.stopPropagation(); toggleByokConfig();">
-                  <span class="chevron">▲</span>
-                </button>
-              </div>
-            </div>
-
-            <div id="byok-card-content" class="byok-card-content">
-              <p style="color: #cbd5e1; font-size: 13.5px; line-height: 1.6;">
-                O módulo de inteligência utiliza os modelos <b>Anthropic Claude</b>. Sua chave de API do
-                <b>Anthropic Console</b> pode ser informada abaixo ou definida via variável de ambiente (<code>ANTHROPIC_API_KEY</code>),
-                garantindo controle total sobre o consumo de tokens e privacidade das mensagens.
-              </p>
-
-              <!-- Formulário de API Key e Seleção de Modelo -->
-              <div class="byok-form-grid">
-
-                <!-- Campo 1: API Key com botão de revelar / ocultar e colar -->
-                <div>
-                  <label for="input-gemini-api-key"
-                    style="display: block; font-size: 12.5px; font-weight: 600; color: #d8b4fe; margin-bottom: 6px;">
-                    Chave de API (Anthropic API Key):
-                  </label>
-                  <div class="input-action-group">
-                    <input type="password" id="input-gemini-api-key" placeholder="Cole sua chave sk-ant-... aqui"
-                      oninput="aoAlterarCredenciaisLLM()">
-                    <div class="inline-buttons">
-                      <button type="button" class="btn-input-action" id="btn-toggle-key-visibility"
-                        onclick="alternarVisibilidadeApiKey()" title="Revelar ou ocultar chave de API">
-                        👁️ Revelar
-                      </button>
-                      <button type="button" class="btn-input-action" onclick="colarApiKeyClipboard()"
-                        title="Colar chave da área de transferência">
-                        📋 Colar
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Campo 2: Dropdown de Seleção de Modelo -->
-                <div>
-                  <label for="select-gemini-model"
-                    style="display: block; font-size: 12.5px; font-weight: 600; color: #d8b4fe; margin-bottom: 6px;">
-                    Modelo do Claude:
-                  </label>
-                  <div class="select-wrapper">
-                    <select id="select-gemini-model" class="custom-select" onchange="aoAlterarCredenciaisLLM()">
-                      <option value="claude-3-5-sonnet-20241022" selected>⚡ Claude 3.5 Sonnet (Recomendado / Rápido e Analítico)</option>
-                      <option value="claude-3-7-sonnet-20250219">🚀 Claude 3.7 Sonnet (Alta Performance / Raciocínio Híbrido)</option>
-                      <option value="claude-3-haiku-20240307">💨 Claude 3 Haiku (Ultra Rápido / Econômico)</option>
-                      <option value="claude-3-opus-20240229">🧠 Claude 3 Opus (Raciocínio Profundo)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <!-- Botão 3: Testar / Validar Conexão -->
-                <div>
-                  <button type="button" id="btn-validar-chave" class="secondary" onclick="testarChaveGemini()"
-                    style="width: 100%; white-space: nowrap;">
-                    <span>🧪 Testar Chave</span>
-                  </button>
-                </div>
-
-              </div>
-
-              <!-- Banner de Informação e Segurança -->
-              <div class="byok-info-banner">
-                🔒 <b>Segurança e Privacidade:</b> Sua chave de API é mantida com segurança no armazenamento local do
-                seu navegador (<code>localStorage</code>) ou carregada via ambiente (<code>.env</code>), sendo utilizada exclusivamente
-                durante as requisições de geração de análises.
-              </div>
-
-              <!-- Links de Documentação e Recursos -->
-              <div class="byok-docs-row">
-                <span style="font-size: 12px; color: #94a3b8; font-weight: 600;">Documentações & Recursos:</span>
-                <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer"
-                  class="byok-doc-link" title="Gere sua chave ou gerencie cotas no Anthropic Console">
-                  <span>🔑 Obter API Key no Anthropic Console</span> ↗
-                </a>
-                <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener noreferrer"
-                  class="byok-doc-link" title="Veja os limites de contexto e capacidades dos modelos Claude">
-                  <span>📖 Modelos Anthropic Claude</span> ↗
-                </a>
-                <a href="https://pt.wikipedia.org/wiki/BYOK" target="_blank" rel="noopener noreferrer"
-                  class="byok-doc-link" title="Entenda o modelo de Bring Your Own Key em aplicações modernas">
-                  <span>💡 O que é a BYOK?</span> ↗
-                </a>
-              </div>
-
-            </div>
-          </div>
-
-          <!-- 2. CARD DO DUAL RANGE SLIDER: RECORTE TEMPORAL DAS MENSAGENS -->
+          <!-- 1. CARD DO DUAL RANGE SLIDER: RECORTE TEMPORAL DAS MENSAGENS -->
           <div class="range-filter-card">
             <div class="range-header-row">
               <div style="display: flex; align-items: center; gap: 8px;">
@@ -5100,55 +4997,27 @@
     }
 
     // -------------------------------------------------------------
+    // -------------------------------------------------------------
     // Gerenciamento de Provedor LLM & API (Anthropic Claude)
     // -------------------------------------------------------------
     const STORAGE_KEY_API = 'zap_anthropic_api_key';
     const STORAGE_KEY_MODEL = 'zap_anthropic_model';
     const STORAGE_KEY_VALIDATED = 'zap_anthropic_validated';
-    const STORAGE_KEY_COLLAPSED = 'zap_anthropic_config_collapsed';
-
-    function toggleByokConfig(forcarEstado) {
-      const card = document.getElementById('byok-card');
-      const btn = document.getElementById('btn-toggle-byok-card');
-      if (!card) return;
-
-      let isCollapsed;
-      if (typeof forcarEstado === 'boolean') {
-        isCollapsed = forcarEstado;
-        if (isCollapsed) {
-          card.classList.add('collapsed');
-        } else {
-          card.classList.remove('collapsed');
-        }
-      } else {
-        isCollapsed = card.classList.toggle('collapsed');
-      }
-
-      if (btn) {
-        btn.innerHTML = `<span class="chevron">${isCollapsed ? '▼' : '▲'}</span>`;
-        btn.title = isCollapsed ? "Expandir configuração da API" : "Recolher configuração da API";
-      }
-
-      localStorage.setItem(STORAGE_KEY_COLLAPSED, isCollapsed ? 'true' : 'false');
-    }
 
     function atualizarBadgesBYOK(key, isValidated, model) {
-      const badgeInsights = document.getElementById('byok-status-badge');
       const badgeConfig = document.getElementById('config-byok-status-badge');
+      if (!badgeConfig) return;
 
-      [badgeInsights, badgeConfig].forEach(b => {
-        if (!b) return;
-        if (key && isValidated) {
-          b.className = 'byok-badge active';
-          b.innerText = `✅ Conectada e validada (${model})`;
-        } else if (key) {
-          b.className = 'byok-badge pending';
-          b.innerText = '⚠️ Chave configurada (não testada)';
-        } else {
-          b.className = 'byok-badge pending';
-          b.innerText = '⚠️ Chave não configurada';
-        }
-      });
+      if (key && isValidated) {
+        badgeConfig.className = 'byok-badge active';
+        badgeConfig.innerText = `✅ Conectada e validada (${model})`;
+      } else if (key) {
+        badgeConfig.className = 'byok-badge pending';
+        badgeConfig.innerText = '⚠️ Chave configurada (não testada)';
+      } else {
+        badgeConfig.className = 'byok-badge pending';
+        badgeConfig.innerText = '⚠️ Chave não configurada';
+      }
     }
 
     function carregarConfiguracaoLLM() {
@@ -5160,47 +5029,17 @@
         localStorage.setItem(STORAGE_KEY_MODEL, savedModel);
       }
       const isValidated = localStorage.getItem(STORAGE_KEY_VALIDATED) === 'true';
-      const savedCollapsedPref = localStorage.getItem(STORAGE_KEY_COLLAPSED);
 
-      // Se houver preferência salva, usa ela. Se a chave estiver validada, colapsa por padrão
-      const isCollapsed = savedCollapsedPref !== null ? (savedCollapsedPref === 'true') : (savedKey && isValidated);
-
-      const inputKey = document.getElementById('input-gemini-api-key');
-      const selectModel = document.getElementById('select-gemini-model');
       const configKey = document.getElementById('config-gemini-api-key');
       const configModel = document.getElementById('config-gemini-model');
 
-      if (inputKey) inputKey.value = savedKey;
-      if (selectModel) selectModel.value = savedModel;
       if (configKey) configKey.value = savedKey;
       if (configModel) configModel.value = savedModel;
 
       atualizarBadgesBYOK(savedKey, isValidated, savedModel);
-      toggleByokConfig(isCollapsed);
-    }
-
-    function aoAlterarCredenciaisLLM() {
-      const inputKey = document.getElementById('input-gemini-api-key');
-      const selectModel = document.getElementById('select-gemini-model');
-      const configKey = document.getElementById('config-gemini-api-key');
-      const configModel = document.getElementById('config-gemini-model');
-
-      const key = inputKey ? inputKey.value.trim() : '';
-      const model = selectModel ? selectModel.value : 'claude-3-5-sonnet-20241022';
-
-      localStorage.setItem(STORAGE_KEY_API, key);
-      localStorage.setItem(STORAGE_KEY_MODEL, model);
-      localStorage.setItem(STORAGE_KEY_VALIDATED, 'false');
-
-      if (configKey) configKey.value = key;
-      if (configModel) configModel.value = model;
-
-      atualizarBadgesBYOK(key, false, model);
     }
 
     function aoAlterarCredenciaisConfig() {
-      const inputKey = document.getElementById('input-gemini-api-key');
-      const selectModel = document.getElementById('select-gemini-model');
       const configKey = document.getElementById('config-gemini-api-key');
       const configModel = document.getElementById('config-gemini-model');
 
@@ -5211,26 +5050,7 @@
       localStorage.setItem(STORAGE_KEY_MODEL, model);
       localStorage.setItem(STORAGE_KEY_VALIDATED, 'false');
 
-      if (inputKey) inputKey.value = key;
-      if (selectModel) selectModel.value = model;
-
       atualizarBadgesBYOK(key, false, model);
-    }
-
-    function alternarVisibilidadeApiKey() {
-      const inputKey = document.getElementById('input-gemini-api-key');
-      const btnToggle = document.getElementById('btn-toggle-key-visibility');
-      if (!inputKey || !btnToggle) return;
-
-      if (inputKey.type === 'password') {
-        inputKey.type = 'text';
-        btnToggle.innerText = '🙈 Ocultar';
-        btnToggle.title = 'Ocultar chave de API';
-      } else {
-        inputKey.type = 'password';
-        btnToggle.innerText = '👁️ Revelar';
-        btnToggle.title = 'Revelar chave de API';
-      }
     }
 
     function alternarVisibilidadeConfigKey() {
@@ -5246,28 +5066,6 @@
         configKey.type = 'password';
         btnToggle.innerText = '👁️ Revelar';
         btnToggle.title = 'Revelar chave de API';
-      }
-    }
-
-    async function colarApiKeyClipboard() {
-      try {
-        if (!navigator.clipboard || !navigator.clipboard.readText) {
-          showToast("Acesso à área de transferência não suportado ou bloqueado pelo navegador.");
-          return;
-        }
-        const text = await navigator.clipboard.readText();
-        if (!text) {
-          showToast("Área de transferência vazia.");
-          return;
-        }
-        const inputKey = document.getElementById('input-gemini-api-key');
-        if (inputKey) {
-          inputKey.value = text.trim();
-          aoAlterarCredenciaisLLM();
-          showToast("Chave colada com sucesso!");
-        }
-      } catch (err) {
-        showToast("Não foi possível ler da área de transferência.");
       }
     }
 
@@ -5300,9 +5098,7 @@
       localStorage.removeItem(STORAGE_KEY_API);
       localStorage.setItem(STORAGE_KEY_VALIDATED, 'false');
 
-      const inputKey = document.getElementById('input-gemini-api-key');
       const configKey = document.getElementById('config-gemini-api-key');
-      if (inputKey) inputKey.value = '';
       if (configKey) configKey.value = '';
 
       const model = localStorage.getItem(STORAGE_KEY_MODEL) || 'claude-3-5-sonnet-20241022';
@@ -5319,7 +5115,7 @@
 
     function atualizarDropdownsModelos(modelos, modeloSelecionado) {
       if (!modelos || !Array.isArray(modelos) || modelos.length === 0) return;
-      const selectIds = ['select-gemini-model', 'config-gemini-model'];
+      const selectIds = ['config-gemini-model'];
       selectIds.forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -5335,71 +5131,6 @@
       });
       if (modeloSelecionado) {
         localStorage.setItem(STORAGE_KEY_MODEL, modeloSelecionado);
-      }
-    }
-
-    async function testarChaveGemini() {
-      const inputKey = document.getElementById('input-gemini-api-key');
-      const selectModel = document.getElementById('select-gemini-model');
-      const btnValidar = document.getElementById('btn-validar-chave');
-
-      const apiKey = inputKey ? inputKey.value.trim() : '';
-      const model = selectModel ? selectModel.value : 'claude-3-5-sonnet-20241022';
-
-      if (!apiKey) {
-        showToast("Por favor, digite ou cole sua API Key da Anthropic antes de testar.");
-        if (inputKey) inputKey.focus();
-        return;
-      }
-
-      if (btnValidar) {
-        btnValidar.disabled = true;
-        btnValidar.innerHTML = '<span>⏳ Testando conexão...</span>';
-      }
-
-      appendLog(`[Anthropic / Claude] Iniciando teste de autenticação com o modelo '${model}'...`);
-
-      try {
-        const res = await fetch('/api/llm/validar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ api_key: apiKey, model: model })
-        });
-        const json = await res.json();
-
-        if (json.available_models && json.available_models.length > 0) {
-          atualizarDropdownsModelos(json.available_models, json.model || model);
-        }
-
-        const modelEfetivo = json.model || model;
-
-        if (json.success) {
-          localStorage.setItem(STORAGE_KEY_VALIDATED, 'true');
-          localStorage.setItem(STORAGE_KEY_MODEL, modelEfetivo);
-          atualizarBadgesBYOK(apiKey, true, modelEfetivo);
-          showToast("API Key da Anthropic validada com sucesso!");
-          appendLog(`[Anthropic / Claude] ${json.message}`);
-
-          // Colapsa automaticamente o card de configuração da API após validação bem-sucedida
-          setTimeout(() => {
-            toggleByokConfig(true);
-          }, 400);
-        } else {
-          localStorage.setItem(STORAGE_KEY_VALIDATED, 'false');
-          atualizarBadgesBYOK(apiKey, false, modelEfetivo);
-          showToast(json.message || "Falha ao validar API Key.");
-          appendLog(`[Anthropic / Claude - Erro] ${json.message}`);
-        }
-      } catch (err) {
-        localStorage.setItem(STORAGE_KEY_VALIDATED, 'false');
-        atualizarBadgesBYOK(apiKey, false, model);
-        showToast("Erro ao conectar com o servidor para validar a chave.");
-        appendLog(`[Anthropic / Claude - Erro] Falha na requisição de validação: ${err}`);
-      } finally {
-        if (btnValidar) {
-          btnValidar.disabled = false;
-          btnValidar.innerHTML = '<span>🧪 Testar Chave</span>';
-        }
       }
     }
 
@@ -5834,10 +5565,8 @@
       const model = localStorage.getItem(STORAGE_KEY_MODEL) || 'claude-3-5-sonnet-20241022';
 
       if (!apiKey) {
-        showToast("⚠️ Configure sua API Key da Anthropic no topo antes de enviar.");
-        toggleByokConfig(false); // expande o card de chave para o usuário preencher
-        const inputKey = document.getElementById('input-gemini-api-key');
-        if (inputKey) inputKey.focus();
+        showToast("⚠️ Configure sua chave de API da Anthropic na aba 'Configurações' antes de enviar.");
+        navegarPara('page-configuracoes');
         return;
       }
 
@@ -6476,8 +6205,8 @@
       const elExecTexto = document.getElementById('rep-executivo-texto');
 
       if (!apiKey) {
-        showToast("Configure sua chave de API da Anthropic no card da aba 'Gerar insights' ou em 'Configurações'.");
-        navegarPara('page-insights');
+        showToast("Configure sua chave de API da Anthropic na aba 'Configurações'.");
+        navegarPara('page-configuracoes');
         return;
       }
 
