@@ -193,6 +193,13 @@ def save_catalog_groups(groups: list[dict | str]) -> int:
     except Exception as e:
         print(f"[ERRO] Falha ao salvar groups_catalog.json: {e}")
 
+    # Sincronização transparente com Neon (Cloud)
+    try:
+        from services.cloud_sync import sync_catalog_groups_to_cloud
+        sync_catalog_groups_to_cloud(lista_ordenada)
+    except Exception as e:
+        print(f"[AVISO] Sincronização de catálogo em nuvem: {e}")
+
     return novos_salvos
 
 
@@ -589,6 +596,14 @@ def record_coleta_historico(
     )
     conn.commit()
     conn.close()
+
+    # Sincronização transparente com Neon (Cloud)
+    try:
+        from services.cloud_sync import sync_coleta_historico_to_cloud
+        sync_coleta_historico_to_cloud(coleta_data, consulta_id=Path(db_path).stem if db_path else None)
+    except Exception as e:
+        print(f"[AVISO] Sincronização de histórico de coleta em nuvem: {e}")
+
     return cid
 
 
@@ -704,6 +719,20 @@ def create_new_consulta_db(group_name: str | None = None) -> tuple[str, str]:
 
     with open(state_path, "w", encoding="utf-8") as f:
         json.dump(current_state, f, ensure_ascii=False, indent=2)
+
+    # Sincronização transparente com Neon (Cloud)
+    try:
+        from services.cloud_sync import sync_consulta_to_cloud
+        sync_consulta_to_cloud({
+            "id": Path(filename).stem,
+            "nome": group_name or f"Consulta {Path(filename).stem}",
+            "grupo_id": current_state.get("active_group_id"),
+            "grupo_nome": group_name,
+            "total_messages": 0,
+            "status": "Ativa",
+        })
+    except Exception as e:
+        print(f"[AVISO] Sincronização de consulta em nuvem: {e}")
 
     return filename, db_path
 
@@ -1284,6 +1313,14 @@ def save_messages(messages: list[dict], db_path: str | None = None) -> int:
     if grupo_detectado_nome:
         set_active_group(grupo_detectado_id, grupo_detectado_nome, total_no_banco)
         save_catalog_groups([{"id": grupo_detectado_id, "nome": grupo_detectado_nome}])
+
+    # Sincronização transparente com Neon (Cloud)
+    try:
+        from services.cloud_sync import sync_messages_to_cloud
+        consulta_id = Path(db_path).stem if db_path else None
+        sync_messages_to_cloud(messages, consulta_id=consulta_id)
+    except Exception as e:
+        print(f"[AVISO] Sincronização de mensagens em nuvem: {e}")
 
     return count
 

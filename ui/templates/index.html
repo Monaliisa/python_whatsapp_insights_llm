@@ -620,109 +620,6 @@
       box-shadow: 0 0 8px #10b981;
     }
 
-    /* -------------------------------------------------------------
-       PAINEL FIXO DO CONSOLE (REDIMENSIONÁVEL VIA DRAG)
-       ------------------------------------------------------------- */
-    .console-resizer {
-      height: 6px;
-      min-height: 6px;
-      background: #111c33;
-      border-top: 1px solid var(--border-color);
-      border-bottom: 1px solid rgba(15, 23, 42, 0.8);
-      cursor: row-resize;
-      z-index: 20;
-      flex: 0 0 6px;
-      transition: background 0.2s ease;
-      position: relative;
-    }
-
-    .console-resizer::after {
-      content: "";
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      width: 36px;
-      height: 2px;
-      background: #475569;
-      border-radius: 2px;
-      transition: background 0.2s ease;
-    }
-
-    .console-resizer:hover,
-    .console-resizer.resizing {
-      background: rgba(59, 130, 246, 0.45);
-    }
-
-    .console-resizer:hover::after,
-    .console-resizer.resizing::after {
-      background: #60a5fa;
-    }
-
-    .console-panel {
-      height: 150px;
-      min-height: 38px;
-      max-height: 480px;
-      background: #090e1a;
-      display: flex;
-      flex-direction: column;
-      flex: 0 0 auto;
-      transition: height 0.15s ease;
-      user-select: none;
-    }
-
-    .console-panel.minimized {
-      height: 38px !important;
-      min-height: 38px !important;
-    }
-
-    .console-header {
-      height: 38px;
-      min-height: 38px;
-      background: #0d1527;
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 14px;
-    }
-
-    .console-title {
-      font-size: 12px;
-      font-weight: 700;
-      color: #93c5fd;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .console-actions {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .log-container {
-      flex: 1;
-      background: #090e1a;
-      padding: 10px 14px;
-      overflow-y: auto;
-      font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
-      font-size: 12px;
-      color: #94a3b8;
-      white-space: pre-wrap;
-      word-break: break-all;
-      user-select: text;
-    }
-
-    .log-entry {
-      margin-bottom: 4px;
-      line-height: 1.4;
-    }
-
-    .log-entry.highlight {
-      color: #38bdf8;
-    }
 
     /* Tabela de Mensagens */
     .table-container {
@@ -2326,12 +2223,10 @@
         box-shadow: none !important;
       }
 
-      /* Ocultar elementos de navegação, console e interativos */
+      /* Ocultar elementos de navegação e interativos */
       .appbar, 
       .sidebar, 
       .sidebar-resizer, 
-      .console-panel, 
-      .console-resizer, 
       .report-header-controls, 
       .appbar-menu-btn, 
       .toast-container, 
@@ -3786,27 +3681,6 @@
         </div>
       </div>
 
-      <!-- =========================================================
-           PAINEL FIXO DO CONSOLE (SEMPRE VISÍVEL & REDIMENSIONÁVEL)
-           ========================================================= -->
-      <div id="console-resizer" class="console-resizer" title="Arraste para redimensionar a altura do console"></div>
-
-      <div id="console-panel" class="console-panel">
-        <div class="console-header">
-          <div class="console-title">
-            <span>📟 Console de execução em tempo real</span>
-          </div>
-          <div class="console-actions">
-            <button class="btn-sm secondary" onclick="limparConsole()" title="Limpar mensagens do console">🧹
-              Limpar</button>
-            <button class="btn-sm secondary" id="btn-toggle-console" onclick="toggleConsole()"
-              title="Minimizar/Expandir console">🔽</button>
-          </div>
-        </div>
-        <div id="log-output" class="log-container">
-          <div class="log-entry">[Sistema] ZapInsights Hub iniciado. Aguardando comandos...</div>
-        </div>
-      </div>
 
     </main>
   </div>
@@ -4158,62 +4032,6 @@
     }
 
     // -------------------------------------------------------------
-    // Controle do Console Fixo (Redimensionável por Drag)
-    // -------------------------------------------------------------
-    const consolePanel = document.getElementById('console-panel');
-    const consoleResizer = document.getElementById('console-resizer');
-
-    if (consoleResizer && consolePanel) {
-      let isConsoleResizing = false;
-      let startY, startHeight;
-
-      consoleResizer.addEventListener('mousedown', (e) => {
-        isConsoleResizing = true;
-        startY = e.clientY;
-        startHeight = parseInt(document.defaultView.getComputedStyle(consolePanel).height, 10);
-        consoleResizer.classList.add('resizing');
-        document.body.style.cursor = 'row-resize';
-        e.preventDefault();
-      });
-
-      document.addEventListener('mousemove', (e) => {
-        if (!isConsoleResizing) return;
-        const newHeight = startHeight - (e.clientY - startY);
-        if (newHeight <= 38) {
-          consolePanel.classList.add('minimized');
-        } else {
-          consolePanel.classList.remove('minimized');
-          if (newHeight >= 50 && newHeight <= 480) {
-            consolePanel.style.height = newHeight + 'px';
-          }
-        }
-      });
-
-      document.addEventListener('mouseup', () => {
-        if (isConsoleResizing) {
-          isConsoleResizing = false;
-          consoleResizer.classList.remove('resizing');
-          document.body.style.cursor = 'default';
-        }
-      });
-    }
-
-    function toggleConsole() {
-      if (consolePanel) {
-        consolePanel.classList.toggle('minimized');
-        const btn = document.getElementById('btn-toggle-console');
-        if (btn) {
-          btn.innerText = consolePanel.classList.contains('minimized') ? '🔼' : '🔽';
-        }
-      }
-    }
-
-    function limparConsole() {
-      const logOutput = document.getElementById('log-output');
-      if (logOutput) {
-        logOutput.innerHTML = '<div class="log-entry">[Sistema] Console limpo.</div>';
-      }
-    }
 
     // -------------------------------------------------------------
     // Navegação entre Telas
@@ -4221,7 +4039,7 @@
     const sidebarItems = document.querySelectorAll('.sidebar-item');
     const pages = document.querySelectorAll('.page');
 
-    function navegarPara(pageId) {
+    async function navegarPara(pageId) {
       const targetSidebar = document.querySelector(`[data-page="${pageId}"]`);
       if (targetSidebar && targetSidebar.classList.contains('disabled')) {
         showToast("Etapa bloqueada. É necessário extrair ou importar mensagens primeiro.");
@@ -4235,15 +4053,18 @@
       if (targetPage) targetPage.classList.add('active');
       if (targetSidebar) targetSidebar.classList.add('active');
 
+      // Revalida status da sessão e mensagens ao navegar
+      await carregarStatus();
+
       if (pageId === 'page-visualizacao') {
-        carregarMensagens();
+        await carregarMensagens();
       } else if (pageId === 'page-insights') {
-        carregarLimitesDatasLLM();
-        carregarHistoricoChat();
+        await carregarLimitesDatasLLM();
+        await carregarHistoricoChat();
       } else if (pageId === 'page-relatorios') {
-        carregarMesesRelatorio();
+        await carregarMesesRelatorio();
       } else if (pageId === 'page-historico') {
-        carregarHistorico();
+        await carregarHistorico();
       } else if (pageId === 'page-configuracoes') {
         carregarConfiguracaoLLM();
       }
@@ -4270,9 +4091,10 @@
     }
 
     // -------------------------------------------------------------
-    // Logs no Console Unificado
+    // Logs de Execução
     // -------------------------------------------------------------
     function appendLog(msg) {
+      console.log(msg);
       const box = document.getElementById('log-output');
       if (!box) return;
       const entry = document.createElement('div');
@@ -4656,6 +4478,8 @@
     async function sincronizarGruposWeb() {
       const btn = document.getElementById('btn-sync-grupos');
       if (btn) btn.disabled = true;
+      tarefaEmAndamento = 'sincronizar';
+      setBusy(true);
       try {
         showToast("Disparando varredura de grupos no WhatsApp Web...");
         const res = await fetch('/api/grupos/sincronizar', { method: 'POST' });
@@ -4664,12 +4488,16 @@
           showToast(json.message || "Varredura de grupos em andamento...");
           appendLog("[Sincronização] Solicitação de busca de grupos enviada.");
         } else {
+          tarefaEmAndamento = null;
+          setBusy(false);
           showToast(json.message || "Não foi possível sincronizar os grupos.");
         }
       } catch (err) {
+        tarefaEmAndamento = null;
+        setBusy(false);
         showToast("Erro ao solicitar sincronização de grupos.");
       } finally {
-        if (btn) btn.disabled = false;
+        if (btn && !isBusy) btn.disabled = false;
       }
     }
 
@@ -5256,10 +5084,41 @@
     }
 
     // -------------------------------------------------------------
+    // Tratamento Centralizado de Conclusão de Tarefas
+    // -------------------------------------------------------------
+    async function tratarConclusaoTarefa(tarefa, statusData) {
+      if (!statusData) {
+        statusData = await carregarStatus();
+      }
+      await carregarMensagens();
+
+      if (tarefa === 'conectar') {
+        if (statusData && statusData.has_session) {
+          showToast("WhatsApp conectado com sucesso! Redirecionando para Extração...");
+          await navegarPara('page-extracao');
+        }
+      } else if (tarefa === 'coleta') {
+        if ((statusData && statusData.message_count > 0) || grupoAtivoMensagensGlobal > 0 || (mensagensCache && mensagensCache.length > 0)) {
+          showToast("Coleta concluída com sucesso! Redirecionando para Visualização...");
+          await navegarPara('page-visualizacao');
+        }
+      } else if (tarefa === 'sincronizar') {
+        await carregarGrupos();
+        showToast("Catálogo de grupos sincronizado com sucesso!");
+      }
+    }
+
+    // -------------------------------------------------------------
     // Streaming de Logs via SSE
     // -------------------------------------------------------------
+    let sseInstance = null;
     function conectarSSE() {
+      if (sseInstance) {
+        try { sseInstance.close(); } catch (e) {}
+      }
       const evtSource = new EventSource('/api/logs/stream');
+      sseInstance = evtSource;
+
       evtSource.onmessage = async (e) => {
         try {
           const data = JSON.parse(e.data);
@@ -5270,26 +5129,10 @@
             const eraBusy = isBusy;
             setBusy(data.is_busy);
             if (!data.is_busy && eraBusy) {
+              const tarefa = tarefaEmAndamento;
+              tarefaEmAndamento = null;
               const statusData = await carregarStatus();
-              await carregarMensagens();
-
-              // Transição de telas automática:
-              // 1. Ao conectar ao WhatsApp -> pula para a tela de Extração
-              if (tarefaEmAndamento === 'conectar') {
-                if (statusData && statusData.has_session) {
-                  showToast("WhatsApp conectado com sucesso! Redirecionando para Extração...");
-                  navegarPara('page-extracao');
-                }
-                tarefaEmAndamento = null;
-              }
-              // 2. Ao extrair ou coletar mensagens -> pula para a tela de Visualização
-              else if (tarefaEmAndamento === 'coleta') {
-                if ((statusData && statusData.message_count > 0) || grupoAtivoMensagensGlobal > 0 || (mensagensCache && mensagensCache.length > 0)) {
-                  showToast("Coleta concluída com sucesso! Redirecionando para Visualização...");
-                  navegarPara('page-visualizacao');
-                }
-                tarefaEmAndamento = null;
-              }
+              await tratarConclusaoTarefa(tarefa, statusData);
             }
           }
         } catch (err) {
@@ -5301,6 +5144,43 @@
         evtSource.close();
         setTimeout(conectarSSE, 3000);
       };
+    }
+
+    // -------------------------------------------------------------
+    // Smart Polling de Segurança (Fallback de Reatividade)
+    // -------------------------------------------------------------
+    let smartPollingInterval = null;
+    function iniciarSmartPolling() {
+      if (smartPollingInterval) return;
+      smartPollingInterval = setInterval(async () => {
+        try {
+          const res = await fetch('/api/status');
+          if (!res.ok) return;
+          const data = await res.json();
+          if (!data) return;
+
+          // Detecta conclusão de tarefa mesmo se o SSE oscilou
+          if (isBusy && !data.is_busy) {
+            setBusy(false);
+            const tarefa = tarefaEmAndamento;
+            tarefaEmAndamento = null;
+            await tratarConclusaoTarefa(tarefa, data);
+          } else if (!isBusy && data.is_busy) {
+            setBusy(true);
+          }
+
+          // Atualiza status se houve mudanças no banco ou na sessão
+          if (!isBusy) {
+            const currentCount = Number(data.message_count) || 0;
+            const currentSession = Boolean(data.has_session);
+            if (currentCount !== grupoAtivoMensagensGlobal || currentSession !== sessaoAtivaGlobal) {
+              atualizarStatusUI(currentSession, currentCount, data.active_group);
+            }
+          }
+        } catch (e) {
+          // Polling silencioso
+        }
+      }, 2500);
     }
 
     // -------------------------------------------------------------
@@ -7153,6 +7033,30 @@
       }
 
       conectarSSE();
+      iniciarSmartPolling();
+    });
+
+    // Revalidação automática ao voltar para a aba
+    document.addEventListener('visibilitychange', async () => {
+      if (document.visibilityState === 'visible') {
+        await carregarStatus();
+        const activePage = document.querySelector('.page.active');
+        if (activePage) {
+          if (activePage.id === 'page-visualizacao') {
+            await carregarMensagens();
+          } else if (activePage.id === 'page-historico') {
+            await carregarHistorico();
+          } else if (activePage.id === 'page-relatorios') {
+            await carregarMesesRelatorio();
+          } else if (activePage.id === 'page-insights') {
+            await carregarLimitesDatasLLM();
+          }
+        }
+      }
+    });
+
+    window.addEventListener('focus', async () => {
+      await carregarStatus();
     });
   </script>
 </body>

@@ -102,6 +102,16 @@ app.add_middleware(
 )
 
 
+@app.on_event("startup")
+async def startup_event():
+    """Garante que as tabelas estejam criadas no banco configurado (Neon ou SQLite)."""
+    try:
+        init_database_tables()
+    except Exception as exc:
+        print(f"[AVISO] Falha ao inicializar tabelas na inicialização: {exc}")
+
+
+
 class ExecutionState:
     def __init__(self):
         self.is_busy = False
@@ -1061,6 +1071,25 @@ async def abrir_banco():
     except Exception as exc:
         state.add_log(f"Erro ao abrir banco: {exc}")
         return {"success": False, "error": str(exc)}
+
+
+@app.get("/api/database/status")
+async def get_database_status():
+    """Retorna o status da conexão com o banco de dados (Neon / SQLite)."""
+    return test_db_connection()
+
+
+@app.post("/api/database/sync-all")
+async def trigger_database_sync_all():
+    """Sincroniza todos os dados locais (SQLite e catálogo) para o Neon (PostgreSQL)."""
+    from services.cloud_sync import sync_all_local_data_to_cloud
+    state.add_log("[Neon Cloud Sync] Iniciando sincronização completa dos dados locais para o Neon...")
+    res = sync_all_local_data_to_cloud()
+    if res.get("success"):
+        state.add_log(f"[Neon Cloud Sync] ✅ {res.get('message')}")
+    else:
+        state.add_log(f"[Neon Cloud Sync] ⚠️ {res.get('message')}")
+    return res
 
 
 @app.get("/api/llm/modelos")
