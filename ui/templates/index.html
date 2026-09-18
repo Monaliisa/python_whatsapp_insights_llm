@@ -2415,58 +2415,50 @@
 
       <div class="sidebar-header">
         <span>Navegação</span>
-        <span style="font-size: 10px; color: #64748b; font-weight: 500;">6 etapas</span>
+        <span style="font-size: 10px; color: #64748b; font-weight: 500;">5 etapas</span>
       </div>
 
-      <!-- 1. Resumo -->
-      <div class="sidebar-item active" data-page="page-resumo">
-        <div class="sidebar-item-label">
-          <span class="sidebar-item-icon">📄</span>
-          <span>1. Resumo</span>
-        </div>
-      </div>
-
-      <!-- 2. Conectar ao WhatsApp -->
-      <div id="drawer-item-conectar" class="sidebar-item alert-danger" data-page="page-conectar">
+      <!-- 1. Conectar ao WhatsApp -->
+      <div id="drawer-item-conectar" class="sidebar-item alert-danger active" data-page="page-conectar">
         <div class="sidebar-item-label">
           <span class="sidebar-item-icon">💬</span>
-          <span>2. Conectar ao WhatsApp</span>
+          <span>1. Conectar ao WhatsApp</span>
         </div>
         <span id="drawer-conectar-badge" class="sidebar-alert-badge">Desconectado</span>
       </div>
 
-      <!-- 3. Extração -->
+      <!-- 2. Extração -->
       <div id="drawer-item-extracao" class="sidebar-item alert-danger" data-page="page-extracao">
         <div class="sidebar-item-label">
           <span class="sidebar-item-icon">⚡</span>
-          <span>3. Extração</span>
+          <span>2. Extração</span>
         </div>
         <span id="drawer-extracao-badge" class="sidebar-alert-badge">Sem dados</span>
       </div>
 
-      <!-- 4. Visualização (Bloqueada se não houver dados) -->
+      <!-- 3. Visualização (Bloqueada se não houver dados) -->
       <div id="drawer-item-visualizacao" class="sidebar-item disabled" data-page="page-visualizacao">
         <div class="sidebar-item-label">
           <span class="sidebar-item-icon">📋</span>
-          <span>4. Visualização</span>
+          <span>3. Visualização</span>
         </div>
         <span id="drawer-visualizacao-lock" class="sidebar-lock-badge">🔒 Bloqueado</span>
       </div>
 
-      <!-- 5. Gerar insights (Bloqueada se não houver dados) -->
+      <!-- 4. Gerar insights (Bloqueada se não houver dados) -->
       <div id="drawer-item-insights" class="sidebar-item disabled" data-page="page-insights">
         <div class="sidebar-item-label">
           <span class="sidebar-item-icon">🧠</span>
-          <span>5. Gerar insights</span>
+          <span>4. Gerar insights</span>
         </div>
         <span id="drawer-insights-lock" class="sidebar-lock-badge">🔒 Bloqueado</span>
       </div>
 
-      <!-- 6. Relatórios (Bloqueada se não houver dados) -->
+      <!-- 5. Relatórios (Bloqueada se não houver dados) -->
       <div id="drawer-item-relatorios" class="sidebar-item disabled" data-page="page-relatorios">
         <div class="sidebar-item-label">
           <span class="sidebar-item-icon">📑</span>
-          <span>6. Relatórios</span>
+          <span>5. Relatórios</span>
         </div>
         <span id="drawer-relatorios-lock" class="sidebar-lock-badge">🔒 Bloqueado</span>
       </div>
@@ -2517,93 +2509,9 @@
       <div class="page-container">
 
         <!-- =========================================================
-             TELA 1: RESUMO (APENAS INFORMATIVA)
+             TELA 1: CONECTAR AO WHATSAPP
              ========================================================= -->
-        <div id="page-resumo" class="page active">
-          <div class="page-header">
-            <h1 class="page-title">📄 Visão Geral da Aplicação</h1>
-            <p class="page-subtitle">Entenda a arquitetura, o fluxo de dados e todos os recursos disponíveis no ZapInsights Hub.</p>
-          </div>
-
-          <!-- Banner de Boas-vindas -->
-          <div class="card"
-            style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(15, 23, 42, 0.7)); border-color: rgba(59, 130, 246, 0.35);">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-              <span style="font-size: 20px;">⚡</span>
-              <h2 style="font-size: 16px; color: #93c5fd; margin: 0; font-weight: 700;">Bem-vindo ao ZapInsights Hub!</h2>
-            </div>
-            <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6; margin: 0;">
-              O <b>ZapInsights Hub</b> é uma plataforma <b>Local-First</b> de inteligência analítica para comunidades e grupos do WhatsApp. 
-              Com arquitetura desacoplada e foco em privacidade absoluta, a ferramenta realiza coleta automatizada via Playwright, 
-              importação flexível de múltiplos formatos, armazenamento incremental persistente em SQLite e geração de relatórios e insights avançados com <b>Anthropic (Claude)</b>.
-            </p>
-          </div>
-
-          <!-- Grid Principal com Fluxo e Diferenciais -->
-          <div class="grid-2">
-            <!-- Card 1: Fluxo de Trabalho (6 Etapas) -->
-            <div class="card">
-              <div class="card-title" style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
-                <span>🚀</span> Fluxo Completo de Trabalho
-              </div>
-              <div style="display: flex; flex-direction: column; gap: 14px; font-size: 13.5px; color: #cbd5e1; line-height: 1.55;">
-                <div style="display: flex; gap: 10px; align-items: flex-start;">
-                  <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 4px; margin-top: 2px;">1</span>
-                  <div><b>Resumo & Arquitetura:</b> Conheça a visão geral do sistema, as diretrizes de privacidade e o guia de uso rápido.</div>
-                </div>
-                <div style="display: flex; gap: 10px; align-items: flex-start;">
-                  <span style="background: rgba(37, 211, 102, 0.15); color: #25d366; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 4px; margin-top: 2px;">2</span>
-                  <div><b>Conectar ao WhatsApp:</b> Autenticação via QR Code no navegador isolado com <i>Playwright</i> e persistência de sessão (login único).</div>
-                </div>
-                <div style="display: flex; gap: 10px; align-items: flex-start;">
-                  <span style="background: rgba(234, 179, 8, 0.15); color: #facc15; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 4px; margin-top: 2px;">3</span>
-                  <div><b>Extração & Importação:</b> Colete grupos ao vivo com paginação reversa por período (dias ou mês específico) ou importe arquivos nativos <code>.txt</code> (WhatsApp), <code>.zip</code>, <code>.csv</code> e <code>.json</code>.</div>
-                </div>
-                <div style="display: flex; gap: 10px; align-items: flex-start;">
-                  <span style="background: rgba(168, 85, 247, 0.15); color: #c084fc; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 4px; margin-top: 2px;">4</span>
-                  <div><b>Visualização & Auditoria:</b> Explore mensagens em tabela dinâmica, aplique filtros avançados (texto, período, autor, mídia) e exporte em <b>CSV, JSON, Markdown, HTML ou TXT</b>.</div>
-                </div>
-                <div style="display: flex; gap: 10px; align-items: flex-start;">
-                  <span style="background: rgba(244, 63, 94, 0.15); color: #fb7185; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 4px; margin-top: 2px;">5</span>
-                  <div><b>Gerar Insights com IA:</b> Chat interativo e análises pré-programadas em 1 clique com a família <b>Anthropic (Claude 3.5 Sonnet, Haiku e Opus)</b> filtradas por contexto de tempo.</div>
-                </div>
-                <div style="display: flex; gap: 10px; align-items: flex-start;">
-                  <span style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 4px; margin-top: 2px;">6</span>
-                  <div><b>Relatórios & Dashboard:</b> Painel consolidado com métricas de engajamento, matriz de dúvidas, gráficos de volumetria, palavras-chave e <b>Resumo Executivo com IA</b> pronto para impressão/PDF.</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Card 2: Diferenciais e Capacidades do Sistema -->
-            <div class="card">
-              <div class="card-title" style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
-                <span>✨</span> Diferenciais & Recursos do Sistema
-              </div>
-              <div style="display: flex; flex-direction: column; gap: 14px; font-size: 13.5px; color: #cbd5e1; line-height: 1.55;">
-                <div>
-                  🔒 <b>Privacidade Local-First:</b> Todos os dados, mensagens e relatórios ficam gravados no seu banco local SQLite (<code>data/</code>), sem envio de mensagens para servidores de terceiros.
-                </div>
-                <div>
-                  ⚡ <b>Armazenamento Incremental:</b> O banco de dados deduplica mensagens automaticamente. Novas extrações complementam o histórico sem perda de dados prévios.
-                </div>
-                <div>
-                  🔑 <b>Filosofia BYOK (Anthropic):</b> Sua chave de API da Anthropic permanece salva de forma segura no seu navegador ou em arquivo <code>.env</code> local, dando a você controle direto de custos e limites.
-                </div>
-                <div>
-                  👥 <b>Gestão Multi-Grupos & Backups:</b> Alterne rapidamente entre grupos armazenados e utilize o sistema de backups automáticos e manuais (em <code>.db</code> e <code>.json</code>) com restauração pontual.
-                </div>
-                <div>
-                  📊 <b>Exportação Versátil:</b> Exporte os dados brutos filtrados ou completos em 5 formatos diferentes (CSV, JSON, MD, HTML, TXT) e gere relatórios executivos em PDF com um clique.
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- =========================================================
-             TELA 2: CONECTAR AO WHATSAPP
-             ========================================================= -->
-        <div id="page-conectar" class="page">
+        <div id="page-conectar" class="page active">
           <div class="page-header">
             <h1 class="page-title">💬 Conectar ao WhatsApp</h1>
             <p class="page-subtitle">Gerencie sua sessão e autenticação no WhatsApp Web de forma segura.</p>
@@ -2655,7 +2563,7 @@
         </div>
 
         <!-- =========================================================
-             TELA 3: EXTRAÇÃO (& IMPORTAÇÃO)
+             TELA 2: EXTRAÇÃO (& IMPORTAÇÃO)
              ========================================================= -->
         <div id="page-extracao" class="page">
           <div class="page-header">
@@ -2828,7 +2736,7 @@
         </div>
 
         <!-- =========================================================
-             TELA 4: VISUALIZAÇÃO (TABELA + DIALOG)
+             TELA 3: VISUALIZAÇÃO (TABELA + DIALOG)
              ========================================================= -->
         <div id="page-visualizacao" class="page">
           <div class="page-header">
@@ -2881,9 +2789,8 @@
           </div>
         </div>
 
-        <!-- =========================================================
         <!-- =================================================================== -->
-        <!-- TELA 5: GERAR INSIGHTS COM ANTHROPIC CLAUDE (CHAT & ANÁLISES)       -->
+        <!-- TELA 4: GERAR INSIGHTS COM ANTHROPIC CLAUDE (CHAT & ANÁLISES)       -->
         <!-- =================================================================== -->
         <div id="page-insights" class="page">
 
@@ -3149,7 +3056,7 @@
         </div>
 
         <!-- =========================================================
-             TELA 6: RELATÓRIOS MENSAIS (4 SEÇÕES)
+             TELA 5: RELATÓRIOS MENSAIS (4 SEÇÕES)
              ========================================================= -->
         <div id="page-relatorios" class="page">
           <div class="page-header">
@@ -3390,7 +3297,7 @@
         </div>
 
         <!-- =========================================================
-             TELA 7: HISTÓRICO & SESSÕES DE ANÁLISE (WEB-FIRST)
+             TELA 6: HISTÓRICO & SESSÕES DE ANÁLISE (WEB-FIRST)
              ========================================================= -->
         <div id="page-historico" class="page">
           <div class="page-header">
@@ -3505,7 +3412,7 @@
         </div>
 
         <!-- =========================================================
-             TELA 8: CONFIGURAÇÕES
+             TELA 7: CONFIGURAÇÕES
              ========================================================= -->
         <div id="page-configuracoes" class="page">
           <div class="page-header">
@@ -5585,7 +5492,7 @@
 
           await carregarStatus();
           await carregarMensagens();
-          navegarPara('page-resumo');
+          navegarPara('page-conectar');
         } else {
           showToast(json.error || json.message || "Erro ao executar limpeza total.");
           appendLog(`[Sistema - Erro] ${json.error || json.message}`);
