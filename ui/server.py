@@ -228,8 +228,15 @@ class SetActiveConsultaRequest(BaseModel):
 
 class ReportSummaryRequest(BaseModel):
     api_key: str
-    model: str = "gemini-2.5-flash"
+    model: str = "claude-3-5-sonnet-20241022"
     mes: str
+
+
+class ExportHTMLReportRequest(BaseModel):
+    mes: str
+    resumo_conteudo: str | None = None
+    grupo_id: str | None = None
+    grupo_nome: str | None = None
 
 
 @app.on_event("startup")
@@ -1290,6 +1297,144 @@ async def generate_report_summary(req: ReportSummaryRequest):
     else:
         state.add_log(f"[Relatórios / Anthropic] ⚠️ Falha na geração do resumo: {texto}")
         return {"success": False, "message": texto}
+
+
+@app.get("/api/relatorios/exportar/html")
+async def exportar_relatorio_html(mes: str | None = None, grupo_id: str | None = None, grupo_nome: str | None = None):
+    """
+    Gera e retorna para download direto o Relatório Mensal compilado em arquivo HTML autônomo.
+    """
+    db_path = get_db_path()
+    if not grupo_id and not grupo_nome:
+        app_state = get_app_state()
+        grupo_id = app_state.get("active_group_id")
+        grupo_nome = app_state.get("active_group_name")
+
+    metricas = ReportService.calcular_metricas_mensais(mes=mes, db_path=db_path, grupo_id=grupo_id, grupo_nome=grupo_nome)
+    if not metricas.get("tem_dados"):
+        raise HTTPException(status_code=404, detail="Nenhum dado encontrado para gerar o relatório do mês solicitado.")
+
+    mes_alvo = metricas.get("mes_id") or mes or "recente"
+    grupo_label = metricas.get("grupo_nome") or grupo_nome or "comunidade"
+
+    texto_norm = unicodedata.normalize("NFKD", str(grupo_label)).encode("ascii", "ignore").decode("ascii")
+    slug = re.sub(r"[^\w\s-]", "", texto_norm).strip().lower()
+    slug = re.sub(r"[-\s]+", "_", slug) or "comunidade"
+    filename = f"Relatorio_{slug}_{mes_alvo}.html"
+
+    html_content = ReportService.gerar_relatorio_html(mes=mes_alvo, metricas=metricas)
+    state.add_log(f"[Relatório HTML] Arquivo HTML autônomo gerado com sucesso: {filename}")
+
+    return HTMLResponse(
+        content=html_content,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Type": "text/html; charset=utf-8",
+        },
+    )
+
+
+@app.post("/api/relatorios/gerar-html-download")
+async def gerar_html_download_post(req: ExportHTMLReportRequest):
+    """
+    Gera o Relatório HTML autônomo contendo o Resumo Executivo customizado gerado por IA na tela.
+    """
+    db_path = get_db_path()
+    app_state = get_app_state()
+    grupo_id = req.grupo_id or app_state.get("active_group_id")
+    grupo_nome = req.grupo_nome or app_state.get("active_group_name")
+
+    metricas = ReportService.calcular_metricas_mensais(mes=req.mes, db_path=db_path, grupo_id=grupo_id, grupo_nome=grupo_nome)
+    if not metricas.get("tem_dados"):
+        raise HTTPException(status_code=404, detail="Nenhum dado encontrado para gerar o relatório.")
+
+    mes_alvo = metricas.get("mes_id") or req.mes or "recente"
+    grupo_label = metricas.get("grupo_nome") or grupo_nome or "comunidade"
+
+    texto_norm = unicodedata.normalize("NFKD", str(grupo_label)).encode("ascii", "ignore").decode("ascii")
+    slug = re.sub(r"[^\w\s-]", "", texto_norm).strip().lower()
+    slug = re.sub(r"[-\s]+", "_", slug) or "comunidade"
+    filename = f"Relatorio_{slug}_{mes_alvo}.html"
+
+    html_content = ReportService.gerar_relatorio_html(
+        mes=mes_alvo,
+        metricas=metricas,
+        resumo_conteudo=req.resumo_conteudo,
+    )
+    state.add_log(f"[Relatório HTML] Arquivo HTML com resumo IA compilado para download: {filename}")
+
+    return HTMLResponse(
+        content=html_content,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Type": "text/html; charset=utf-8",
+        },
+    )
+
+
+@app.get("/api/exportar/anonimizado")
+async def exportar_dados_anonimizados(formato: str = "json", grupo_id: str | None = None, grupo_nome: str | None = None):
+    """
+    Exporta todas as mensagens do grupo ativo já sanitizadas de acordo com as regras de LGPD/Privacidade.
+    """
+    db_path = get_db_path()
+    if not grupo_id and not grupo_nome:
+        app_state = get_app_state()
+        grupo_id = app_state.get("active_group_id")
+        grupo_nome = app_state.get("active_group_name")
+
+    from services.storage import fetch_recent
+    from services.anonymizer import get_anonymizer_service
+
+    mensagens = fetch_recent(limit=50000, db_path=db_path, grupo_id=grupo_id, grupo_nome=grupo_nome)
+    if not mensagens:
+        raise HTTPException(status_code=404, detail="Nenhuma mensagem para exportar.")
+
+    anon_svc = get_anonymizer_service()
+    mensagens_limpas, stats = anon_svc.anonimizar_mensagens(mensagens)
+
+    nome_base = grupo_nome or "mensagens"
+    texto_norm = unicodedata.normalize("NFKD", str(nome_base)).encode("ascii", "ignore").decode("ascii")
+    slug = re.sub(r"[^\w\s-]", "", texto_norm).strip().lower()
+    slug = re.sub(r"[-\s]+", "_", slug) or "mensagens"
+
+    if formato.lower() == "csv":
+        import csv
+        output = io.StringIO()
+        fieldnames = ["id", "data_hora", "remetente", "texto", "is_reply", "reply_author", "reply_text", "has_attachments", "grupo_nome"]
+        writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction="ignore")
+        writer.writeheader()
+        for m in mensagens_limpas:
+            writer.writerow(m)
+        filename = f"export_anonimizado_{slug}.csv"
+        return HTMLResponse(
+            content=output.getvalue(),
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Content-Type": "text/csv; charset=utf-8",
+            },
+        )
+    else:
+        filename = f"export_anonimizado_{slug}.json"
+        json_str = json.dumps({"grupo": grupo_nome, "total": len(mensagens_limpas), "stats_redacao": stats, "mensagens": mensagens_limpas}, ensure_ascii=False, indent=2)
+        return HTMLResponse(
+            content=json_str,
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Content-Type": "application/json; charset=utf-8",
+            },
+        )
+
+
+@app.get("/api/anonymizer/stats")
+async def get_anonymizer_stats():
+    """Retorna estatísticas do serviço de anonimização (total de identidades e redações)."""
+    from services.anonymizer import get_anonymizer_service
+    anon_svc = get_anonymizer_service()
+    return {
+        "success": True,
+        "total_identidades_mapeadas": anon_svc.total_pseudonimos(),
+    }
 
 
 def start_server(host: str = "127.0.0.1", port: int = 8000):

@@ -2898,6 +2898,36 @@
 
               <div class="analyses-sidebar-content">
 
+                <!-- 0. Diagnóstico de Saúde Comunitária -->
+                <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('saude_comunidade')"
+                  title="Clique para avaliar a saúde da comunidade em 3 eixos">
+                  <div class="analysis-item-top">
+                    <div class="analysis-item-title"><span>🩺</span> Saúde Comunitária</div>
+                    <span class="byok-badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">3 Eixos</span>
+                  </div>
+                  <p class="analysis-item-desc">Diagnóstico estrutural: Volume & Rotina, Autonomia vs. Moderação e Conversas entre Pares (P2P).</p>
+                </div>
+
+                <!-- 0.1. Termômetro de Temas -->
+                <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('temas_temperatura')"
+                  title="Clique para mapear temas por temperatura">
+                  <div class="analysis-item-top">
+                    <div class="analysis-item-title"><span>🔥</span> Temas & Temperatura</div>
+                    <span class="byok-badge" style="background: rgba(239, 68, 68, 0.15); color: #f87171;">Tendências</span>
+                  </div>
+                  <p class="analysis-item-desc">Mapeamento de assuntos classificados em Quentes (5+ msgs), Mornos e Lacunas de conteúdo.</p>
+                </div>
+
+                <!-- 0.2. Provas Sociais e Mentores -->
+                <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('provas_sociais_mentores')"
+                  title="Clique para identificar conquistas e lideranças">
+                  <div class="analysis-item-top">
+                    <div class="analysis-item-title"><span>🌟</span> Provas Sociais & Mentores</div>
+                    <span class="byok-badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">Conquistas</span>
+                  </div>
+                  <p class="analysis-item-desc">Extração de relatos de sucesso, contratações, transições e mentores informais voluntários.</p>
+                </div>
+
                 <!-- 1. Resumo e Destaques -->
                 <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('resumo_destaques')"
                   title="Clique para gerar resumo executivo no chat">
@@ -2922,19 +2952,7 @@
                     participantes.</p>
                 </div>
 
-                <!-- 3. Sentimento e Clima -->
-                <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('analise_sentimento')"
-                  title="Clique para avaliar engajamento e clima no chat">
-                  <div class="analysis-item-top">
-                    <div class="analysis-item-title"><span>📈</span> Sentimento & Clima</div>
-                    <span class="byok-badge"
-                      style="background: rgba(52, 211, 153, 0.15); color: #34d399;">Engajamento</span>
-                  </div>
-                  <p class="analysis-item-desc">Termômetro emocional da comunidade, relatos de conquistas e pontos de
-                    atrito.</p>
-                </div>
-
-                <!-- 4. Recomendações e Ação -->
+                <!-- 3. Recomendações e Ação -->
                 <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('plano_de_acao')"
                   title="Clique para gerar plano de ação no chat">
                   <div class="analysis-item-top">
@@ -2979,8 +2997,11 @@
               <button type="button" class="secondary" onclick="carregarRelatorioAtual()" title="Recarregar métricas do mês selecionado">
                 <span>🔄 Recarregar</span>
               </button>
-              <button type="button" class="secondary" onclick="imprimirRelatorio()" title="Imprimir relatório ou exportar como PDF">
-                <span>🖨️ Imprimir / PDF</span>
+              <button type="button" class="btn success" onclick="exportarRelatorioHTML()" title="Baixar relatório completo em HTML autônomo (Offline / Standalone)">
+                <span>🌐 Baixar Relatório HTML</span>
+              </button>
+              <button type="button" class="secondary" onclick="imprimirRelatorio()" title="Imprimir visualização">
+                <span>🖨️ Imprimir</span>
               </button>
             </div>
           </div>
@@ -3013,12 +3034,28 @@
               </div>
             </div>
 
-            <!-- 2. SEÇÃO ENGAJAMENTO -->
+            <!-- 2. SEÇÃO SAÚDE DA COMUNIDADE (FRAMEWORK 3 EIXOS) -->
             <div class="report-section-card">
               <div class="report-section-header">
                 <div>
                   <div class="report-section-title">
-                    <span>📈</span> 2. Engajamento da Comunidade
+                    <span>🩺</span> 2. Saúde da Comunidade (Framework 3 Eixos)
+                  </div>
+                  <div id="rep-saude-justificativa" class="report-section-subtitle">Diagnóstico estrutural: Volume/Rotina, Dependência da Moderação e Conversa entre Pares (P2P).</div>
+                </div>
+                <div id="rep-saude-badge-container"></div>
+              </div>
+
+              <!-- Cards dos 3 Eixos -->
+              <div id="rep-saude-eixos-grid" class="report-kpi-grid"></div>
+            </div>
+
+            <!-- 3. SEÇÃO ENGAJAMENTO -->
+            <div class="report-section-card">
+              <div class="report-section-header">
+                <div>
+                  <div class="report-section-title">
+                    <span>📈</span> 3. Engajamento & Volumetria da Comunidade
                   </div>
                   <div class="report-section-subtitle">Principais índices de participação, intensidade das trocas e dinamicidade dos membros.</div>
                 </div>
@@ -3128,18 +3165,24 @@
               </div>
 
               <!-- Amostra de Dúvidas em Aberto -->
-              <div>
+              <div style="margin-bottom: 16px;">
                 <div style="font-size: 12.5px; font-weight: 700; color: #cbd5e1; margin-bottom: 8px;">💡 Amostra de Dúvidas Identificadas no Período:</div>
                 <div id="rep-atencao-duvidas-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
               </div>
+
+              <!-- Provas Sociais e Conquistas de Membros -->
+              <div>
+                <div style="font-size: 12.5px; font-weight: 700; color: #34d399; margin-bottom: 8px;">🏆 Provas Sociais, Transições & Conquistas Identificadas:</div>
+                <div id="rep-provas-sociais-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
+              </div>
             </div>
 
-            <!-- 4. SEÇÃO ANÁLISES QUANTITATIVAS -->
+            <!-- 5. SEÇÃO ANÁLISES QUANTITATIVAS -->
             <div class="report-section-card">
               <div class="report-section-header">
                 <div>
                   <div class="report-section-title">
-                    <span>📊</span> 4. Análises Quantitativas & Métricas
+                    <span>📊</span> 5. Análises Quantitativas & Métricas
                   </div>
                   <div class="report-section-subtitle">Dados numéricos, tipologia de mensagens, distribuição semanal e ranking de participação.</div>
                 </div>
@@ -5760,12 +5803,45 @@
     }
 
     function renderizarSecoesRelatorio(data) {
+      const saude = data.saude_comunidade || {};
       const eng = data.engajamento || {};
       const atencao = data.pontos_atencao || {};
       const quant = data.analises_quantitativas || {};
       const resumo = data.resumo_executivo || {};
 
-      // 1. ENGAJAMENTO
+      // 1. SAÚDE DA COMUNIDADE (FRAMEWORK 3 EIXOS)
+      const elSaudeJust = document.getElementById('rep-saude-justificativa');
+      if (elSaudeJust) {
+        elSaudeJust.innerText = saude.justificativa || "Diagnóstico estrutural: Volume/Rotina, Dependência da Moderação e Conversa entre Pares (P2P).";
+      }
+
+      const elSaudeBadge = document.getElementById('rep-saude-badge-container');
+      if (elSaudeBadge) {
+        elSaudeBadge.innerHTML = `
+          <div class="report-attention-badge" style="background: ${saude.cor || '#10b981'}22; border: 1px solid ${saude.cor || '#10b981'}; color: ${saude.cor || '#10b981'}; font-size: 13px;">
+            <span>●</span> Saúde: ${saude.label || 'Saudável'}
+          </div>
+        `;
+      }
+
+      const elSaudeGrid = document.getElementById('rep-saude-eixos-grid');
+      if (elSaudeGrid && saude.eixos) {
+        elSaudeGrid.innerHTML = saude.eixos.map(e => {
+          const cor = e.aprovado ? '#34d399' : '#f59e0b';
+          const bg = e.aprovado ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)';
+          return `
+            <div class="report-kpi-card" style="border-left: 3px solid ${cor};">
+              <div class="report-kpi-label">${e.nome}</div>
+              <div style="font-size: 13px; font-weight: 700; color: #f1f5f9; margin: 4px 0;">${e.medida}</div>
+              <span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;background:${bg};color:${cor};margin-top:2px;">
+                ${e.status_label}
+              </span>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 2. ENGAJAMENTO
       const elEngTotal = document.getElementById('rep-eng-total-msgs');
       const elEngPart = document.getElementById('rep-eng-total-part');
       const elEngMediaDia = document.getElementById('rep-eng-media-dia');
@@ -5869,6 +5945,26 @@
           }).join('');
         } else {
           elDuvidasList.innerHTML = '<div style="color: #64748b; font-size: 12px;">Nenhuma dúvida em aberto identificada na amostra.</div>';
+        }
+      }
+
+      // Lista de Provas Sociais e Conquistas
+      const elProvasList = document.getElementById('rep-provas-sociais-list');
+      if (elProvasList) {
+        if (atencao.amostra_provas_sociais && atencao.amostra_provas_sociais.length > 0) {
+          elProvasList.innerHTML = atencao.amostra_provas_sociais.map(ps => {
+            return `
+              <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 10px 12px; font-size: 12.5px;">
+                <div style="display: flex; justify-content: space-between; color: #34d399; font-size: 11px; margin-bottom: 4px;">
+                  <span><b>@${ps.autor}</b> • <em>"${ps.termo_gatilho}"</em></span>
+                  <span>${ps.data_hora}</span>
+                </div>
+                <div style="color: #e2e8f0; line-height: 1.4; font-style: italic;">"${ps.texto}"</div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          elProvasList.innerHTML = '<div style="color: #64748b; font-size: 12px;">Nenhuma citação explícita de conquista/prova social mapeada no período.</div>';
         }
       }
 
@@ -6290,6 +6386,53 @@
         });
       } else {
         showToast("Área de transferência não suportada pelo navegador.");
+      }
+    }
+
+    function exportarRelatorioHTML() {
+      if (!relatorioMesSelecionado) {
+        showToast("Selecione um mês para exportar o relatório HTML.");
+        return;
+      }
+
+      showToast("Compilando Relatório HTML executivo autônomo...");
+      
+      const elExecTexto = document.getElementById('rep-executivo-texto');
+      const textoResumo = elExecTexto ? elExecTexto.innerText : "";
+
+      // Se houver texto customizado gerado por IA na tela, envia via POST para compilar com o resumo
+      if (textoResumo && !textoResumo.includes("Carregando resumo")) {
+        fetch('/api/relatorios/gerar-html-download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mes: relatorioMesSelecionado,
+            resumo_conteudo: textoResumo
+          })
+        })
+        .then(res => {
+          if (!res.ok) throw new Error("Erro ao compilar HTML");
+          return res.blob();
+        })
+        .then(blob => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = `Relatorio_${relatorioMesSelecionado}.html`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          showToast("Relatório HTML autônomo baixado com sucesso! 🌐");
+        })
+        .catch(err => {
+          console.error("Erro ao gerar download de HTML:", err);
+          // Fallback para GET direto
+          window.location.href = `/api/relatorios/exportar/html?mes=${encodeURIComponent(relatorioMesSelecionado)}`;
+        });
+      } else {
+        // Download direto via GET
+        window.location.href = `/api/relatorios/exportar/html?mes=${encodeURIComponent(relatorioMesSelecionado)}`;
       }
     }
 

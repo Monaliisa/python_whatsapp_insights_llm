@@ -48,25 +48,120 @@ MODELOS_DISPONIVEIS = [
     },
 ]
 
-# System Prompt base com foco em Engenharia de Prompt e análise comunitária
-SYSTEM_PROMPT_BASE = """Você é o ZapInsights AI, um assistente especialista em inteligência de dados, análise qualitativa e gestão de comunidades e grupos de estudo do WhatsApp.
+from services.anonymizer import get_anonymizer_service
 
-Sua missão é processar mensagens reais extraídas de conversas e fornecer diagnósticos analíticos precisos, sínteses claras e planos de ação objetivos para gestores, educadores e moderadores.
+# System Prompt base enriquecido com o Framework de Análise de Comunidades WhatsApp
+SYSTEM_PROMPT_BASE = """Você é o ZapInsights AI, um assistente especialista em inteligência de dados, análise qualitativa e gestão estratégica de comunidades e grupos do WhatsApp.
 
-DIRETRIZES E REGRAS DE OURO:
-1. **Fidelidade estrita aos dados**: Baseie suas respostas única e exclusivamente no histórico de mensagens fornecido no contexto. Se alguma informação ou detalhe não constar nas mensagens analisadas, declare com clareza em vez de inventar fatos ou presumir eventos.
-2. **Formatação visual rica em Markdown**:
-   - Utilize cabeçalhos bem estruturados (`##`, `###`).
-   - Use listas com marcadores (`-`), destaques em **negrito** e *itálico* para facilitar leitura dinâmica.
-   - Sempre que couber, organize categorias, frequências ou comparações em tabelas Markdown elegantes.
-   - Use blocos de citação (`>`) para ilustrar com falas ou menções textuais expressivas dos membros.
-3. **Tom de voz**: Profissional, analítico, acolhedor, empático e com foco em aplicabilidade prática.
-4. **Respeito à privacidade**: Evite expor números de telefone completos ou dados sensíveis que possam constar nos textos.
-5. **Idioma**: Responda sempre em Português do Brasil de forma fluida e elegante.
+Sua missão é processar mensagens reais extraídas de conversas e fornecer diagnósticos analíticos precisos, sínteses claras e planos de ação objetivos para gestores, educadores e moderadores, utilizando um framework rigoroso de análise comunitária.
+
+CRITÉRIOS E REGRAS ANALÍTICAS DA METODOLOGIA:
+1. **Saúde do Grupo em 3 Eixos**:
+   - **Eixo 1: Volume & Regularidade**: Avalie se o volume de mensagens representa um fluxo diário consistente ou se concentra mais de 50% das mensagens em apenas 1 a 3 dias (pico pontual isolado, não rotina).
+   - **Eixo 2: Dependência da Moderação/Equipe**: Meça se a comunidade depende excessivamente dos administradores para falar (falha se >= 30% das mensagens vêm da equipe) ou se possui autonomia.
+   - **Eixo 3: Conversa entre Pares (P2P)**: Identifique se há trocas orgânicas entre os próprios participantes (threads com 5+ mensagens entre membros sem intervenção direta de admin). Menos de 2 threads no período indica falha comunitária.
+   - **Classificação**: `saudavel` (nenhum eixo falha), `atencao` (1 a 2 eixos falham ou volume concentrado em pico) ou `critico` (3 eixos falham, grupo silencioso ou 100% dependente da equipe).
+
+2. **Temperatura e Recorrência dos Temas**:
+   - `quente`: Temas que geraram debate engajado no período (threads de 5+ mensagens no mesmo assunto).
+   - `morno`: Assuntos mencionados esporadicamente ou em mensagens soltas.
+   - `esfriando`: Tópicos que deixaram de ser debatidos (decay de relevância).
+
+3. **Mapeamento de Personas e Lideranças Comunitárias**:
+   - `mentor-informal`: Membro veterano ou muito colaborativo que acolhe colegas, tira dúvidas e compartilha projetos.
+   - `detrator`: Membro com reclamações acionáveis sobre metodologia, plataforma ou mercado (risco de churn). Registre a dor específica de forma construtiva.
+   - `iniciante-em-ascensao`: Aluno/membro novo com curva rápida de evolução e alto engajamento.
+   - `engajado`: Participante frequente e motivador.
+
+4. **Provas Sociais e Histórias de Sucesso**:
+   - Extraia citações espontâneas de conquistas (aprovação em vagas, transição de carreira, primeiros freelas, projetos no ar, elogios sinceros à metodologia).
+
+5. **Referências de Mercado, Ferramentas e Cursos**:
+   - Mapeie ferramentas, bibliotecas, canais e cursos externos/concorrentes citados com classificação de sentimento (`positivo`, `misto`, `negativo`, `neutro`).
+
+DIRETRIZES DE RESPOSTA E APRESENTAÇÃO:
+- **Fidelidade estrita aos dados**: Baseie-se apenas nas mensagens do contexto. Se algo não constar, declare explicitamente.
+- **Formatação Markdown Rica**: Utilize títulos estruturados, tabelas comparativas, listas e citações em bloco (`>`).
+- **Privacidade por Padrão**: Sempre utilize os pseudônimos dos remetentes (ex: `aluno-0042`) e nunca deduza dados pessoais reais.
+- **Tom de Voz**: Analítico, consultivo, executivo, acolhedor e focado em decisões práticas. Responda em Português do Brasil.
 """
 
 # Templates especializados para Análises Úteis
 ANALISES_PRE_PROGRAMADAS = {
+    "saude_comunidade": {
+        "id": "saude_comunidade",
+        "titulo": "Diagnóstico de Saúde Comunitária (3 Eixos)",
+        "icone": "🩺",
+        "badge": "Saúde & Eixos",
+        "descricao": "Avaliação de saúde nos 3 eixos: Volume/Rotina, Dependência da Moderação e Conversa entre Pares (P2P).",
+        "frase_chat": "Faça um diagnóstico completo de saúde da comunidade com base nos 3 eixos fundamentais.",
+        "prompt_template": """Elabore um **Diagnóstico de Saúde Comunitária** avaliando os 3 eixos metodológicos no período selecionado:
+
+1. **🩺 Classificação de Saúde do Grupo**:
+   - Diagnóstico geral: `saudavel`, `atencao` ou `critico`.
+   - **Eixo 1 (Volume & Rotina)**: Análise da cadência de mensagens. O engajamento foi rotineiro ou concentrado em picos isolados?
+   - **Eixo 2 (Dependência da Moderação)**: Qual o grau de autonomia dos membros vs. dependência da equipe/admins?
+   - **Eixo 3 (Conversa entre Pares / P2P)**: Existiram threads orgânicas entre alunos (5+ msgs)? Quantas foram identificadas?
+
+2. **📊 Tabela Resumo dos Eixos**:
+   | Eixo | Situação Observada | Status (Aprovado / Atenção / Falha) |
+   |---|---|---|
+
+3. **👥 Lideranças Informais e Dinâmica Social**:
+   - Identifique quem são os membros que atuaram como `mentor-informal` ou `iniciante-em-ascensao`.
+
+4. **🎯 Recomendações de Ação**:
+   - 3 recomendações claras para os moderadores equilibrarem a dinâmica no próximo ciclo.
+""",
+    },
+    "temas_temperatura": {
+        "id": "temas_temperatura",
+        "titulo": "Termômetro de Temas (Quente / Morno / Esfriando)",
+        "icone": "🔥",
+        "badge": "Temas & Tendências",
+        "descricao": "Mapeamento dos assuntos debatidos categorizados por temperatura e engajamento das discussões.",
+        "frase_chat": "Mapeie os temas debatidos no período e classifique-os por temperatura (Quente, Morno, Esfriando).",
+        "prompt_template": """Faça um **Mapeamento de Temas e Tendências** a partir das conversas do período:
+
+1. **🔥 Temas Quentes (Threads de 5+ mensagens)**:
+   - Liste os temas que geraram debates intensos e engajados, detalhando o contexto e o sentimento do grupo.
+
+2. **🌤️ Temas Mornos (Menções esporádicas ou tópicos pontuais)**:
+   - Assuntos citados sem formação de grandes discussões.
+
+3. **❄️ Temas Esfriando / Lacunas de Conteúdo**:
+   - Dúvidas que ficaram sem continuidade ou assuntos recorrentes em ciclos anteriores que perderam tração.
+
+4. **📊 Tabela Sintética de Temas**:
+   | Tema | Temperatura | Volume Relativo | Resumo do Debate |
+   |---|---|---|---|
+
+5. **💡 Oportunidades Pedagógicas**: Conteúdos ou eventos que poderiam ser criados para atender à demanda dos temas quentes.
+""",
+    },
+    "provas_sociais_mentores": {
+        "id": "provas_sociais_mentores",
+        "titulo": "Provas Sociais, Conquistas & Mentores",
+        "icone": "🌟",
+        "badge": "Sucesso & Lideranças",
+        "descricao": "Extração de relatos de sucesso, conquistas de vagas, transições e lideranças informais.",
+        "frase_chat": "Identifique as provas sociais, conquistas e os principais mentores informais do grupo.",
+        "prompt_template": """Realize uma busca aprofundada por **Provas Sociais, Histórias de Sucesso e Lideranças Comunitárias** no período:
+
+1. **🏆 Provas Sociais e Conquistas de Alunos**:
+   - Relatos de contratação, estágio, transição de carreira, primeiros freelas, projetos publicados ou elogios à metodologia.
+   - Para cada prova social, inclua a citação fiel (usando o pseudônimo do autor) em bloco `>`.
+
+2. **🤝 Mentores Informais & Membros em Ascensão**:
+   - Membros que se destacaram pelo acolhimento, suporte técnico e ajuda voluntária aos colegas.
+
+3. **⚠️ Voz Crítica / Alertas de Detratores**:
+   - Pontos de frustração legítimos levantados por alunos experientes (com foco em melhoria contínua de produto/conteúdo).
+
+4. **🔗 Ferramentas e Referências Externas Mais Elogiadas**:
+   - Tecnologias, canais, livros ou concorrentes citados positivamente pelos participantes.
+""",
+    },
     "resumo_destaques": {
         "id": "resumo_destaques",
         "titulo": "Resumo Executivo e Destaques",
@@ -98,21 +193,6 @@ Sua análise deve conter:
 4. **🤝 Resoluções Comunitárias**: Como os próprios colegas colaboraram para resolver os problemas.
 """,
     },
-    "analise_sentimento": {
-        "id": "analise_sentimento",
-        "titulo": "Análise de Sentimento e Clima",
-        "icone": "📈",
-        "badge": "Engajamento & Clima",
-        "descricao": "Termômetro emocional, engajamento dos membros, potenciais atritos e momentos de celebração.",
-        "frase_chat": "Faça uma análise de sentimento, engajamento e clima da comunidade no período.",
-        "prompt_template": """Realize uma **Análise de Sentimento e Diagnóstico do Clima da Comunidade** no período analisado.
-Sua análise deve conter:
-1. **🌡️ Termômetro Geral da Comunidade**: Classifique o sentimento predominante (ex: Muito Positivo / Otimista / Ansioso / Neutro / Frustrado) com percentuais aproximados e justificativas.
-2. **✨ Momentos de Celebração e Conquista**: Relatos de sucesso, vitórias em projetos, contratações, agradecimentos ou elogios.
-3. **⚠️ Pontos de Atrito ou Insegurança**: Expressões de desânimo, sobrecarga de estudos, desentendimentos ou frustrações com ferramentas.
-4. **👥 Dinâmica de Colaboração**: Nível de interajuda entre os participantes (comunidade acolhedora vs. isolada).
-""",
-    },
     "plano_de_acao": {
         "id": "plano_de_acao",
         "titulo": "Recomendações e Plano de Ação",
@@ -131,18 +211,24 @@ Sua resposta deve conter:
 }
 
 
-def formatar_contexto_mensagens(mensagens: list[dict], max_chars: int = 400000) -> str:
+def formatar_contexto_mensagens(mensagens: list[dict], max_chars: int = 400000, anonimizar: bool = True) -> str:
     """
     Formata a lista de mensagens extraídas do SQLite em um formato de log estruturado,
-    enxuto e otimizado para o consumo de contexto pela LLM.
+    enxuto e sanitizado com LGPD/Privacidade por padrão para o consumo seguro de contexto pela LLM.
     """
     if not mensagens:
         return "Nenhuma mensagem encontrada no período selecionado."
 
+    if anonimizar:
+        anon_svc = get_anonymizer_service()
+        mensagens_proc, _ = anon_svc.anonimizar_mensagens(mensagens)
+    else:
+        mensagens_proc = mensagens
+
     linhas = []
     chars_acumulados = 0
 
-    for msg in mensagens:
+    for msg in mensagens_proc:
         dh = msg.get("data_hora") or "Sem data"
         remetente = msg.get("remetente") or "Participante"
         texto = (msg.get("texto") or "").strip()
