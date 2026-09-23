@@ -2410,7 +2410,6 @@
       <!-- 1. Conectar ao WhatsApp -->
       <div id="drawer-item-conectar" class="sidebar-item alert-danger active" data-page="page-conectar">
         <div class="sidebar-item-label">
-          <span class="sidebar-item-icon">💬</span>
           <span>1. Conectar ao WhatsApp</span>
         </div>
         <span id="drawer-conectar-badge" class="sidebar-alert-badge">Desconectado</span>
@@ -2419,7 +2418,6 @@
       <!-- 2. Extração -->
       <div id="drawer-item-extracao" class="sidebar-item alert-danger" data-page="page-extracao">
         <div class="sidebar-item-label">
-          <span class="sidebar-item-icon">⚡</span>
           <span>2. Extração</span>
         </div>
         <span id="drawer-extracao-badge" class="sidebar-alert-badge">Sem dados</span>
@@ -2428,34 +2426,30 @@
       <!-- 3. Visualização (Bloqueada se não houver dados) -->
       <div id="drawer-item-visualizacao" class="sidebar-item disabled" data-page="page-visualizacao">
         <div class="sidebar-item-label">
-          <span class="sidebar-item-icon">📋</span>
           <span>3. Visualização</span>
         </div>
-        <span id="drawer-visualizacao-lock" class="sidebar-lock-badge">🔒 Bloqueado</span>
+        <span id="drawer-visualizacao-lock" class="sidebar-lock-badge">Bloqueado</span>
       </div>
 
       <!-- 4. Gerar insights (Bloqueada se não houver dados) -->
       <div id="drawer-item-insights" class="sidebar-item disabled" data-page="page-insights">
         <div class="sidebar-item-label">
-          <span class="sidebar-item-icon">🧠</span>
           <span>4. Gerar insights</span>
         </div>
-        <span id="drawer-insights-lock" class="sidebar-lock-badge">🔒 Bloqueado</span>
+        <span id="drawer-insights-lock" class="sidebar-lock-badge">Bloqueado</span>
       </div>
 
       <!-- 5. Relatórios (Bloqueada se não houver dados) -->
       <div id="drawer-item-relatorios" class="sidebar-item disabled" data-page="page-relatorios">
         <div class="sidebar-item-label">
-          <span class="sidebar-item-icon">📑</span>
           <span>5. Relatórios</span>
         </div>
-        <span id="drawer-relatorios-lock" class="sidebar-lock-badge">🔒 Bloqueado</span>
+        <span id="drawer-relatorios-lock" class="sidebar-lock-badge">Bloqueado</span>
       </div>
 
       <!-- Histórico -->
       <div id="drawer-item-historico" class="sidebar-item" data-page="page-historico">
         <div class="sidebar-item-label">
-          <span class="sidebar-item-icon">🕒</span>
           <span>Histórico</span>
         </div>
         <span id="drawer-historico-badge" class="sidebar-success-badge" style="display: none;">0 msgs</span>
@@ -2464,7 +2458,6 @@
       <!-- Configurações (na parte de baixo, mas acima do divider) -->
       <div id="drawer-item-configuracoes" class="sidebar-item" data-page="page-configuracoes" style="margin-top: auto;">
         <div class="sidebar-item-label">
-          <span class="sidebar-item-icon">⚙️</span>
           <span>Configurações</span>
         </div>
       </div>
@@ -2486,7 +2479,7 @@
         </div>
         <button id="btn-desconectar-sidebar" class="btn danger btn-sm" onclick="desconectarWhatsApp()"
           style="width: 100%; display: none;">
-          🚪 Desconectar e limpar sessão
+          Desconectar e limpar sessão
         </button>
       </div>
     </nav>
@@ -2867,7 +2860,6 @@
             <div id="analyses-sidebar" class="analyses-sidebar">
               <div class="analyses-sidebar-header">
                 <div style="display: flex; align-items: center; gap: 6px;">
-                  <span style="font-size: 14px;">⚡</span>
                   <span class="analyses-sidebar-title-text"
                     style="font-weight: 700; font-size: 13px; color: #c084fc;">Análises Prontas</span>
                 </div>
@@ -2883,7 +2875,7 @@
                 <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('saude_comunidade')"
                   title="Clique para avaliar a saúde da comunidade em 3 eixos">
                   <div class="analysis-item-top">
-                    <div class="analysis-item-title"><span>🩺</span> Saúde Comunitária</div>
+                    <div class="analysis-item-title">Saúde Comunitária</div>
                     <span class="byok-badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">3 Eixos</span>
                   </div>
                   <p class="analysis-item-desc">Diagnóstico estrutural: Volume & Rotina, Autonomia vs. Moderação e Conversas entre Pares (P2P).</p>
@@ -2893,7 +2885,7 @@
                 <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('temas_temperatura')"
                   title="Clique para mapear temas por temperatura">
                   <div class="analysis-item-top">
-                    <div class="analysis-item-title"><span>🔥</span> Temas & Temperatura</div>
+                    <div class="analysis-item-title">Temas & Temperatura</div>
                     <span class="byok-badge" style="background: rgba(239, 68, 68, 0.15); color: #f87171;">Tendências</span>
                   </div>
                   <p class="analysis-item-desc">Mapeamento de assuntos classificados em Quentes (5+ msgs), Mornos e Lacunas de conteúdo.</p>
@@ -2903,7 +2895,7 @@
                 <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('provas_sociais_mentores')"
                   title="Clique para identificar conquistas e lideranças">
                   <div class="analysis-item-top">
-                    <div class="analysis-item-title"><span>🌟</span> Provas Sociais & Mentores</div>
+                    <div class="analysis-item-title">Provas Sociais & Mentores</div>
                     <span class="byok-badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">Conquistas</span>
                   </div>
                   <p class="analysis-item-desc">Extração de relatos de sucesso, contratações, transições e mentores informais voluntários.</p>
@@ -2913,7 +2905,7 @@
                 <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('resumo_destaques')"
                   title="Clique para gerar resumo executivo no chat">
                   <div class="analysis-item-top">
-                    <div class="analysis-item-title"><span>📊</span> Resumo & Destaques</div>
+                    <div class="analysis-item-title">Resumo & Destaques</div>
                     <span class="byok-badge"
                       style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;">Síntese</span>
                   </div>
@@ -2925,7 +2917,7 @@
                 <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('duvidas_recorrentes')"
                   title="Clique para mapear dúvidas no chat">
                   <div class="analysis-item-top">
-                    <div class="analysis-item-title"><span>💡</span> Dúvidas Recorrentes</div>
+                    <div class="analysis-item-title">Dúvidas Recorrentes</div>
                     <span class="byok-badge"
                       style="background: rgba(251, 191, 36, 0.15); color: #fbbf24;">Gargalos</span>
                   </div>
@@ -2937,7 +2929,7 @@
                 <div class="analysis-item-card" onclick="dispararAnalisePreProgramada('plano_de_acao')"
                   title="Clique para gerar plano de ação no chat">
                   <div class="analysis-item-top">
-                    <div class="analysis-item-title"><span>🎯</span> Plano de Ação</div>
+                    <div class="analysis-item-title">Plano de Ação</div>
                     <span class="byok-badge" style="background: rgba(168, 85, 247, 0.15); color: #c084fc;">Ação</span>
                   </div>
                   <p class="analysis-item-desc">Recomendações práticas de novas lives, FAQs e intervenções imediatas
@@ -3978,7 +3970,7 @@
         drawerConectar.classList.remove('alert-danger');
         drawerConectarBadge.style.display = 'inline-block';
         drawerConectarBadge.className = 'sidebar-success-badge';
-        drawerConectarBadge.innerText = '✅ Conectado';
+        drawerConectarBadge.innerText = 'Conectado';
 
         sidebarSessionStatus.className = 'status-badge connected';
         sidebarSessionLabel.innerText = 'Online';
@@ -4121,7 +4113,7 @@
         drawerExtracao.classList.remove('alert-danger');
         drawerExtracaoBadge.style.display = 'inline-block';
         drawerExtracaoBadge.className = 'sidebar-success-badge';
-        drawerExtracaoBadge.innerText = '✅ OK';
+        drawerExtracaoBadge.innerText = 'OK';
 
         // Desbloqueia Visualização, Insights e Relatórios
         drawerVisualizacao.classList.remove('disabled');
