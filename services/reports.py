@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 # Palavras-chave associadas a dúvidas, dificuldades, termos críticos e pontos de atenção
 TERMOS_ALERTA_PADRAO = [
-    "duvida", "dúvida", "ajuda", "socorro", "erro", "bug", "travou", "falha",
+    "duvida", "dúvida", "socorro", "erro", "bug", "travou", "falha",
     "problema", "nao consigo", "não consigo", "dificuldade", "travado",
     "nao funciona", "não funciona", "urgente", "alguem sabe", "alguém sabe"
 ]
