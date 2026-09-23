@@ -947,17 +947,6 @@
       }
     }
 
-    .extraction-intro-banner {
-      background: rgba(15, 23, 42, 0.7);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 14px 18px;
-      margin-bottom: 22px;
-      font-size: 13.5px;
-      color: #cbd5e1;
-      line-height: 1.55;
-    }
-
     .extraction-pathways-container {
       display: grid;
       grid-template-columns: 1fr 60px 1fr;
@@ -2617,14 +2606,6 @@
 
           </div>
 
-          <!-- Banner Explicativo sobre os Dois Caminhos Equivalentes -->
-          <div id="extraction-intro-banner" class="extraction-intro-banner">
-            💡 <b>Ambas as opções abaixo satisfazem a extração:</b> Você pode tanto <b>coletar ao vivo</b> do WhatsApp
-            Web via automação quanto <b>importar um arquivo</b> (exportação nativa do WhatsApp em <code>.txt</code> ou <code>.zip</code>, ou arquivo <code>.csv</code> / <code>.json</code>). Qualquer um dos caminhos carrega as
-            mensagens para o banco SQLite local (<code>messages.db</code>), liberando imediatamente a visualização e os
-            módulos de inteligência artificial.
-          </div>
-
           <!-- Dois Caminhos Lado a Lado com Divisor Vertical "OU" -->
           <div id="extraction-pathways-container" class="extraction-pathways-container">
 
@@ -4050,7 +4031,6 @@
       const msgsAtivoDisplay = document.getElementById('active-group-messages-display');
       const idAtivoBadge = document.getElementById('active-group-id-badge');
 
-      const introBanner = document.getElementById('extraction-intro-banner');
       const pathwaysContainer = document.getElementById('extraction-pathways-container');
       const dividerOu = document.getElementById('divider-ou-extracao');
       const cardImportacao = document.getElementById('card-importacao');
@@ -4084,8 +4064,7 @@
         }
         if (idAtivoBadge) idAtivoBadge.innerText = activeGroup.id ? `[ID: ${activeGroup.id}]` : '';
 
-        // Mantém opções de coleta e importação visíveis e habilitadas para complementar o grupo
-        if (introBanner) introBanner.style.display = 'block';
+
         if (dividerOu) dividerOu.style.display = 'flex';
         if (cardImportacao) cardImportacao.style.display = 'flex';
         if (pathwaysContainer) pathwaysContainer.classList.remove('has-active-group');
@@ -4114,7 +4093,7 @@
       } else {
         if (bannerAtivo) bannerAtivo.style.display = 'none';
 
-        if (introBanner) introBanner.style.display = 'block';
+
         if (dividerOu) dividerOu.style.display = 'flex';
         if (cardImportacao) cardImportacao.style.display = 'flex';
         if (pathwaysContainer) pathwaysContainer.classList.remove('has-active-group');
