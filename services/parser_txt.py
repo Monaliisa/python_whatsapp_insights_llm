@@ -72,10 +72,64 @@ MIDIA_INDICATORS = [
 ]
 
 
-def _parse_datetime(parte1: str, parte2: str) -> Optional[datetime]:
+def _inferir_ordem_data(linhas_texto: List[str]) -> str:
+    """
+    Analisa as linhas do arquivo exportado para identificar se o padrão
+    de data predominante é Dia/Mês (DMY - padrão BR/Internacional)
+    ou Mês/Dia (MDY - padrão US).
+    """
+    votos_dmy = 0
+    votos_mdy = 0
+    tem_ampm = 0
+
+    for linha in linhas_texto[:1000]:  # Amostra até 1000 linhas
+        linha_limpa = linha.rstrip("\r\n")
+        linha_normalizada = re.sub(r"^[\u200e\u200f\ufeff\s]+", "", linha_limpa)
+        linha_normalizada = re.sub(r"[\u202f\u00a0]", " ", linha_normalizada)
+
+        match = PATTERN_BRACKETS.match(linha_normalizada) or PATTERN_DASH.match(linha_normalizada)
+        if not match:
+            continue
+
+        g1, g2 = match.group(1), match.group(2)
+        p1, p2 = g1.strip(), g2.strip()
+        data_str = p1 if ("/" in p1 or "-" in p1 or "." in p1) else p2
+        hora_str = p2 if data_str == p1 else p1
+
+        if re.search(r"[AaPp][Mm]", hora_str):
+            tem_ampm += 1
+
+        data_clean = re.sub(r"[-.]", "/", data_str)
+        partes = data_clean.split("/")
+        if len(partes) != 3:
+            continue
+
+        try:
+            p_a, p_b, _ = [int(p) for p in partes]
+        except ValueError:
+            continue
+
+        if p_a > 12 and p_b <= 12:
+            votos_dmy += 1
+        elif p_b > 12 and p_a <= 12:
+            votos_mdy += 1
+
+    if votos_mdy > votos_dmy:
+        return "MDY"
+    if votos_dmy > votos_mdy:
+        return "DMY"
+    
+    # Se não há dias > 12 para desempate, horários AM/PM são fortes indícios de locale americano (MDY)
+    if tem_ampm > 0:
+        return "MDY"
+
+    return "DMY"
+
+
+def _parse_datetime(parte1: str, parte2: str, formato_preferencial: str = "DMY") -> Optional[datetime]:
     """
     Analisa duas strings (uma com data e outra com hora, em qualquer ordem)
-    e retorna o objeto datetime correspondente com ano, mês, dia, hora e minuto corretos.
+    e retorna o objeto datetime correspondente respeitando o formato inferido (DMY ou MDY).
     """
     p1 = parte1.strip()
     p2 = parte2.strip()
@@ -95,15 +149,21 @@ def _parse_datetime(parte1: str, parte2: str) -> Optional[datetime]:
     except ValueError:
         return None
 
-    # Identifica dia, mês e ano
+    # Identifica o ano
     if p_a > 1000:  # YYYY/MM/DD
         ano, mes, dia = p_a, p_b, p_c
-    elif p_c > 1000:  # DD/MM/YYYY
-        dia, mes, ano = p_a, p_b, p_c
-    elif p_c < 100:  # DD/MM/YY
-        dia, mes, ano = p_a, p_b, 2000 + p_c
     else:
-        dia, mes, ano = p_a, p_b, p_c
+        ano = 2000 + p_c if p_c < 100 else p_c
+
+        # Identifica dia e mês com base em restrições lógicas e no formato preferencial
+        if p_a > 12:
+            dia, mes = p_a, p_b
+        elif p_b > 12:
+            mes, dia = p_a, p_b
+        elif formato_preferencial == "MDY":
+            mes, dia = p_a, p_b
+        else:
+            dia, mes = p_a, p_b
 
     # Limpa caracteres invisíveis na hora
     hora_clean = re.sub(r"[\u202f\u00a0]", " ", hora_str).strip()
@@ -128,7 +188,7 @@ def _parse_datetime(parte1: str, parte2: str) -> Optional[datetime]:
     try:
         return datetime(ano, mes, dia, hh, mm, ss)
     except ValueError:
-        # Fallback para caso dia/mês estejam invertidos (MM/DD/YYYY)
+        # Fallback invertendo dia e mês caso ocorra inconsistência
         try:
             return datetime(ano, dia, mes, hh, mm, ss)
         except ValueError:
@@ -223,7 +283,10 @@ def parse_whatsapp_txt(
     else:
         raise ValueError(f"Tipo de entrada não suportado: {type(conteudo_ou_caminho)}")
 
-    # 2. Varredura e agrupamento de linhas (lidando com mensagens multilinhas)
+    # 2. Inferência inteligente do formato de data no arquivo (DMY vs MDY)
+    formato_data = _inferir_ordem_data(linhas_texto)
+
+    # 3. Varredura e agrupamento de linhas (lidando com mensagens multilinhas)
     blocos_brutos: List[dict] = []
     mensagem_atual: Optional[dict] = None
     msg_index = 0
@@ -241,7 +304,7 @@ def parse_whatsapp_txt(
         match = PATTERN_BRACKETS.match(linha_normalizada) or PATTERN_DASH.match(linha_normalizada)
         if match:
             g1, g2, autor, texto, sistema_txt = match.groups()
-            dt = _parse_datetime(g1, g2)
+            dt = _parse_datetime(g1, g2, formato_preferencial=formato_data)
 
             if dt:
                 if mensagem_atual:

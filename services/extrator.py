@@ -321,13 +321,20 @@ def extrair_dados_balao(balao):
         return None
         
     attr = pre_plain_elem.get_attribute("data-pre-plain-text") or ""
-    # Padrão retornado pelo WA: "[14:20, 12/08/2026] Nome do Remetente: "
-    match_meta = re.search(r"\[(\d{2}:\d{2}),\s*(\d{2}/\d{2}/\d{4})\]\s*(.*?):", attr)
+    # Padrões retornados pelo WA Web: "[14:20, 12/08/2026] Nome: " ou "[4:17 PM, 6/20/2026] Nome: "
+    match_meta = re.search(
+        r"\[(\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}|\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AaPp][Mm])?)[,\s]+"
+        r"(\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}|\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AaPp][Mm])?)\]\s*(.*?):",
+        attr,
+    )
     if not match_meta:
         return None
         
-    hora_str, data_str, remetente = match_meta.groups()
-    data_hora = datetime.strptime(f"{data_str} {hora_str}", "%d/%m/%Y %H:%M")
+    p1, p2, remetente = match_meta.groups()
+    from services.parser_txt import _parse_datetime
+    data_hora = _parse_datetime(p1, p2)
+    if not data_hora:
+        return None
 
     # 3. Identificação e Isolação de Reply (Citação)
     is_reply = False
