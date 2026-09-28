@@ -7,6 +7,7 @@ import json
 import os
 import queue
 import re
+import sqlite3
 import subprocess
 import sys
 import threading
@@ -1007,26 +1008,64 @@ async def export_csv(req: ExportRequest):
 
 @app.get("/api/exportar/csv")
 @app.get("/api/exportar/download")
-async def download_csv(grupo_id: str | None = None, grupo_nome: str | None = None):
-    destino = str(DEFAULT_EXPORT_PATH)
+@app.get("/api/consultas/exportar/csv/{filename}")
+@app.get("/api/backups/exportar/csv/{filename}")
+async def download_csv(
+    grupo_id: str | None = None,
+    grupo_nome: str | None = None,
+    filename: str | None = None,
+):
+    clean_name = os.path.basename(filename) if filename else None
+    target_db_path = get_db_path()
+
+    if clean_name:
+        consultas_dir = get_consultas_dir()
+        backups_dir = get_backups_dir()
+        data_dir = get_data_dir()
+
+        if (consultas_dir / clean_name).exists():
+            target_db_path = str(consultas_dir / clean_name)
+        elif (backups_dir / clean_name).exists():
+            target_db_path = str(backups_dir / clean_name)
+        elif (data_dir / clean_name).exists():
+            target_db_path = str(data_dir / clean_name)
+
+    destino = str(DATA_DIR / f"export_{Path(clean_name).stem if clean_name else 'messages'}.csv")
     os.makedirs(os.path.dirname(destino), exist_ok=True)
     try:
         count = export_to_csv(
             destino,
-            db_path=get_db_path(),
+            db_path=target_db_path,
             grupo_id=grupo_id,
             grupo_nome=grupo_nome,
         )
-        app_state = get_app_state()
-        nome_base = app_state.get("active_group_name") or grupo_nome or "mensagens"
+        
+        nome_base = grupo_nome
+        if not nome_base:
+            try:
+                conn = sqlite3.connect(target_db_path)
+                cur = conn.cursor()
+                row = cur.execute(
+                    "SELECT grupo_nome FROM messages WHERE grupo_nome IS NOT NULL AND grupo_nome != '' LIMIT 1"
+                ).fetchone()
+                conn.close()
+                if row and row[0]:
+                    nome_base = row[0]
+            except Exception:
+                pass
+
+        if not nome_base:
+            app_state = get_app_state()
+            nome_base = app_state.get("active_group_name") or (Path(clean_name).stem if clean_name else "mensagens")
+
         texto_norm = unicodedata.normalize("NFKD", str(nome_base)).encode("ascii", "ignore").decode("ascii")
         slug = re.sub(r"[^\w\s-]", "", texto_norm).strip().lower()
         slug = re.sub(r"[-\s]+", "_", slug) or "mensagens"
-        filename = f"export_{slug}.csv"
-        state.add_log(f"[Exportação] CSV gerado para download com sucesso ({count} mensagens): {filename}")
+        out_filename = f"export_{slug}.csv" if not clean_name else f"export_{slug}_{Path(clean_name).stem}.csv"
+        state.add_log(f"[Exportação] CSV gerado para download com sucesso ({count} mensagens): {out_filename}")
         return FileResponse(
             path=destino,
-            filename=filename,
+            filename=out_filename,
             media_type="text/csv; charset=utf-8",
         )
     except Exception as exc:
@@ -1035,26 +1074,64 @@ async def download_csv(grupo_id: str | None = None, grupo_nome: str | None = Non
 
 
 @app.get("/api/exportar/json")
-async def download_json(grupo_id: str | None = None, grupo_nome: str | None = None):
-    json_path = DATA_DIR / "export_messages.json"
+@app.get("/api/consultas/exportar/json/{filename}")
+@app.get("/api/backups/exportar/json/{filename}")
+async def download_json(
+    grupo_id: str | None = None,
+    grupo_nome: str | None = None,
+    filename: str | None = None,
+):
+    clean_name = os.path.basename(filename) if filename else None
+    target_db_path = get_db_path()
+
+    if clean_name:
+        consultas_dir = get_consultas_dir()
+        backups_dir = get_backups_dir()
+        data_dir = get_data_dir()
+
+        if (consultas_dir / clean_name).exists():
+            target_db_path = str(consultas_dir / clean_name)
+        elif (backups_dir / clean_name).exists():
+            target_db_path = str(backups_dir / clean_name)
+        elif (data_dir / clean_name).exists():
+            target_db_path = str(data_dir / clean_name)
+
+    json_path = DATA_DIR / f"export_{Path(clean_name).stem if clean_name else 'messages'}.json"
     os.makedirs(os.path.dirname(str(json_path)), exist_ok=True)
     try:
         count = export_to_json(
             str(json_path),
-            db_path=get_db_path(),
+            db_path=target_db_path,
             grupo_id=grupo_id,
             grupo_nome=grupo_nome,
         )
-        app_state = get_app_state()
-        nome_base = app_state.get("active_group_name") or grupo_nome or "mensagens"
+        
+        nome_base = grupo_nome
+        if not nome_base:
+            try:
+                conn = sqlite3.connect(target_db_path)
+                cur = conn.cursor()
+                row = cur.execute(
+                    "SELECT grupo_nome FROM messages WHERE grupo_nome IS NOT NULL AND grupo_nome != '' LIMIT 1"
+                ).fetchone()
+                conn.close()
+                if row and row[0]:
+                    nome_base = row[0]
+            except Exception:
+                pass
+
+        if not nome_base:
+            app_state = get_app_state()
+            nome_base = app_state.get("active_group_name") or (Path(clean_name).stem if clean_name else "mensagens")
+
         texto_norm = unicodedata.normalize("NFKD", str(nome_base)).encode("ascii", "ignore").decode("ascii")
         slug = re.sub(r"[^\w\s-]", "", texto_norm).strip().lower()
         slug = re.sub(r"[-\s]+", "_", slug) or "mensagens"
-        filename = f"export_{slug}.json"
-        state.add_log(f"[Exportação] JSON gerado para download com sucesso ({count} mensagens): {filename}")
+        out_filename = f"export_{slug}.json" if not clean_name else f"export_{slug}_{Path(clean_name).stem}.json"
+        state.add_log(f"[Exportação] JSON gerado para download com sucesso ({count} mensagens): {out_filename}")
         return FileResponse(
             path=str(json_path),
-            filename=filename,
+            filename=out_filename,
             media_type="application/json; charset=utf-8",
         )
     except Exception as exc:

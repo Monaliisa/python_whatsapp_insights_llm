@@ -3252,6 +3252,9 @@
                 <span>Minhas Sessões de Análise & Extrações</span>
               </div>
               <div class="btn-group">
+                <a href="/api/exportar/json" class="btn secondary btn-sm" download title="Baixar todas as mensagens da sessão ativa em formato JSON">
+                  <span>📥 Baixar JSON Ativo</span>
+                </a>
                 <button type="button" class="btn secondary btn-sm" onclick="carregarHistorico()">
                   <span>🔄 Atualizar Lista</span>
                 </button>
@@ -6492,6 +6495,9 @@
                     <button type="button" class="btn secondary btn-sm" onclick="baixarConsultaCSV('${c.filename}')" title="Baixar mensagens em CSV">
                       <span>📥 CSV</span>
                     </button>
+                    <button type="button" class="btn secondary btn-sm" onclick="baixarConsultaJSON('${c.filename}')" title="Baixar mensagens em JSON">
+                      <span>📥 JSON</span>
+                    </button>
                     <button type="button" class="btn danger btn-sm" onclick="excluirConsultaArquivo('${c.filename}')" title="Excluir esta sessão">
                       <span>🗑️</span>
                     </button>
@@ -6515,7 +6521,19 @@
     }
 
     function baixarConsultaCSV(filename) {
-      window.location.href = `/api/exportar/csv?download=true`;
+      if (filename) {
+        window.location.href = `/api/exportar/csv?filename=${encodeURIComponent(filename)}`;
+      } else {
+        window.location.href = `/api/exportar/csv`;
+      }
+    }
+
+    function baixarConsultaJSON(filename) {
+      if (filename) {
+        window.location.href = `/api/exportar/json?filename=${encodeURIComponent(filename)}`;
+      } else {
+        window.location.href = `/api/exportar/json`;
+      }
     }
 
     async function ativarConsultaArquivo(filename) {
@@ -6732,8 +6750,76 @@
       }
     }
 
+    async function carregarBackupsLista() {
+      const tbody = document.getElementById('tabela-backups-corpo');
+      if (!tbody) return;
+
+      try {
+        const res = await fetch('/api/backups');
+        const json = await res.json();
+        if (json.success && json.data) {
+          const backups = json.data;
+          if (backups.length > 0) {
+            tbody.innerHTML = backups.map(b => {
+              const dtFormatada = b.created_at_formatted || b.created_at || '-';
+              const gruposStr = (b.grupos && b.grupos.length > 0) ? b.grupos.join(', ') : 'Geral';
+              const tagBadge = `<span class="byok-badge pending" style="font-size: 11px; background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.3); color: #38bdf8;">${b.tag || 'manual'}</span>`;
+
+              return `
+                <tr>
+                  <td style="color: #cbd5e1; white-space: nowrap;">${dtFormatada}</td>
+                  <td style="font-weight: 700; color: #f1f5f9;">
+                    <div style="font-family: monospace; font-size: 11.5px; color: #93c5fd;">${b.filename}</div>
+                    <div style="font-size: 11px; color: #64748b;">${gruposStr}</div>
+                  </td>
+                  <td>${tagBadge}</td>
+                  <td style="color: #94a3b8; font-size: 12px;">${b.description || '-'}</td>
+                  <td style="color: #38bdf8; font-weight: 700; white-space: nowrap;">
+                    ${(b.total_messages || 0).toLocaleString('pt-BR')} msgs
+                    <span style="font-size: 11px; color: #64748b; font-weight: normal;">(${b.size_formatted || '0 KB'})</span>
+                  </td>
+                  <td style="text-align: right; white-space: nowrap;">
+                    <button type="button" class="btn btn-sm" onclick="abrirModalRestaurarBackup('${b.filename}')" title="Restaurar este snapshot para a base ativa">
+                      <span>🔄 Restaurar</span>
+                    </button>
+                    <button type="button" class="btn secondary btn-sm" onclick="baixarBackupArquivo('${b.filename}')" title="Baixar arquivo de banco .db do snapshot">
+                      <span>📥 .DB</span>
+                    </button>
+                    <button type="button" class="btn secondary btn-sm" onclick="baixarBackupJSON('${b.filename}')" title="Baixar mensagens deste snapshot em JSON">
+                      <span>📥 JSON</span>
+                    </button>
+                    <button type="button" class="btn danger btn-sm" onclick="excluirBackupArquivo('${b.filename}')" title="Excluir este snapshot">
+                      <span>🗑️</span>
+                    </button>
+                  </td>
+                </tr>
+              `;
+            }).join('');
+          } else {
+            tbody.innerHTML = `
+              <tr>
+                <td colspan="6" style="text-align: center; color: #64748b; padding: 24px;">
+                  Nenhuma cópia de segurança salva ainda. Clique em <b>"➕ Salvar Snapshot da Base Ativa"</b> acima para gerar seu primeiro backup.
+                </td>
+              </tr>
+            `;
+          }
+        }
+      } catch (err) {
+        console.error("Erro ao carregar lista de backups:", err);
+      }
+    }
+
     function baixarBackupArquivo(filename) {
       window.location.href = `/api/backups/download/${encodeURIComponent(filename)}`;
+    }
+
+    function baixarBackupJSON(filename) {
+      if (filename) {
+        window.location.href = `/api/exportar/json?filename=${encodeURIComponent(filename)}`;
+      } else {
+        window.location.href = `/api/exportar/json`;
+      }
     }
 
     async function abrirPastaBackupsLocal() {
