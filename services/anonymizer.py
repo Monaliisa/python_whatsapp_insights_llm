@@ -26,7 +26,12 @@ logger = logging.getLogger(__name__)
 
 # Expressões regulares para detecção de dados sensíveis
 RE_TELEFONE = re.compile(
-    r"(?<!\d)(?:\+?55\s?)?\(?\d{2}\)?\s?9?\s?\d{4}[-.\s]?\d{4}(?!\d)"
+    r"(?<!\d)(?:"
+    # Números internacionais com DDI iniciado em + (ex: +1 555 123-4567, +351 912 345 678, +44 20 7946 0919)
+    r"\+\d{1,4}[\s.-]?(?:\(?\d{1,4}\)?[\s.-]?)?\d{2,5}[\s.-]?\d{3,5}|"
+    # Números nacionais brasileiros com ou sem +55, com ou sem DDD, com ou sem 9º dígito
+    r"(?:\+?55\s?)?(?:\(?0?\d{2}\)?\s?)?(?:9\s?)?\d{4}[-.\s]?\d{4}"
+    r")(?!\d)"
 )
 RE_EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
 
@@ -158,6 +163,10 @@ class AnonymizerService:
 
         texto_orig = msg.get("texto") or ""
         msg_copia["texto"] = self.redigir_texto(texto_orig, contador)
+
+        transcript_orig = msg.get("transcript") or ""
+        if transcript_orig:
+            msg_copia["transcript"] = self.redigir_texto(transcript_orig, contador)
 
         reply_text_orig = msg.get("reply_text") or ""
         if reply_text_orig:

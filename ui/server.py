@@ -882,6 +882,7 @@ async def get_messages(
     grupo_id: str | None = None,
     grupo_nome: str | None = None,
     apenas_ativo: bool = False,
+    anonimizar: bool = True,
 ):
     try:
         init_db(get_db_path())
@@ -891,16 +892,24 @@ async def get_messages(
             grupo_nome = app_state.get("active_group_name")
 
         messages = fetch_recent(limit=limit, db_path=get_db_path(), grupo_id=grupo_id, grupo_nome=grupo_nome)
+        if anonimizar:
+            from services.anonymizer import get_anonymizer_service
+            anon_svc = get_anonymizer_service()
+            messages, _ = anon_svc.anonimizar_mensagens(messages)
         return {"success": True, "count": len(messages), "data": messages}
     except Exception as exc:
         return {"success": False, "error": str(exc), "data": []}
 
 
 @app.get("/api/messages/{message_id}")
-async def get_message_detail(message_id: str):
+async def get_message_detail(message_id: str, anonimizar: bool = True):
     data = fetch_message_by_id(message_id, db_path=get_db_path())
     if not data:
         raise HTTPException(status_code=404, detail="Mensagem não encontrada.")
+    if anonimizar:
+        from services.anonymizer import get_anonymizer_service
+        anon_svc = get_anonymizer_service()
+        data = anon_svc.anonimizar_mensagem(data)
     return {"success": True, "data": data}
 
 
