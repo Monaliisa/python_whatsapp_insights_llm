@@ -1456,8 +1456,9 @@ def export_to_csv(
     db_path: str | None = None,
     grupo_id: str | None = None,
     grupo_nome: str | None = None,
+    anonimizar: bool = True,
 ) -> int:
-    """Exporta mensagens para CSV (UTF-8 com BOM e separador ';')."""
+    """Exporta mensagens para CSV (UTF-8 com BOM e separador ';') com anonimização ativa por padrão (LGPD)."""
     if db_path is None:
         db_path = get_db_path()
     init_db(db_path)
@@ -1492,15 +1493,24 @@ def export_to_csv(
     cols = [d[0] for d in cur.description]
     conn.close()
 
+    items = [dict(zip(cols, r)) for r in rows]
+    if anonimizar and items:
+        try:
+            from services.anonymizer import get_anonymizer_service
+            anon_svc = get_anonymizer_service()
+            items, _ = anon_svc.anonimizar_mensagens(items)
+        except Exception as e:
+            print(f"[AVISO] Falha ao aplicar anonimização no CSV: {e}")
+
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     with open(p, "w", encoding="utf-8-sig", newline="") as f:
         writer = csv.writer(f, delimiter=";")
         writer.writerow(cols)
-        for r in rows:
-            writer.writerow(r)
+        for item in items:
+            writer.writerow([item.get(c) for c in cols])
 
-    return len(rows)
+    return len(items)
 
 
 def export_to_json(
@@ -1509,8 +1519,9 @@ def export_to_json(
     db_path: str | None = None,
     grupo_id: str | None = None,
     grupo_nome: str | None = None,
+    anonimizar: bool = True,
 ) -> int:
-    """Exporta mensagens para JSON."""
+    """Exporta mensagens para JSON com anonimização ativa por padrão (LGPD)."""
     if db_path is None:
         db_path = get_db_path()
     init_db(db_path)
@@ -1541,6 +1552,14 @@ def export_to_json(
     conn.close()
 
     items = [dict(zip(cols, r)) for r in rows]
+    if anonimizar and items:
+        try:
+            from services.anonymizer import get_anonymizer_service
+            anon_svc = get_anonymizer_service()
+            items, _ = anon_svc.anonimizar_mensagens(items)
+        except Exception as e:
+            print(f"[AVISO] Falha ao aplicar anonimização no JSON: {e}")
+
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     with open(p, "w", encoding="utf-8") as f:
