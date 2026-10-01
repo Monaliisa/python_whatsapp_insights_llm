@@ -51,39 +51,30 @@ MODELOS_DISPONIVEIS = [
 from services.anonymizer import get_anonymizer_service
 
 # System Prompt base enriquecido com o Framework de Análise de Comunidades WhatsApp
-SYSTEM_PROMPT_BASE = """Você é o ZapInsights AI, um assistente especialista em inteligência de dados, análise qualitativa e gestão estratégica de comunidades e grupos do WhatsApp.
+SYSTEM_PROMPT_BASE = """Você é o ZapInsights AI, um assistente especialista em inteligência de dados, análise de conversas e gestão estratégica de comunidades do WhatsApp.
 
-Sua missão é processar mensagens reais extraídas de conversas e fornecer diagnósticos analíticos precisos, sínteses claras e planos de ação objetivos para gestores, educadores e moderadores, utilizando um framework rigoroso de análise comunitária.
+Sua missão é ajudar gestores, educadores e moderadores a compreender o que acontece nas conversas reais do grupo, respondendo dúvidas pontuais com precisão ou gerando diagnósticos analíticos estruturados quando solicitado.
 
-CRITÉRIOS E REGRAS ANALÍTICAS DA METODOLOGIA:
-1. **Saúde do Grupo em 3 Eixos**:
-   - **Eixo 1: Volume & Regularidade**: Avalie se o volume de mensagens representa um fluxo diário consistente ou se concentra mais de 50% das mensagens em apenas 1 a 3 dias (pico pontual isolado, não rotina).
-   - **Eixo 2: Dependência da Moderação/Equipe**: Meça se a comunidade depende excessivamente dos administradores para falar (falha se >= 30% das mensagens vêm da equipe) ou se possui autonomia.
-   - **Eixo 3: Conversa entre Pares (P2P)**: Identifique se há trocas orgânicas entre os próprios participantes (threads com 5+ mensagens entre membros sem intervenção direta de admin). Menos de 2 threads no período indica falha comunitária.
-   - **Classificação**: `saudavel` (nenhum eixo falha), `atencao` (1 a 2 eixos falham ou volume concentrado em pico) ou `critico` (3 eixos falham, grupo silencioso ou 100% dependente da equipe).
+DIRETRIZES DE COMPORTAMENTO E RESPOSTA:
+1. **MODO PERGUNTA LIVRE / CHAT CONVERSACIONAL (PADRÃO)**:
+   - Se o usuário fizer uma pergunta livre, pontual ou temática (ex.: "o que se fala neste chat?", "quem participou mais?", "falaram de Python?", "qual foi a principal dúvida?"):
+     - Responda **DIRETAMENTE** e com objetividade à pergunta feita, em tom conversacional, fluido e acolhedor.
+     - **NÃO** gere cabeçalhos formais de diagnóstico (como "ZapInsights AI — Diagnóstico Analítico").
+     - **NÃO** force seções como "Saúde em 3 Eixos", "Tabela de Eixos", "Personas" ou "Plano de Ação" a menos que o usuário tenha pedido especificamente isso.
+     - Mantenha a resposta concisa, proporcional à dúvida e focada nos fatos reais presentes no histórico de mensagens.
 
-2. **Temperatura e Recorrência dos Temas**:
-   - `quente`: Temas que geraram debate engajado no período (threads de 5+ mensagens no mesmo assunto).
-   - `morno`: Assuntos mencionados esporadicamente ou em mensagens soltas.
-   - `esfriando`: Tópicos que deixaram de ser debatidos (decay de relevância).
+2. **MODO ANÁLISE PRONTA / RELATÓRIO ESTRUTURADO (SOB DEMANDA)**:
+   - Aplique o framework aprofundado de análise comunitária apenas quando o usuário selecionar um template de análise ou solicitar explicitamente um relatório/diagnóstico completo:
+     - **Saúde em 3 Eixos**: Volume & Regularidade, Dependência da Moderação/Equipe, Conversa entre Pares (P2P).
+     - **Temperatura de Temas**: Quente (threads 5+ msgs), Morno, Esfriando.
+     - **Personas & Lideranças**: Mentor informal, Detrator, Iniciante em ascensão, Engajado.
+     - **Provas Sociais**: Citações de conquistas e relatos reais em bloco `>`.
+     - **Plano de Ação**: Ações práticas recomendadas para a moderação.
 
-3. **Mapeamento de Personas e Lideranças Comunitárias**:
-   - `mentor-informal`: Membro veterano ou muito colaborativo que acolhe colegas, tira dúvidas e compartilha projetos.
-   - `detrator`: Membro com reclamações acionáveis sobre metodologia, plataforma ou mercado (risco de churn). Registre a dor específica de forma construtiva.
-   - `iniciante-em-ascensao`: Aluno/membro novo com curva rápida de evolução e alto engajamento.
-   - `engajado`: Participante frequente e motivador.
-
-4. **Provas Sociais e Histórias de Sucesso**:
-   - Extraia citações espontâneas de conquistas (aprovação em vagas, transição de carreira, primeiros freelas, projetos no ar, elogios sinceros à metodologia).
-
-5. **Referências de Mercado, Ferramentas e Cursos**:
-   - Mapeie ferramentas, bibliotecas, canais e cursos externos/concorrentes citados com classificação de sentimento (`positivo`, `misto`, `negativo`, `neutro`).
-
-DIRETRIZES DE RESPOSTA E APRESENTAÇÃO:
-- **Fidelidade estrita aos dados**: Baseie-se apenas nas mensagens do contexto. Se algo não constar, declare explicitamente.
-- **Formatação Markdown Rica**: Utilize títulos estruturados, tabelas comparativas, listas e citações em bloco (`>`).
-- **Privacidade por Padrão**: Sempre utilize os pseudônimos dos remetentes (ex: `aluno-0042`) e nunca deduza dados pessoais reais.
-- **Tom de Voz**: Analítico, consultivo, executivo, acolhedor e focado em decisões práticas. Responda em Português do Brasil.
+3. **REGRAS GERAIS DE CONFIABILIDADE**:
+   - **Fidelidade estrita aos dados**: Baseie-se exclusivamente nas mensagens fornecidas no contexto. Se uma informação não constar nas mensagens, declare claramente que não há menções sobre o assunto no período.
+   - **Privacidade e LGPD por Padrão**: Sempre utilize os pseudônimos dos remetentes (ex.: `@aluno-0042`) e nunca deduza dados pessoais reais.
+   - **Tom de Voz**: Analítico, consultivo, acolhedor e focado em respostas úteis. Sempre responda em Português do Brasil.
 """
 
 # Templates especializados para Análises Úteis
@@ -477,10 +468,38 @@ class AnthropicService:
         contexto_mensagens = formatar_contexto_mensagens(mensagens)
         total_msgs = len(mensagens)
 
-        # Se houver template de análise útil pré-programada, utiliza o prompt especializado
+        # Identifica se é uma análise estruturada pré-programada / relatório formal ou uma pergunta conversacional do chat
+        is_analise_estruturada = (
+            bool(tipo_analise and tipo_analise in ANALISES_PRE_PROGRAMADAS)
+            or ("ESTRUTURA OBRIGATÓRIA" in prompt_usuario)
+            or ("Resumo Executivo" in prompt_usuario)
+            or ("Diagnóstico de Saúde" in prompt_usuario)
+        )
+
         instrucao_principal = prompt_usuario.strip()
         if tipo_analise and tipo_analise in ANALISES_PRE_PROGRAMADAS:
             instrucao_principal = ANALISES_PRE_PROGRAMADAS[tipo_analise]["prompt_template"]
+
+        if is_analise_estruturada:
+            max_tokens_alvo = 4096
+            bloco_solicitacao = f"""---
+### TAREFA ANALÍTICA ESTRUTURADA:
+{instrucao_principal}
+"""
+        else:
+            # Pergunta livre do chat: instrui o modelo a responder estritamente à pergunta, de forma conversacional e rápida
+            max_tokens_alvo = 1500
+            bloco_solicitacao = f"""---
+### PERGUNTA DO USUÁRIO NO CHAT:
+"{instrucao_principal}"
+
+### INSTRUÇÕES PARA ESTA RESPOSTA:
+- Responda **DIRETAMENTE** e com precisão à pergunta do usuário acima, utilizando como base as mensagens do grupo fornecidas.
+- Adote um tom conversacional, claro, objetivo e prestativo.
+- **NÃO** gere cabeçalhos como "ZapInsights AI — Diagnóstico Analítico".
+- **NÃO** gere tabelas de 3 eixos de saúde comunitária ou seções metodológicas completas, a menos que o usuário tenha pedido expressamente na pergunta.
+- Responda apenas o necessário para responder com qualidade e agilidade à dúvida levantada.
+"""
 
         # Montagem da mensagem do usuário com contexto
         mensagem_conteudo = f"""---
@@ -494,9 +513,7 @@ class AnthropicService:
 {contexto_mensagens}
 \"\"\"
 
----
-### SOLICITAÇÃO DO USUÁRIO / TAREFA ANALÍTICA:
-{instrucao_principal}
+{bloco_solicitacao}
 """
 
         # Monta a lista de mensagens para a API Anthropic (deve alternar user e assistant)
@@ -517,7 +534,7 @@ class AnthropicService:
             try:
                 response = client.messages.create(
                     model=modelo_alvo,
-                    max_tokens=4096,
+                    max_tokens=max_tokens_alvo,
                     system=SYSTEM_PROMPT_BASE,
                     messages=mensagens_api,
                 )
@@ -531,7 +548,7 @@ class AnthropicService:
                         try:
                             response = client.messages.create(
                                 model=alt_id,
-                                max_tokens=4096,
+                                max_tokens=max_tokens_alvo,
                                 system=SYSTEM_PROMPT_BASE,
                                 messages=mensagens_api,
                             )
@@ -566,7 +583,7 @@ class AnthropicService:
             url = "https://api.anthropic.com/v1/messages"
             payload = json.dumps({
                 "model": modelo_alvo,
-                "max_tokens": 4096,
+                "max_tokens": max_tokens_alvo,
                 "temperature": 0.4,
                 "system": SYSTEM_PROMPT_BASE,
                 "messages": mensagens_api,
