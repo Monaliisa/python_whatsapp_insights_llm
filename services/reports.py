@@ -68,74 +68,186 @@ def _formatar_label_mes(ano_mes: str) -> str:
 
 
 def _render_markdown_simples(md_text: str) -> str:
-    """Converte Markdown simples em HTML seguro com tipografia limpa."""
+    """Converte Markdown simples em HTML seguro com tipografia limpa e suporte a tabelas."""
     if not md_text:
         return ""
-    
-    linhas = md_text.replace("\r\n", "\n").split("\n")
+
+    # Proteger codeblocks
+    code_blocks = []
+    def save_cb(m):
+        code = m.group(2) if len(m.groups()) >= 2 and m.group(2) is not None else m.group(1)
+        idx = len(code_blocks)
+        escaped = html.escape(code.strip())
+        code_blocks.append(f'<pre style="background:#020617;padding:12px;border-radius:8px;overflow-x:auto;border:1px solid #1e293b;margin:10px 0;font-family:monospace;font-size:12.5px;color:#e2e8f0;"><code>{escaped}</code></pre>')
+        return f"@@@CODEBLOCK_{idx}@@@"
+
+    txt = re.sub(r'```([a-zA-Z0-9_-]*)\s*\n([\s\S]*?)\n```', save_cb, md_text)
+    txt = re.sub(r'```([\s\S]*?)```', save_cb, txt)
+
+    # Inline code
+    inline_codes = []
+    def save_ic(m):
+        code = m.group(1)
+        idx = len(inline_codes)
+        escaped = html.escape(code)
+        inline_codes.append(f'<code style="background:rgba(15,23,42,0.8);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:12px;color:#38bdf8;border:1px solid rgba(56,189,248,0.2);">{escaped}</code>')
+        return f"@@@INLINECODE_{idx}@@@"
+
+    txt = re.sub(r'`([^`\n]+)`', save_ic, txt)
+
+    linhas = txt.replace("\r\n", "\n").split("\n")
     out = []
     em_lista = False
+    tipo_lista = None  # 'ul' | 'ol'
+    em_tabela = False
+    tabela_header_ok = False
+    tabela_html = []
+    em_citacao = False
+    citacao_linhas = []
+
+    def fechar_lista():
+        nonlocal em_lista, tipo_lista
+        if em_lista:
+            out.append(f"</{tipo_lista}>")
+            em_lista = False
+            tipo_lista = None
+
+    def fechar_tabela():
+        nonlocal em_tabela, tabela_header_ok, tabela_html
+        if em_tabela:
+            tabela_html.append("</tbody></table></div>")
+            out.append("".join(tabela_html))
+            em_tabela = False
+            tabela_header_ok = False
+            tabela_html = []
+
+    def fechar_citacao():
+        nonlocal em_citacao, citacao_linhas
+        if em_citacao:
+            c_texto = "<br>".join(citacao_linhas)
+            out.append(f'<blockquote style="margin:10px 0;padding:8px 14px;border-left:3.5px solid #8b5cf6;background:rgba(139,92,246,0.08);border-radius:0 6px 6px 0;color:#cbd5e1;font-style:italic;">{c_texto}</blockquote>')
+            em_citacao = False
+            citacao_linhas = []
+
+    def formatar_inline(s: str) -> str:
+        s = html.escape(s)
+        s = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', s)
+        s = re.sub(r'__(.+?)__', r'<strong>\1</strong>', s)
+        s = re.sub(r'\*(.+?)\*', r'<em>\1</em>', s)
+        s = re.sub(r'(^|[\s(>])_([^_]+)_(?=[\s).,!?<]|$)', r'\1<em>\2</em>', s)
+        s = re.sub(r'~~(.+?)~~', r'<del>\1</del>', s)
+        s = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2" target="_blank" style="color:#38bdf8;">\1</a>', s)
+        return s
 
     for linha in linhas:
         l = linha.strip()
-        if not l:
-            if em_lista:
-                out.append("</ul>")
-                em_lista = False
+
+        # Tabela
+        is_tabela = bool(re.match(r'^\|(.+)\|$', l) or (l.startswith('|') and l.endswith('|') and '|' in l))
+        is_sep = bool(re.match(r'^\|?(\s*:?-+:?\s*\|)+\s*:?-+:?\s*\|?$', l))
+
+        if is_tabela:
+            fechar_lista()
+            fechar_citacao()
+            raw_cells = l.strip('|').split('|')
+            celulas = [c.strip() for c in raw_cells]
+            if not em_tabela:
+                em_tabela = True
+                tabela_header_ok = False
+                tabela_html = ['<div style="width:100%;overflow-x:auto;margin:14px 0;border-radius:8px;border:1px solid #334155;"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:450px;"><thead><tr style="background:#1e293b;">']
+                for c in celulas:
+                    tabela_html.append(f'<th style="padding:10px 14px;color:#93c5fd;font-weight:600;text-align:left;border-bottom:2px solid #334155;border-right:1px solid #283548;">{formatar_inline(c)}</th>')
+                tabela_html.append('</tr></thead><tbody>')
+                continue
+            elif is_sep and not tabela_header_ok:
+                tabela_header_ok = True
+                continue
+            else:
+                tabela_html.append('<tr style="border-bottom:1px solid #1e293b;">')
+                for c in celulas:
+                    tabela_html.append(f'<td style="padding:9px 14px;color:#cbd5e1;border-right:1px solid #1e293b;vertical-align:top;">{formatar_inline(c)}</td>')
+                tabela_html.append('</tr>')
+                continue
+        elif em_tabela:
+            fechar_tabela()
+
+        # Separador horizontal
+        if re.match(r'^(\*{3,}|-{3,}|_{3,})$', l):
+            fechar_lista()
+            fechar_citacao()
+            out.append('<hr style="border:0;height:1px;background:#334155;margin:16px 0;">')
             continue
 
         # Cabeçalhos
-        if l.startswith("### "):
-            if em_lista:
-                out.append("</ul>")
-                em_lista = False
-            texto = html.escape(l[4:])
-            texto = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", texto)
-            out.append(f"<h3 style='margin:18px 0 6px;color:#38bdf8;font-size:16px;'>{texto}</h3>")
-            continue
-        if l.startswith("## "):
-            if em_lista:
-                out.append("</ul>")
-                em_lista = False
-            texto = html.escape(l[3:])
-            texto = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", texto)
-            out.append(f"<h2 style='margin:22px 0 8px;color:#93c5fd;font-size:18px;border-bottom:1px solid #334155;padding-bottom:4px;'>{texto}</h2>")
+        h_match = re.match(r'^(#{1,6})\s+(.*)$', l)
+        if h_match:
+            fechar_lista()
+            fechar_citacao()
+            lvl = len(h_match.group(1))
+            texto = formatar_inline(h_match.group(2))
+            if lvl == 1:
+                out.append(f'<h2 style="margin:22px 0 8px;color:#60a5fa;font-size:18px;border-bottom:1px solid #334155;padding-bottom:4px;">{texto}</h2>')
+            elif lvl == 2:
+                out.append(f'<h3 style="margin:18px 0 6px;color:#93c5fd;font-size:16px;">{texto}</h3>')
+            else:
+                out.append(f'<h4 style="margin:14px 0 6px;color:#bae6fd;font-size:14.5px;">{texto}</h4>')
             continue
 
         # Citações
-        if l.startswith(">"):
-            if em_lista:
-                out.append("</ul>")
-                em_lista = False
-            texto = html.escape(l[1:].strip())
-            texto = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", texto)
-            out.append(f"<blockquote style='margin:10px 0;padding:8px 14px;border-left:3px solid #38bdf8;background:rgba(56,189,248,0.08);border-radius:0 6px 6px 0;color:#cbd5e1;font-style:italic;'>{texto}</blockquote>")
+        if l.startswith(('>', '&gt;')):
+            fechar_lista()
+            bq = re.sub(r'^(>|&gt;)\s?', '', l)
+            em_citacao = True
+            citacao_linhas.append(formatar_inline(bq))
             continue
+        elif em_citacao:
+            fechar_citacao()
 
-        # Listas
-        if l.startswith(("- ", "* ", "• ")):
-            if not em_lista:
-                out.append("<ul style='margin:8px 0 12px 20px;padding-left:8px;'>")
+        # Listas UL
+        ul_match = re.match(r'^([-*+•])\s+(.*)$', l)
+        if ul_match:
+            fechar_citacao()
+            if not em_lista or tipo_lista != 'ul':
+                fechar_lista()
                 em_lista = True
-            texto = html.escape(l[2:])
-            texto = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", texto)
-            out.append(f"<li style='margin:4px 0;color:#e2e8f0;'>{texto}</li>")
+                tipo_lista = 'ul'
+                out.append('<ul style="margin:8px 0 12px 20px;padding-left:4px;">')
+            texto = formatar_inline(ul_match.group(2))
+            out.append(f'<li style="margin:4px 0;color:#e2e8f0;line-height:1.55;">{texto}</li>')
             continue
 
-        # Parágrafos normais
-        if em_lista:
-            out.append("</ul>")
-            em_lista = False
+        # Listas OL
+        ol_match = re.match(r'^(\d+)\.\s+(.*)$', l)
+        if ol_match:
+            fechar_citacao()
+            if not em_lista or tipo_lista != 'ol':
+                fechar_lista()
+                em_lista = True
+                tipo_lista = 'ol'
+                out.append('<ol style="margin:8px 0 12px 20px;padding-left:4px;">')
+            texto = formatar_inline(ol_match.group(2))
+            out.append(f'<li style="margin:4px 0;color:#e2e8f0;line-height:1.55;">{texto}</li>')
+            continue
 
-        texto = html.escape(l)
-        texto = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", texto)
-        texto = re.sub(r"\*(.+?)\*", r"<em>\1</em>", texto)
-        out.append(f"<p style='margin:6px 0 10px;line-height:1.6;color:#e2e8f0;'>{texto}</p>")
+        fechar_lista()
 
-    if em_lista:
-        out.append("</ul>")
+        if not l:
+            continue
 
-    return "\n".join(out)
+        texto = formatar_inline(l)
+        out.append(f'<p style="margin:6px 0 10px;line-height:1.6;color:#e2e8f0;">{texto}</p>')
+
+    fechar_lista()
+    fechar_tabela()
+    fechar_citacao()
+
+    final_html = "\n".join(out)
+    for idx, ic in enumerate(inline_codes):
+        final_html = final_html.replace(f"@@@INLINECODE_{idx}@@@", ic)
+    for idx, cb in enumerate(code_blocks):
+        final_html = final_html.replace(f"@@@CODEBLOCK_{idx}@@@", cb)
+
+    return final_html
 
 
 class ReportService:

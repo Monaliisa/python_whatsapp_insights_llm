@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ZapInsights Hub | WhatsApp Insights</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -1560,70 +1561,157 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
-    /* Markdown styling inside chat */
-    .chat-bubble-content h2,
-    .chat-bubble-content h3,
-    .chat-bubble-content h4 {
-      color: #93c5fd;
-      margin: 12px 0 6px 0;
-      font-size: 15px;
+    /* Markdown styling inside chat & reports */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      margin: 12px 0;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #090e1a;
+      -webkit-overflow-scrolling: touch;
     }
 
+    .markdown-table,
+    .chat-bubble-content table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: left;
+      margin: 0;
+      min-width: 460px;
+    }
+
+    .chat-bubble-content th,
+    .markdown-table th {
+      background: #1e293b;
+      color: #93c5fd;
+      font-weight: 600;
+      padding: 10px 14px;
+      border-bottom: 2px solid #334155;
+      border-right: 1px solid #283548;
+      white-space: nowrap;
+    }
+
+    .chat-bubble-content th:last-child,
+    .markdown-table th:last-child {
+      border-right: none;
+    }
+
+    .chat-bubble-content td,
+    .markdown-table td {
+      padding: 9px 14px;
+      border-bottom: 1px solid #1e293b;
+      border-right: 1px solid #1e293b;
+      color: #cbd5e1;
+      vertical-align: top;
+    }
+
+    .chat-bubble-content td:last-child,
+    .markdown-table td:last-child {
+      border-right: none;
+    }
+
+    .chat-bubble-content tr:nth-child(even),
+    .markdown-table tr:nth-child(even) {
+      background: rgba(15, 23, 42, 0.55);
+    }
+
+    .chat-bubble-content tr:hover,
+    .markdown-table tr:hover {
+      background: rgba(37, 99, 235, 0.1);
+    }
+
+    .chat-bubble-content h1,
+    .chat-bubble-content h2,
+    .chat-bubble-content h3,
+    .chat-bubble-content h4,
+    .chat-bubble-content h5 {
+      color: #93c5fd;
+      font-weight: 700;
+      margin: 16px 0 8px 0;
+      line-height: 1.35;
+    }
+
+    .chat-bubble-content h1 { font-size: 17px; color: #60a5fa; border-bottom: 1px solid #334155; padding-bottom: 5px; }
+    .chat-bubble-content h2 { font-size: 16px; color: #93c5fd; border-bottom: 1px solid #1e293b; padding-bottom: 4px; }
+    .chat-bubble-content h3 { font-size: 15px; color: #bae6fd; }
+    .chat-bubble-content h4 { font-size: 14px; color: #e0f2fe; }
+
+    .chat-bubble-content h1:first-child,
     .chat-bubble-content h2:first-child,
-    .chat-bubble-content h3:first-child {
+    .chat-bubble-content h3:first-child,
+    .chat-bubble-content h4:first-child {
       margin-top: 0;
     }
 
     .chat-bubble-content p {
       margin-bottom: 8px;
+      line-height: 1.6;
+    }
+
+    .chat-bubble-content p:last-child {
+      margin-bottom: 0;
     }
 
     .chat-bubble-content ul,
-    .chat-bubble-content ol {
-      margin: 8px 0 8px 20px;
+    .chat-bubble-content ol,
+    .markdown-list {
+      margin: 8px 0 10px 22px;
+      padding-left: 4px;
     }
 
     .chat-bubble-content li {
-      margin-bottom: 4px;
-    }
-
-    .chat-bubble-content table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 12px 0;
-      font-size: 12.5px;
-    }
-
-    .chat-bubble-content th,
-    .chat-bubble-content td {
-      border: 1px solid #334155;
-      padding: 6px 10px;
-      text-align: left;
-    }
-
-    .chat-bubble-content th {
-      background: #1e293b;
-      color: #93c5fd;
+      margin-bottom: 5px;
+      line-height: 1.55;
     }
 
     .chat-bubble-content blockquote {
-      border-left: 3px solid #8b5cf6;
-      padding-left: 10px;
-      margin: 8px 0;
+      border-left: 3.5px solid #8b5cf6;
+      padding: 8px 14px;
+      margin: 10px 0;
       color: #cbd5e1;
       font-style: italic;
       background: rgba(139, 92, 246, 0.08);
-      padding: 6px 10px;
-      border-radius: 0 6px 6px 0;
+      border-radius: 0 8px 8px 0;
     }
 
     .chat-bubble-content code {
-      background: rgba(0, 0, 0, 0.3);
-      padding: 2px 4px;
+      background: rgba(15, 23, 42, 0.8);
+      padding: 2px 6px;
       border-radius: 4px;
-      font-family: monospace;
-      font-size: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12.5px;
       color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+
+    .chat-bubble-content pre,
+    .code-block {
+      background: #020617;
+      padding: 12px 14px;
+      border-radius: 8px;
+      overflow-x: auto;
+      border: 1px solid #1e293b;
+      margin: 10px 0;
+    }
+
+    .chat-bubble-content pre code {
+      background: transparent;
+      padding: 0;
+      border: none;
+      color: #e2e8f0;
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+
+    .chat-bubble-content hr,
+    .markdown-hr {
+      border: 0;
+      height: 1px;
+      background: #334155;
+      margin: 16px 0;
     }
 
     /* Chat Input Bar */
@@ -5433,44 +5521,234 @@
       el.style.height = Math.min(el.scrollHeight, 140) + 'px';
     }
 
-    function renderizarMarkdownSimples(texto) {
+    function parserMarkdownNativo(texto) {
       if (!texto) return '';
 
-      // Escape seguro de HTML
-      let html = texto
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-
-      // Blocos de código ```code```
-      html = html.replace(/```([\s\S]*?)```/g, (match, p1) => {
-        return `<pre style="background: #020617; padding: 10px; border-radius: 6px; overflow-x: auto; border: 1px solid #1e293b; margin: 8px 0;"><code>${p1.trim()}</code></pre>`;
+      // 1. Extrair e proteger blocos de código multiline
+      const codeBlocks = [];
+      let txt = texto.replace(/```([a-zA-Z0-9_-]*)\s*\n([\s\S]*?)\n```/g, (match, lang, code) => {
+        const idx = codeBlocks.length;
+        const escapedCode = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        codeBlocks.push('<pre class="code-block"><code>' + escapedCode + '</code></pre>');
+        return '@@@CODEBLOCK_' + idx + '@@@';
       });
 
-      // Código inline `code`
-      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+      txt = txt.replace(/```([\s\S]*?)```/g, (match, code) => {
+        const idx = codeBlocks.length;
+        const escapedCode = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        codeBlocks.push('<pre class="code-block"><code>' + escapedCode + '</code></pre>');
+        return '@@@CODEBLOCK_' + idx + '@@@';
+      });
 
-      // Títulos Markdown ###, ##, #
-      html = html.replace(/^### (.*$)/gim, '<h4>$1</h4>');
-      html = html.replace(/^## (.*$)/gim, '<h3>$1</h3>');
-      html = html.replace(/^# (.*$)/gim, '<h2>$1</h2>');
+      // 2. Extrair código inline
+      const inlineCodes = [];
+      txt = txt.replace(/`([^`\n]+)`/g, (match, code) => {
+        const idx = inlineCodes.length;
+        const escapedCode = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        inlineCodes.push('<code>' + escapedCode + '</code>');
+        return '@@@INLINECODE_' + idx + '@@@';
+      });
 
-      // Negrito e Itálico
-      html = html.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-      html = html.replace(/\*([^*]+)\*/g, '<i>$1</i>');
+      const lines = txt.split(/\r?\n/);
+      const output = [];
+      let inTable = false;
+      let tableHeaderParsed = false;
+      let tableHtml = [];
+      let inList = false;
+      let listType = null;
+      let inBlockquote = false;
+      let blockquoteHtml = [];
 
-      // Citações > texto
-      html = html.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
+      function closeList() {
+        if (inList) {
+          output.push('</' + listType + '>');
+          inList = false;
+          listType = null;
+        }
+      }
 
-      // Listas com marcadores (- item ou * item)
-      html = html.replace(/^\s*[-*]\s+(.*$)/gim, '<li>$1</li>');
-      html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+      function closeTable() {
+        if (inTable) {
+          tableHtml.push('</tbody></table></div>');
+          output.push(tableHtml.join(''));
+          inTable = false;
+          tableHeaderParsed = false;
+          tableHtml = [];
+        }
+      }
 
-      // Quebras de linha normais
-      html = html.replace(/\n\n+/g, '<br><br>');
-      html = html.replace(/\n/g, '<br>');
+      function closeBlockquote() {
+        if (inBlockquote) {
+          output.push('<blockquote>' + blockquoteHtml.join('<br>') + '</blockquote>');
+          inBlockquote = false;
+          blockquoteHtml = [];
+        }
+      }
 
-      return html;
+      function parseInline(str) {
+        let s = str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        // Negrito **bold** ou __bold__
+        s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+        // Itálico *italic*
+        s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+        // Itálico _italic_ delimitado
+        s = s.replace(/(^|[\s(>])_([^_]+)_(?=[\s).,!?<]|$)/g, '$1<em>$2</em>');
+        // Tachado ~~strikethrough~~
+        s = s.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+        // Links [title](url)
+        s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+        return s;
+      }
+
+      for (let i = 0; i < lines.length; i++) {
+        const rawLine = lines[i];
+        const trimmed = rawLine.trim();
+
+        // Linha de tabela (contendo pipes)
+        const isTableRow = /^\|(.+)\|$/.test(trimmed) || (trimmed.startsWith('|') && trimmed.includes('|'));
+        const isTableSeparator = /^\|?(\s*:?-+:?\s*\|)+\s*:?-+:?\s*\|?$/.test(trimmed);
+
+        if (isTableRow) {
+          closeList();
+          closeBlockquote();
+
+          const rawCells = trimmed.replace(/^\|/, '').replace(/\|$/, '').split('|');
+          const cells = rawCells.map(c => c.trim());
+
+          if (!inTable) {
+            inTable = true;
+            tableHeaderParsed = false;
+            tableHtml = ['<div class="table-responsive"><table class="markdown-table"><thead><tr>'];
+            cells.forEach(c => {
+              tableHtml.push('<th>' + parseInline(c) + '</th>');
+            });
+            tableHtml.push('</tr></thead><tbody>');
+            continue;
+          } else if (isTableSeparator && !tableHeaderParsed) {
+            tableHeaderParsed = true;
+            continue;
+          } else {
+            tableHtml.push('<tr>');
+            cells.forEach(c => {
+              tableHtml.push('<td>' + parseInline(c) + '</td>');
+            });
+            tableHtml.push('</tr>');
+            continue;
+          }
+        } else if (inTable) {
+          closeTable();
+        }
+
+        // Linha horizontal
+        if (/^(\*{3,}|-{3,}|_{3,})$/.test(trimmed)) {
+          closeList();
+          closeBlockquote();
+          output.push('<hr class="markdown-hr">');
+          continue;
+        }
+
+        // Títulos
+        const headingMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
+        if (headingMatch) {
+          closeList();
+          closeBlockquote();
+          const level = headingMatch[1].length;
+          const hTag = 'h' + Math.min(level + 1, 6);
+          output.push('<' + hTag + ' class="markdown-heading">' + parseInline(headingMatch[2]) + '</' + hTag + '>');
+          continue;
+        }
+
+        // Citações
+        if (trimmed.startsWith('>')) {
+          closeList();
+          const bqText = trimmed.replace(/^>\s?/, '');
+          inBlockquote = true;
+          blockquoteHtml.push(parseInline(bqText));
+          continue;
+        } else if (inBlockquote) {
+          closeBlockquote();
+        }
+
+        // Listas não ordenadas
+        const ulMatch = trimmed.match(/^([-*+•])\s+(.*)$/);
+        if (ulMatch) {
+          closeBlockquote();
+          if (!inList || listType !== 'ul') {
+            closeList();
+            inList = true;
+            listType = 'ul';
+            output.push('<ul class="markdown-list">');
+          }
+          output.push('<li>' + parseInline(ulMatch[2]) + '</li>');
+          continue;
+        }
+
+        // Listas ordenadas
+        const olMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
+        if (olMatch) {
+          closeBlockquote();
+          if (!inList || listType !== 'ol') {
+            closeList();
+            inList = true;
+            listType = 'ol';
+            output.push('<ol class="markdown-list">');
+          }
+          output.push('<li>' + parseInline(olMatch[2]) + '</li>');
+          continue;
+        }
+
+        closeList();
+
+        if (!trimmed) {
+          continue;
+        }
+
+        output.push('<p class="markdown-p">' + parseInline(trimmed) + '</p>');
+      }
+
+      closeList();
+      closeTable();
+      closeBlockquote();
+
+      let finalHtml = output.join('\n');
+
+      inlineCodes.forEach((code, idx) => {
+        finalHtml = finalHtml.split('@@@INLINECODE_' + idx + '@@@').join(code);
+      });
+      codeBlocks.forEach((code, idx) => {
+        finalHtml = finalHtml.split('@@@CODEBLOCK_' + idx + '@@@').join(code);
+      });
+
+      return finalHtml;
+    }
+
+    function renderizarMarkdown(texto) {
+      if (!texto) return '';
+
+      // Tenta usar Marked.js se disponível via CDN
+      if (typeof marked !== 'undefined' && typeof marked.parse === 'function') {
+        try {
+          marked.setOptions({
+            gfm: true,
+            breaks: true
+          });
+          let html = marked.parse(texto);
+          // Envolve tabelas em container responsivo
+          html = html.replace(/<table>/g, '<div class="table-responsive"><table class="markdown-table">')
+                     .replace(/<\/table>/g, '</table></div>');
+          return html;
+        } catch (e) {
+          console.warn("Aviso ao processar Markdown com Marked.js, ativando fallback nativo:", e);
+        }
+      }
+
+      // Fallback local robusto (offline e autônomo)
+      return parserMarkdownNativo(texto);
+    }
+
+    function renderizarMarkdownSimples(texto) {
+      return renderizarMarkdown(texto);
     }
 
     function carregarHistoricoChat() {
