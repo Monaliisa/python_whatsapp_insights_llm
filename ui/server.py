@@ -19,7 +19,7 @@ from typing import Any, AsyncGenerator
 import uvicorn
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, Response, StreamingResponse
 from pydantic import BaseModel
 
 from services.database import (
@@ -1459,9 +1459,15 @@ async def gerar_html_download_post(req: ExportHTMLReportRequest):
 
 
 @app.get("/api/exportar/anonimizado")
-async def exportar_dados_anonimizados(formato: str = "json", grupo_id: str | None = None, grupo_nome: str | None = None):
+async def exportar_dados_anonimizados(
+    formato: str = "json",
+    grupo_id: str | None = None,
+    grupo_nome: str | None = None,
+    separador: str = ";",
+):
     """
     Exporta todas as mensagens do grupo ativo já sanitizadas de acordo com as regras de LGPD/Privacidade.
+    Garante codificação UTF-8 com BOM e delimitador compatível com Excel (padrão ';').
     """
     db_path = get_db_path()
     if not grupo_id and not grupo_nome:
@@ -1486,28 +1492,37 @@ async def exportar_dados_anonimizados(formato: str = "json", grupo_id: str | Non
 
     if formato.lower() == "csv":
         import csv
+        delim = separador if separador in (";", ",", "\t") else ";"
         output = io.StringIO()
         fieldnames = ["id", "data_hora", "remetente", "texto", "is_reply", "reply_author", "reply_text", "has_attachments", "grupo_nome"]
-        writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction="ignore")
+        writer = csv.DictWriter(
+            output,
+            fieldnames=fieldnames,
+            extrasaction="ignore",
+            delimiter=delim,
+            quoting=csv.QUOTE_MINIMAL,
+            lineterminator="\r\n",
+        )
         writer.writeheader()
         for m in mensagens_limpas:
             writer.writerow(m)
-        filename = f"export_anonimizado_{slug}.csv"
-        return HTMLResponse(
-            content=output.getvalue(),
+        filename = f"export_{slug}.csv"
+        csv_bytes = ("\ufeff" + output.getvalue()).encode("utf-8")
+        return Response(
+            content=csv_bytes,
+            media_type="text/csv; charset=utf-8",
             headers={
                 "Content-Disposition": f'attachment; filename="{filename}"',
-                "Content-Type": "text/csv; charset=utf-8",
             },
         )
     else:
-        filename = f"export_anonimizado_{slug}.json"
+        filename = f"export_{slug}.json"
         json_str = json.dumps({"grupo": grupo_nome, "total": len(mensagens_limpas), "stats_redacao": stats, "mensagens": mensagens_limpas}, ensure_ascii=False, indent=2)
-        return HTMLResponse(
-            content=json_str,
+        return Response(
+            content=json_str.encode("utf-8"),
+            media_type="application/json; charset=utf-8",
             headers={
                 "Content-Disposition": f'attachment; filename="{filename}"',
-                "Content-Type": "application/json; charset=utf-8",
             },
         )
 

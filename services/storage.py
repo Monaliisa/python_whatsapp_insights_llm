@@ -1505,7 +1505,7 @@ def export_to_csv(
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     with open(p, "w", encoding="utf-8-sig", newline="") as f:
-        writer = csv.writer(f, delimiter=";")
+        writer = csv.writer(f, delimiter=";", quoting=csv.QUOTE_MINIMAL, lineterminator="\r\n")
         writer.writerow(cols)
         for item in items:
             writer.writerow([item.get(c) for c in cols])
