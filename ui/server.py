@@ -257,7 +257,7 @@ def startup_event():
         state.add_log(f"Interface Web inicializada com sucesso. Banco de dados ({db_type}) pronto.")
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
 async def serve_index():
     index_path = TEMPLATES_DIR / "index.html"
     if not index_path.exists():
@@ -1523,14 +1523,24 @@ async def get_anonymizer_stats():
     }
 
 
-def start_server(host: str = "127.0.0.1", port: int = 8000):
-    print("\n" + "=" * 55)
-    print("WHATSAPP INSIGHTS - SERVIDOR WEB ATIVO")
-    print("=" * 55)
-    print(f"-> Local:    http://{host}:{port}")
-    print(f"-> Hostname: http://localhost:{port}")
-    print("=" * 55 + "\n")
-    uvicorn.run(app, host=host, port=port, log_level="info")
+def start_server(host: str | None = None, port: int | None = None):
+    env_port = os.environ.get("PORT")
+    env_host = os.environ.get("HOST")
+
+    final_port = port if port is not None else (int(env_port) if env_port else 8000)
+    final_host = host if host is not None else (env_host or ("0.0.0.0" if env_port else "127.0.0.1"))
+
+    # Se estiver rodando em nuvem (PORT definido) e o host não foi explicitamente mudado para outro valor público, vincula a 0.0.0.0
+    if env_port and host in (None, "127.0.0.1"):
+        final_host = "0.0.0.0"
+
+    print("\n" + "=" * 55, flush=True)
+    print("WHATSAPP INSIGHTS - SERVIDOR WEB ATIVO", flush=True)
+    print("=" * 55, flush=True)
+    print(f"-> Host / Porta: http://{final_host}:{final_port}", flush=True)
+    print(f"-> Acesso Local: http://localhost:{final_port}", flush=True)
+    print("=" * 55 + "\n", flush=True)
+    uvicorn.run(app, host=final_host, port=final_port, log_level="info")
 
 
 if __name__ == "__main__":

@@ -99,13 +99,22 @@ def menu_cli():
             print("\nOpção inválida! Tente novamente.")
 
 
-def iniciar_servidor_web(host: str = "127.0.0.1", port: int = 8000, abrir_browser: bool = False):
+def iniciar_servidor_web(host: str | None = None, port: int | None = None, abrir_browser: bool = False):
     setup_environment()
+    env_port = os.environ.get("PORT")
+    env_host = os.environ.get("HOST")
+
+    final_port = port if port is not None else (int(env_port) if env_port else 8000)
+    final_host = host if host is not None else (env_host or ("0.0.0.0" if env_port else "127.0.0.1"))
+
+    if env_port and host in (None, "127.0.0.1"):
+        final_host = "0.0.0.0"
+
     print("\n" + "=" * 60, flush=True)
     print("      WHATSAPP INSIGHTS - PAINEL WEB DE CONTROLE", flush=True)
     print("=" * 60, flush=True)
-    print(f"-> IP / Porta:          http://{host}:{port}", flush=True)
-    print(f"-> Acesso no Navegador: http://localhost:{port}", flush=True)
+    print(f"-> Host / Porta:        http://{final_host}:{final_port}", flush=True)
+    print(f"-> Acesso Local:        http://localhost:{final_port}", flush=True)
     print("=" * 60, flush=True)
     print("Pressione Ctrl+C para encerrar o servidor.\n", flush=True)
 
@@ -113,20 +122,26 @@ def iniciar_servidor_web(host: str = "127.0.0.1", port: int = 8000, abrir_browse
         def _abrir():
             time.sleep(1.0)
             try:
-                webbrowser.open(f"http://localhost:{port}")
+                webbrowser.open(f"http://localhost:{final_port}")
             except Exception:
                 pass
         threading.Thread(target=_abrir, daemon=True).start()
 
-    start_server(host=host, port=port)
+    start_server(host=final_host, port=final_port)
 
 
 def main():
     setup_environment()
+    env_port = os.environ.get("PORT")
+    env_host = os.environ.get("HOST")
+
+    default_host = env_host or ("0.0.0.0" if env_port else "127.0.0.1")
+    default_port = int(env_port) if env_port else 8000
+
     parser = argparse.ArgumentParser(description="WhatsApp Insights LLM Orchestrator")
     parser.add_argument("--cli", action="store_true", help="Executa no modo terminal interativo CLI")
-    parser.add_argument("--host", default="127.0.0.1", help="Host IP para o servidor web (default: 127.0.0.1)")
-    parser.add_argument("--port", type=int, default=8000, help="Porta para o servidor web (default: 8000)")
+    parser.add_argument("--host", default=default_host, help=f"Host IP para o servidor web (default: {default_host})")
+    parser.add_argument("--port", type=int, default=default_port, help=f"Porta para o servidor web (default: {default_port})")
     parser.add_argument("--open", action="store_true", help="Abre o navegador automaticamente")
 
     args = parser.parse_args()
